@@ -56,6 +56,13 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :angel_trading,
+  api_endpoint: System.get_env("API_ENDPOINT"),
+  api_key: System.get_env("API_KEY"),
+  secret_key: System.get_env("SECRET_KEY")
+
+config :tesla, adapter: Tesla.Adapter.Hackney
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

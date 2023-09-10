@@ -16,8 +16,7 @@ defmodule AngelTradingWeb.Router do
 
   scope "/", AngelTradingWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
+    live "/login", LoginLive 
   end
 
   # Other scopes may use custom stacks.

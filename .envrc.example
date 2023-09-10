@@ -1,0 +1,3 @@
+export API_ENDPOINT=https://apiconnect.angelbroking.com
+export API_KEY=
+export SECRET_KEY=
