@@ -18,14 +18,10 @@ defmodule AngelTrading.AuthTest do
       }
 
       Tesla.Mock.mock(fn
-        %{method: :post} ->
-          %Tesla.Env{
-            status: 200,
-            body: json(resp)
-          }
+        %{method: :post} -> json(resp)
       end)
 
-      assert {:ok, body} = Auth.login("", "", "")
+      assert {:ok, body} = Auth.login(%{"clientcode" => "", "password" => "", "totp" => ""})
       assert body["message"] == "SUCCESS"
       assert body["data"] == resp["data"]
     end
@@ -39,14 +35,10 @@ defmodule AngelTrading.AuthTest do
       }
 
       Tesla.Mock.mock(fn
-        %{method: :post} ->
-          %Tesla.Env{
-            status: 200,
-            body: json(resp)
-          }
+        %{method: :post} -> json(resp)
       end)
 
-      assert {:error, body} = Auth.login("", "", "")
+      assert {:error, body} = Auth.login(%{"clientcode" => "", "password" => "", "totp" => ""})
       assert body["message"] == resp["message"]
     end
   end

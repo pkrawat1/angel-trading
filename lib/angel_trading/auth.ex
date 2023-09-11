@@ -5,15 +5,9 @@ defmodule AngelTrading.Auth do
     login: "rest/auth/angelbroking/user/v1/loginByPassword"
   }
 
-  def login(client_code, password, totp) do
-    data = %{
-      clientcode: client_code,
-      password: password,
-      totp: totp
-    }
-
+  def login(%{"clientcode" => _, "password" => _, "totp" => _} = params) do
     client()
-    |> post(@routes.login, data)
+    |> post(@routes.login, params)
     |> gen_response()
   end
 
@@ -45,14 +39,8 @@ defmodule AngelTrading.Auth do
     Tesla.client(middleware)
   end
 
-  defp gen_response(env) do
-    {:ok, %{body: %{body: body}}} = env
-    body = Jason.decode!(body)
+  defp gen_response({:ok, %{body: %{"message" => message} = body}})
+       when message == "SUCCESS", do: {:ok, body}
 
-    if body["message"] == "SUCCESS" do
-      {:ok, body}
-    else
-      {:error, body}
-    end
-  end
+  defp gen_response({:ok, %{body: body}}), do: {:error, body}
 end

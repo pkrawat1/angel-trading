@@ -17,6 +17,7 @@ defmodule AngelTradingWeb.Router do
   scope "/", AngelTradingWeb do
     pipe_through :browser
     live "/login", LoginLive 
+    get "/session/:token/:refreshToken/:feedToken", SessionController, :create
   end
 
   # Other scopes may use custom stacks.
