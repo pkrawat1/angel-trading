@@ -6,53 +6,48 @@ defmodule AngelTrading.AuthTest do
 
   describe "Authentication: " do
     test "Login Success" do
-      resp_json =
-        json(%{
-          "status" => true,
-          "message" => "SUCCESS",
-          "errorcode" => "",
-          "data" => %{
-            "jwtToken" => "token",
-            "refreshToken" => "token",
-            "feedToken" => "token"
-          }
-        })
+      resp = %{
+        "status" => true,
+        "message" => "SUCCESS",
+        "errorcode" => "",
+        "data" => %{
+          "jwtToken" => "token",
+          "refreshToken" => "token",
+          "feedToken" => "token"
+        }
+      }
 
       Tesla.Mock.mock(fn
         %{method: :post} ->
           %Tesla.Env{
             status: 200,
-            body: resp_json
+            body: json(resp)
           }
       end)
 
-      assert {:ok, env} = Auth.login("", "", "")
-      assert env.status == 200
-      assert env.body == resp_json
+      assert {:ok, body} = Auth.login("", "", "")
+      assert body["message"] == "SUCCESS"
+      assert body["data"] == resp["data"]
     end
 
     test "Login Failure" do
-      resp_json =
-        json(%{
-          body: %{
-            "data" => nil,
-            "errorcode" => "AB1048",
-            "message" => "Invalid clientcode parameter name",
-            "status" => false
-          }
-        })
+      resp = %{
+        "data" => nil,
+        "errorcode" => "AB1048",
+        "message" => "Invalid clientcode parameter name",
+        "status" => false
+      }
 
       Tesla.Mock.mock(fn
         %{method: :post} ->
           %Tesla.Env{
             status: 200,
-            body: resp_json
+            body: json(resp)
           }
       end)
 
-      assert {:ok, env} = Auth.login("", "", "")
-      assert env.status == 200
-      assert env.body == resp_json
+      assert {:error, body} = Auth.login("", "", "")
+      assert body["message"] == resp["message"]
     end
   end
 end

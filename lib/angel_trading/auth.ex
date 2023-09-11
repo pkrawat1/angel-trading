@@ -1,16 +1,23 @@
 defmodule AngelTrading.Auth do
   use Tesla
 
+  @routes %{
+    login: "rest/auth/angelbroking/user/v1/loginByPassword"
+  }
+
   def login(client_code, password, totp) do
-    client()
-    |> post("rest/auth/angelbroking/user/v1/loginByPassword", %{
+    data = %{
       clientcode: client_code,
       password: password,
       totp: totp
-    })
+    }
+
+    client()
+    |> post(@routes.login, data)
+    |> gen_response()
   end
 
-  def client(token \\ nil) do
+  defp client(token \\ nil) do
     headers = [
       {"Content-Type", "application/json"},
       {"Accept", "application/json"},
@@ -36,5 +43,16 @@ defmodule AngelTrading.Auth do
     ]
 
     Tesla.client(middleware)
+  end
+
+  defp gen_response(env) do
+    {:ok, %{body: %{body: body}}} = env
+    body = Jason.decode!(body)
+
+    if body["message"] == "SUCCESS" do
+      {:ok, body}
+    else
+      {:error, body}
+    end
   end
 end
