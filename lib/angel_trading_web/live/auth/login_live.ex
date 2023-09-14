@@ -2,8 +2,12 @@ defmodule AngelTradingWeb.LoginLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.Auth
 
-  def mount(params, _session, socket) do
-    {:ok, assign(socket, params: params["users"])}
+  def mount(_params, _session, socket) do
+    {:ok, socket}
+  end
+
+  def handle_params(params, _url, socket) do
+    {:noreply, assign(socket, params: params)}
   end
 
   def render(assigns) do
@@ -36,14 +40,22 @@ defmodule AngelTradingWeb.LoginLive do
 
   def handle_event("login", %{"user" => params}, socket) do
     with {:ok,
-          %{data: %{"token" => token, "refreshToken" => refresh_token, "feedToken" => feed_token}}} <-
+          %{
+            "data" => %{
+              "jwtToken" => token,
+              "refreshToken" => refresh_token,
+              "feedToken" => feed_token
+            }
+          }} <-
            Auth.login(params) do
-      {:stop, redirect(socket, to: ~p"/session/#{token}/#{refresh_token}/#{feed_token}")}
+      {:noreply, redirect(socket, to: ~p"/session/#{token}/#{refresh_token}/#{feed_token}")}
     else
       {:error, %{"message" => message}} ->
         {
           :noreply,
-          put_flash(socket, :error, message)
+          socket
+          |> push_patch(to: ~p"/login?#{params}")
+          |> put_flash(:error, message)
         }
     end
   end

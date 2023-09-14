@@ -17,10 +17,10 @@ defmodule AngelTrading.Auth do
       {"Accept", "application/json"},
       {"X-UserType", "USER"},
       {"X-SourceID", "WEB"},
-      {"X-ClientLocalIP", "CLIENT_LOCAL_IP"},
-      {"X-ClientPublicIP", "CLIENT_PUBLIC_IP"},
-      {"X-MACAddress", "MAC_ADDRESS"},
-      {"X-PrivateKey", "API_KEY"}
+      {"X-ClientLocalIP", Application.get_env(:angel_trading, :local_ip)},
+      {"X-ClientPublicIP", Application.get_env(:angel_trading, :public_ip)},
+      {"X-MACAddress", Application.get_env(:angel_trading, :mac_address)},
+      {"X-PrivateKey", Application.get_env(:angel_trading, :api_key)}
     ]
 
     headers =
@@ -40,7 +40,8 @@ defmodule AngelTrading.Auth do
   end
 
   defp gen_response({:ok, %{body: %{"message" => message} = body}})
-       when message == "SUCCESS", do: {:ok, body}
+       when message == "SUCCESS",
+       do: {:ok, body}
 
   defp gen_response({:ok, %{body: body}}), do: {:error, body}
 end
