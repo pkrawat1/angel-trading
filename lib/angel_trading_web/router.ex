@@ -1,5 +1,6 @@
 defmodule AngelTradingWeb.Router do
   use AngelTradingWeb, :router
+  import AngelTradingWeb.UserAuth
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -15,9 +16,13 @@ defmodule AngelTradingWeb.Router do
   end
 
   scope "/", AngelTradingWeb do
-    pipe_through :browser
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
     live "/login", LoginLive 
     get "/session/:token/:refresh_token/:feed_token", SessionController, :create
+
+    live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
+      live "/", DashboardLive
+    end
   end
 
   # Other scopes may use custom stacks.

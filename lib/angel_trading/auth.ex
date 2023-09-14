@@ -2,12 +2,19 @@ defmodule AngelTrading.Auth do
   use Tesla
 
   @routes %{
-    login: "rest/auth/angelbroking/user/v1/loginByPassword"
+    login: "rest/auth/angelbroking/user/v1/loginByPassword",
+    profile: "rest/secure/angelbroking/user/v1/getProfile"
   }
 
   def login(%{"clientcode" => _, "password" => _, "totp" => _} = params) do
     client()
     |> post(@routes.login, params)
+    |> gen_response()
+  end
+
+  def profile(token) do
+    client(token)
+    |> get(@routes.profile)
     |> gen_response()
   end
 
@@ -35,6 +42,8 @@ defmodule AngelTrading.Auth do
       Tesla.Middleware.JSON,
       {Tesla.Middleware.Headers, headers}
     ]
+
+    IO.inspect(middleware)
 
     Tesla.client(middleware)
   end
