@@ -49,6 +49,7 @@ defmodule AngelTrading.MixProject do
       {:tesla, "~> 1.4"},
       {:hackney, "~> 1.17"},
       {:plug_cowboy, "~> 2.5"},
+      {:number, "~> 1.0"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end

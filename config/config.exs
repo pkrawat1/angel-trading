@@ -66,6 +66,18 @@ config :angel_trading,
 
 config :tesla, adapter: Tesla.Adapter.Hackney
 
+config :number,
+  currency: [
+    unit: "₹",
+    precision: 2,
+    delimiter: ",",
+    separator: ".",
+    # "₹30.00"
+    format: "%u%n",
+    # "(₹30.00)"
+    negative_format: "(%u%n)"
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

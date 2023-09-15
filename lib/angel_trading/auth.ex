@@ -3,7 +3,8 @@ defmodule AngelTrading.Auth do
 
   @routes %{
     login: "rest/auth/angelbroking/user/v1/loginByPassword",
-    profile: "rest/secure/angelbroking/user/v1/getProfile"
+    profile: "rest/secure/angelbroking/user/v1/getProfile",
+    portfolio: "rest/secure/angelbroking/portfolio/v1/getHolding"
   }
 
   def login(%{"clientcode" => _, "password" => _, "totp" => _} = params) do
@@ -15,6 +16,12 @@ defmodule AngelTrading.Auth do
   def profile(token) do
     client(token)
     |> get(@routes.profile)
+    |> gen_response()
+  end
+
+  def portfolio(token) do
+    client(token)
+    |> get(@routes.portfolio)
     |> gen_response()
   end
 
@@ -42,8 +49,6 @@ defmodule AngelTrading.Auth do
       Tesla.Middleware.JSON,
       {Tesla.Middleware.Headers, headers}
     ]
-
-    IO.inspect(middleware)
 
     Tesla.client(middleware)
   end

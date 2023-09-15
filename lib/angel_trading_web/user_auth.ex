@@ -22,7 +22,7 @@ defmodule AngelTradingWeb.UserAuth do
     with {:ok, _} <- Auth.profile(get_session(conn, :token)) do
       conn
     else
-      {:error, message} ->
+      {:error, _} ->
         conn
         |> put_flash(:error, "You must log in to access this page.")
         |> redirect(to: ~p"/login")
@@ -46,10 +46,10 @@ defmodule AngelTradingWeb.UserAuth do
     with {:ok, _} <- Auth.profile(session["token"]) do
       {:cont, socket}
     else
-      {:error, message} ->
+      {:error, _} ->
         {:halt,
          socket
-         |> Phoenix.LiveView.put_flash(:error, message)
+         |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
          |> Phoenix.LiveView.redirect(to: ~p"/login")}
     end
   end
