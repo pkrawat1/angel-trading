@@ -47,15 +47,29 @@ defmodule AngelTrading.Auth do
     middleware = [
       {Tesla.Middleware.BaseUrl, Application.get_env(:angel_trading, :api_endpoint)},
       Tesla.Middleware.JSON,
-      {Tesla.Middleware.Headers, headers}
+      {Tesla.Middleware.Headers, headers},
+      {Tesla.Middleware.Retry,
+       delay: 500,
+       max_retries: 10,
+       max_delay: 4_000,
+       should_retry: fn
+         {:ok, %{status: status}} when status in [400, 403, 500] -> true
+         {:ok, _} -> false
+         {:error, _} -> true
+       end}
     ]
 
     Tesla.client(middleware)
   end
 
-  defp gen_response({:ok, %{body: %{"message" => message} = body}})
-       when message == "SUCCESS",
-       do: {:ok, body}
+  defp gen_response({:ok, %{body: %{"message" => message} = body} = _env})
+       when message == "SUCCESS" do
+    # IO.inspect(_env)
+    {:ok, body}
+  end
 
-  defp gen_response({:ok, %{body: body}}), do: {:error, body}
+  defp gen_response({:ok, %{body: body} = _env}) do
+    # IO.inspect(_env)
+    {:error, body}
+  end
 end
