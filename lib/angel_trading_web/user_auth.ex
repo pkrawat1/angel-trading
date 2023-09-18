@@ -3,7 +3,9 @@ defmodule AngelTradingWeb.UserAuth do
 
   import Plug.Conn
   import Phoenix.Controller
-  alias AngelTrading.Auth
+
+  @remember_me_cookie "_angel_remember_me"
+  @remember_me_options [sign: true, same_site: "Lax"]
 
   def login_in_user(conn, %{
         "token" => token,
@@ -11,18 +13,41 @@ defmodule AngelTradingWeb.UserAuth do
         "feed_token" => feed_token
       }) do
     conn
+    |> put_tokens_in_session(token, refresh_token, feed_token)
+    |> redirect(to: "/")
+  end
+
+  def fetch_user_session(conn, _opts) do
+    if get_session(conn, :token) do
+      conn
+    else
+      conn = fetch_cookies(conn, signed: [@remember_me_cookie])
+
+      with [token, refresh_token, feed_token] <-
+             String.split(conn.cookies[@remember_me_cookie], "|") do
+        put_tokens_in_session(conn, token, refresh_token, feed_token)
+      else
+        _ ->
+          conn
+      end
+    end
+  end
+
+  defp put_tokens_in_session(conn, token, refresh_token, feed_token) do
+    conn
+    |> configure_session(renew: true)
+    |> clear_session()
     |> put_session(:token, token)
     |> put_session(:refresh_token, refresh_token)
     |> put_session(:feed_token, feed_token)
     |> put_session(
       :session_expiry,
-      Timex.now("Asia/Calcutta")
-      |> Timex.shift(days: 1)
-      |> Timex.beginning_of_day()
-      |> Timex.shift(hours: 5)
+      session_valid_till()
     )
-    |> configure_session(renew: true)
-    |> redirect(to: "/")
+    |> put_resp_cookie(@remember_me_cookie, token <> "|" <> refresh_token <> "|" <> feed_token, [
+      {:max_age, Timex.diff(session_valid_till(), Timex.now("Asia/Kolkata"), :seconds)}
+      | @remember_me_options
+    ])
   end
 
   def ensure_authenticated(conn, _opts) do
@@ -71,5 +96,12 @@ defmodule AngelTradingWeb.UserAuth do
   defp session_valid?(%{"session_expiry" => session_expiry}),
     do: Timex.after?(session_expiry, Timex.now("Asia/Kolkata"))
 
-  defp session_valid?(session), do: false
+  defp session_valid?(_session), do: false
+
+  defp session_valid_till(),
+    do:
+      Timex.now("Asia/Calcutta")
+      |> Timex.shift(days: 1)
+      |> Timex.beginning_of_day()
+      |> Timex.shift(hours: 5)
 end

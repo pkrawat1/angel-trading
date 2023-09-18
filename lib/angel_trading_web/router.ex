@@ -5,6 +5,7 @@ defmodule AngelTradingWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug :fetch_user_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {AngelTradingWeb.Layouts, :root}
     plug :protect_from_forgery

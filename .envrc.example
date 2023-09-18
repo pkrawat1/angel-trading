@@ -1,3 +1,5 @@
+export SESSION_SIGNING_SALT=
+export SECRET_KEY_BASE=
 export API_ENDPOINT=https://apiconnect.angelbroking.com
 export API_KEY=
 export SECRET_KEY=
