@@ -12,7 +12,11 @@ defmodule AngelTradingWeb.DashboardLive do
       with {:ok, %{"data" => holdings}} <- Auth.portfolio(token),
            holdings <- formatted_holdings(holdings) do
         assign(socket,
-          holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"]))
+          holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),
+          total_invested: holdings |> Enum.map(& &1["invested"]) |> Enum.sum(),
+          total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
+          total_overall_gain_or_loss:
+            holdings |> Enum.map(& &1["overall_gain_or_loss"]) |> Enum.sum()
         )
       else
         {:error, %{"message" => message}} ->
@@ -41,8 +45,12 @@ defmodule AngelTradingWeb.DashboardLive do
                   <%= holding["exchange"] %>
                 </small>
               </span>
-              <span class={[holding["in_overall_profit?"] && "text-green-600", "text-red-600"]}>
-                <%= holding["overall_gain_or_loss"] %> (<%= holding["overall_gain_or_loss_percent"]
+              <span class={[
+                if(holding["in_overall_profit?"], do: "text-green-600", else: "text-red-600")
+              ]}>
+                <%= number_to_currency(holding["overall_gain_or_loss"]) %> (<%= holding[
+                  "overall_gain_or_loss_percent"
+                ]
                 |> Float.floor(2) %>%)
               </span>
             </dd>
@@ -50,10 +58,10 @@ defmodule AngelTradingWeb.DashboardLive do
           <div>
             <dd class="my-2 flex text-xs font-semibold text-slate-900 justify-between">
               <span>
-                Avg <%= holding["averageprice"] %>
+                Avg <%= number_to_currency(holding["averageprice"]) %>
               </span>
-              <span class={[holding["is_gain_today?"] && "text-green-600", "text-red-600"]}>
-                LTP <%= holding["ltp"] %> (<%= holding["ltp_percent"]
+              <span class={[if(holding["is_gain_today?"], do: "text-green-600", else: "text-red-600")]}>
+                LTP <%= number_to_currency(holding["ltp"]) %> (<%= holding["ltp_percent"]
                 |> Float.floor(2) %>%)
               </span>
             </dd>
@@ -63,10 +71,12 @@ defmodule AngelTradingWeb.DashboardLive do
               <span>
                 Shares <%= holding["quantity"] %>
               </span>
-              <span class={[holding["is_gain_today?"] && "text-green-600", "text-red-600"]}>
-                <%= if holding["is_gain_today?"], do: "Today's gain", else: "Today's loss" %> <%= holding[
-                  "todays_profit_or_loss"
-                ] %> (<%= holding["todays_profit_or_loss_percent"]
+              <span class={[if(holding["is_gain_today?"], do: "text-green-600", else: "text-red-600")]}>
+                <%= if holding["is_gain_today?"], do: "Today's gain", else: "Today's loss" %> <%= number_to_currency(
+                  holding[
+                    "todays_profit_or_loss"
+                  ]
+                ) %> (<%= holding["todays_profit_or_loss_percent"]
                 |> Float.floor(2) %>%)
               </span>
             </dd>
@@ -76,10 +86,10 @@ defmodule AngelTradingWeb.DashboardLive do
             <dt class="sr-only">Invested Amount</dt>
             <dd class="text-xs flex justify-between">
               <span>
-                Invested <%= holding["invested"] %>
+                Invested <%= number_to_currency(holding["invested"], precision: 0) %>
               </span>
               <span>
-                Current <%= holding["current"] %>
+                Current <%= number_to_currency(holding["current"], precision: 0) %>
               </span>
             </dd>
           </div>
@@ -119,13 +129,13 @@ defmodule AngelTradingWeb.DashboardLive do
       ltp_percent = (ltp - close) / close * 100
 
       Map.merge(holding, %{
-        "invested" => number_to_currency(invested),
-        "current" => number_to_currency(current),
+        "invested" => invested,
+        "current" => current,
         "in_overall_profit?" => current > invested,
         "is_gain_today?" => ltp > close,
-        "overall_gain_or_loss" => number_to_currency(overall_gain_or_loss),
+        "overall_gain_or_loss" => overall_gain_or_loss,
         "overall_gain_or_loss_percent" => overall_gain_or_loss_percent,
-        "todays_profit_or_loss" => number_to_currency(todays_profit_or_loss),
+        "todays_profit_or_loss" => todays_profit_or_loss,
         "todays_profit_or_loss_percent" => todays_profit_or_loss_percent,
         "ltp_percent" => ltp_percent
       })

@@ -24,7 +24,7 @@ defmodule AngelTradingWeb.UserAuth do
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
       with [token, refresh_token, feed_token] <-
-             String.split(conn.cookies[@remember_me_cookie], "|") do
+             String.split(conn.cookies[@remember_me_cookie] || "", "|") do
         put_tokens_in_session(conn, token, refresh_token, feed_token)
       else
         _ ->
