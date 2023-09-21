@@ -6,25 +6,10 @@ defmodule AngelTradingWeb.DashboardLive do
   def mount(_params, %{"token" => token}, socket) do
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("dashboard")
+      :timer.send_interval(5000, self(), :tick)
     end
 
-    socket =
-      with {:ok, %{"data" => profile}} <- API.profile(token),
-           {:ok, %{"data" => holdings}} <- API.portfolio(token) do
-        holdings = formatted_holdings(holdings)
-
-        socket
-        |> calculated_overview(holdings)
-        |> assign(
-          holdings: Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"])),
-          name: profile["name"]
-        )
-      else
-        {:error, %{"message" => message}} ->
-          put_flash(socket, :error, message)
-      end
-
-    {:ok, socket}
+    {:ok, socket |> assign(:token, token) |> get_portfolio_data()}
   end
 
   def render(assigns) do
@@ -150,9 +135,30 @@ defmodule AngelTradingWeb.DashboardLive do
     """
   end
 
+  def handle_info(:tick, socket) do
+    {:noreply, get_portfolio_data(socket)}
+  end
+
+  defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
+    with {:ok, %{"data" => profile}} <- API.profile(token),
+         {:ok, %{"data" => holdings}} <- API.portfolio(token) do
+      holdings = formatted_holdings(holdings)
+
+      socket
+      |> calculated_overview(holdings)
+      |> assign(
+        holdings: Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"])),
+        name: profile["name"]
+      )
+    else
+      {:error, %{"message" => message}} ->
+        put_flash(socket, :error, message)
+    end
+  end
+
   # Using float calculation as of now. Since most of the data is coming from angel api.
   # I could add ex_money to manage calculations in decimal money format.
-  def formatted_holdings(holdings) do
+  defp formatted_holdings(holdings) do
     Enum.map(holdings, fn %{
                             "authorisedquantity" => _,
                             "averageprice" => averageprice,
