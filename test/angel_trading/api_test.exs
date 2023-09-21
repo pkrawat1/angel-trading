@@ -1,10 +1,10 @@
-defmodule AngelTrading.AuthTest do
+defmodule AngelTrading.APITest do
   use ExUnit.Case
 
   import Tesla.Mock
-  alias AngelTrading.Auth
+  import AngelTrading.API
 
-  describe "Authentication: " do
+  describe "ntication: " do
     test "Login Success" do
       resp = %{
         "status" => true,
@@ -21,7 +21,7 @@ defmodule AngelTrading.AuthTest do
         %{method: :post} -> json(resp)
       end)
 
-      assert {:ok, body} = Auth.login(%{"clientcode" => "", "password" => "", "totp" => ""})
+      assert {:ok, body} = login(%{"clientcode" => "", "password" => "", "totp" => ""})
       assert body["message"] == "SUCCESS"
       assert body["data"] == resp["data"]
     end
@@ -38,7 +38,7 @@ defmodule AngelTrading.AuthTest do
         %{method: :post} -> json(resp)
       end)
 
-      assert {:error, body} = Auth.login(%{"clientcode" => "", "password" => "", "totp" => ""})
+      assert {:error, body} = login(%{"clientcode" => "", "password" => "", "totp" => ""})
       assert body["message"] == resp["message"]
     end
   end

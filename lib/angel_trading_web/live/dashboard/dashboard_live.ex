@@ -1,6 +1,6 @@
 defmodule AngelTradingWeb.DashboardLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.Auth
+  alias AngelTrading.API
   import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
 
   def mount(_params, %{"token" => token}, socket) do
@@ -9,7 +9,7 @@ defmodule AngelTradingWeb.DashboardLive do
     end
 
     socket =
-      with {:ok, %{"data" => holdings}} <- Auth.portfolio(token),
+      with {:ok, %{"data" => holdings}} <- API.portfolio(token),
            holdings <- formatted_holdings(holdings) do
         assign(socket,
           holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),

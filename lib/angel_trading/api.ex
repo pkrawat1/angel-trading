@@ -1,4 +1,4 @@
-defmodule AngelTrading.Auth do
+defmodule AngelTrading.API do
   use Tesla
 
   @routes %{
@@ -58,6 +58,8 @@ defmodule AngelTrading.Auth do
          {:error, _} -> true
        end}
     ]
+
+    IO.inspect middleware
 
     Tesla.client(middleware)
   end

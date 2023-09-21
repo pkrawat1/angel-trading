@@ -1,6 +1,6 @@
 defmodule AngelTradingWeb.LoginLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.Auth
+  alias AngelTrading.API
 
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -47,7 +47,7 @@ defmodule AngelTradingWeb.LoginLive do
               "feedToken" => feed_token
             }
           }} <-
-           Auth.login(params) do
+           API.login(params) do
       {:noreply, redirect(socket, to: ~p"/session/#{token}/#{refresh_token}/#{feed_token}")}
     else
       {:error, %{"message" => message}} ->
