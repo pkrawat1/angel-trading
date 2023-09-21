@@ -97,4 +97,12 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+  config :angel_trading,
+    api_endpoint: System.get_env("API_ENDPOINT"),
+    api_key: System.get_env("API_KEY"),
+    local_ip: System.get_env("LOCAL_IP"),
+    public_ip: System.get_env("PUBLIC_IP"),
+    mac_address: System.get_env("MAC_ADDRESS"),
+    secret_key: System.get_env("SECRET_KEY")
 end

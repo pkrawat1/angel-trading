@@ -9,14 +9,15 @@ defmodule AngelTradingWeb.DashboardLive do
     end
 
     socket =
-      with {:ok, %{"data" => holdings}} <- API.portfolio(token),
-           holdings <- formatted_holdings(holdings) do
-        assign(socket,
-          holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),
-          total_invested: holdings |> Enum.map(& &1["invested"]) |> Enum.sum(),
-          total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
-          total_overall_gain_or_loss:
-            holdings |> Enum.map(& &1["overall_gain_or_loss"]) |> Enum.sum()
+      with {:ok, %{"data" => profile}} <- API.profile(token),
+           {:ok, %{"data" => holdings}} <- API.portfolio(token) do
+        holdings = formatted_holdings(holdings)
+
+        socket
+        |> calculated_overview(holdings)
+        |> assign(
+          holdings: Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"])),
+          name: profile["name"]
         )
       else
         {:error, %{"message" => message}} ->
@@ -27,10 +28,60 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   def render(assigns) do
-    IO.inspect(assigns[:holdings] |> List.first())
+    # IO.inspect(assigns[:holdings] |> List.first())
 
     ~H"""
-    <legend class="text-4xl text-center">My Portfolio</legend>
+    <div class="block w-full p-6 my-5 border rounded-lg shadow capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700">
+      <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
+        <%= String.downcase(@name) %>
+      </h5>
+      <div class="text-2xl">
+        <%= number_to_currency(@total_current, precision: 0) %> <br />
+        <small :if={@in_overall_profit?}>
+          <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Overall gain
+          <span class="text-green-600">
+            <%= number_to_currency(@total_overall_gain_or_loss, precision: 0) %> (%<%= Float.floor(
+              @total_overall_gain_or_loss_percent,
+              2
+            ) %>)
+          </span>
+        </small>
+        <small :if={!@in_overall_profit?}>
+          <.icon name="hero-arrow-down text-red-600" /> Overall loss
+          <span class="text-red-600">
+            <%= number_to_currency(@total_overall_gain_or_loss) %> (%<%= Float.floor(
+              @total_overall_gain_or_loss_percent,
+              2
+            ) %>)
+          </span>
+        </small>
+      </div>
+      <div class="text-2xl mt-5 flex justify-between">
+        <small>
+          Invested Value<br />
+          <%= number_to_currency(@total_current, precision: 0) %> <br />
+        </small>
+        <small :if={@in_overall_profit_today?}>
+          <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Today's gain<br />
+          <span class="text-green-600">
+            <%= number_to_currency(@total_todays_gain_or_loss, precision: 0) %> (%<%= Float.floor(
+              @total_todays_gain_or_loss_percent,
+              2
+            ) %>)
+          </span>
+        </small>
+        <small :if={!@in_overall_profit_today?}>
+          <.icon name="hero-arrow-down w-4 h-4 text-red-600" /> Today's Loss<br />
+          <span class="text-red-600">
+            <%= number_to_currency(@total_todays_gain_or_loss, precision: 0) %> (%<%= Float.floor(
+              @total_todays_gain_or_loss_percent,
+              2
+            ) %>)
+          </span>
+        </small>
+      </div>
+    </div>
+
     <ul class="bg-slate-50 p-4">
       <li
         :for={holding <- @holdings}
@@ -108,7 +159,7 @@ defmodule AngelTradingWeb.DashboardLive do
                             "close" => close,
                             "collateralquantity" => _,
                             "collateraltype" => _,
-                            "exchange" => exchange,
+                            "exchange" => _,
                             "haircut" => _,
                             "isin" => _,
                             "ltp" => ltp,
@@ -118,7 +169,7 @@ defmodule AngelTradingWeb.DashboardLive do
                             "realisedquantity" => _,
                             "symboltoken" => _,
                             "t1quantity" => _,
-                            "tradingsymbol" => tradingsymbol
+                            "tradingsymbol" => _
                           } = holding ->
       invested = quantity * averageprice
       current = quantity * ltp
@@ -140,5 +191,23 @@ defmodule AngelTradingWeb.DashboardLive do
         "ltp_percent" => ltp_percent
       })
     end)
+  end
+
+  defp calculated_overview(socket, holdings) do
+    total_invested = holdings |> Enum.map(& &1["invested"]) |> Enum.sum()
+    total_overall_gain_or_loss = holdings |> Enum.map(& &1["overall_gain_or_loss"]) |> Enum.sum()
+    total_todays_gain_or_loss = holdings |> Enum.map(& &1["todays_profit_or_loss"]) |> Enum.sum()
+
+    assign(socket,
+      holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),
+      total_invested: total_invested,
+      total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
+      total_overall_gain_or_loss: total_overall_gain_or_loss,
+      total_todays_gain_or_loss: total_todays_gain_or_loss,
+      in_overall_profit_today?: total_todays_gain_or_loss > 0,
+      in_overall_profit?: total_overall_gain_or_loss > 0,
+      total_overall_gain_or_loss_percent: total_overall_gain_or_loss / total_invested * 100,
+      total_todays_gain_or_loss_percent: total_todays_gain_or_loss / total_invested * 100
+    )
   end
 end

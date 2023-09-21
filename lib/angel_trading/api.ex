@@ -59,8 +59,6 @@ defmodule AngelTrading.API do
        end}
     ]
 
-    IO.inspect middleware
-
     Tesla.client(middleware)
   end
 
@@ -74,4 +72,6 @@ defmodule AngelTrading.API do
     # IO.inspect(_env)
     {:error, body}
   end
+
+  defp gen_response({:error, %{body: body}}), do: {:error, body}
 end
