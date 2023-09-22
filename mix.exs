@@ -51,7 +51,6 @@ defmodule AngelTrading.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:number, "~> 1.0"},
       {:timex, "~> 3.0"},
-      {:cachex, "~> 3.6"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end

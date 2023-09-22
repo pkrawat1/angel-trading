@@ -18,7 +18,6 @@ defmodule AngelTrading.Application do
       AngelTradingWeb.Endpoint,
       # Start a worker by calling: AngelTrading.Worker.start_link(arg)
       # {AngelTrading.Worker, arg}
-      {Cachex, name: :angel_trading}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
