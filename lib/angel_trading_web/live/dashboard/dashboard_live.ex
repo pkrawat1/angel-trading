@@ -16,11 +16,11 @@ defmodule AngelTradingWeb.DashboardLive do
     # IO.inspect(assigns[:holdings] |> List.first())
 
     ~H"""
-    <div class="block w-full p-6 my-5 border rounded-lg shadow capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700">
+    <div class="block w-full p-6 my-5 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700">
       <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
         <%= String.downcase(@name) %>
       </h5>
-      <div class="text-2xl">
+      <div class="text-xl">
         <%= number_to_currency(@total_current, precision: 0) %> <br />
         <small :if={@in_overall_profit?}>
           <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Overall gain
@@ -41,7 +41,7 @@ defmodule AngelTradingWeb.DashboardLive do
           </span>
         </small>
       </div>
-      <div class="text-2xl mt-5 flex justify-between">
+      <div class="text-xl mt-5 flex justify-between">
         <small>
           Invested Value<br />
           <%= number_to_currency(@total_invested, precision: 0) %> <br />
@@ -67,10 +67,10 @@ defmodule AngelTradingWeb.DashboardLive do
       </div>
     </div>
 
-    <ul class="bg-slate-50 p-4">
+    <ul>
       <li
         :for={holding <- @holdings}
-        class="hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md m-3 p-3 bg-white ring-1 ring-slate-200 shadow-sm"
+        class="hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       >
         <dl class="items-center">
           <div>
