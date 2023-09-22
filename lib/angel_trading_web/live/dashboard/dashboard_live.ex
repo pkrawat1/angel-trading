@@ -44,7 +44,7 @@ defmodule AngelTradingWeb.DashboardLive do
       <div class="text-2xl mt-5 flex justify-between">
         <small>
           Invested Value<br />
-          <%= number_to_currency(@total_current, precision: 0) %> <br />
+          <%= number_to_currency(@total_invested, precision: 0) %> <br />
         </small>
         <small :if={@in_overall_profit_today?}>
           <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Today's gain<br />
