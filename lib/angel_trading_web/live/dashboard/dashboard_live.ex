@@ -81,14 +81,17 @@ defmodule AngelTradingWeb.DashboardLive do
                   <%= holding["exchange"] %>
                 </small>
               </span>
-              <span class={[
-                if(holding["in_overall_profit?"], do: "text-green-600", else: "text-red-600")
-              ]}>
-                <%= number_to_currency(holding["overall_gain_or_loss"]) %> (<%= holding[
-                  "overall_gain_or_loss_percent"
-                ]
-                |> Float.floor(2) %>%)
-              </span>
+              <div>
+                <span :if={holding["in_overall_profit?"]} class="text-green-600">
+                  <%= number_to_currency(holding["overall_gain_or_loss"]) %>
+                </span>
+                <span :if={!holding["in_overall_profit?"]} class="text-red-600">
+                  <%= number_to_currency(holding["overall_gain_or_loss"]) %>
+                </span>
+                <small>
+                  (<%= holding["overall_gain_or_loss_percent"] |> Float.floor(2) %>%)
+                </small>
+              </div>
             </dd>
           </div>
           <div>
@@ -96,10 +99,18 @@ defmodule AngelTradingWeb.DashboardLive do
               <span>
                 Avg <%= number_to_currency(holding["averageprice"]) %>
               </span>
-              <span class={[if(holding["is_gain_today?"], do: "text-green-600", else: "text-red-600")]}>
-                LTP <%= number_to_currency(holding["ltp"]) %> (<%= holding["ltp_percent"]
-                |> Float.floor(2) %>%)
-              </span>
+              <div>
+                <span :if={holding["is_gain_today?"]} class="text-green-600">
+                  LTP <%= number_to_currency(holding["ltp"]) %>
+                </span>
+                <span :if={!holding["is_gain_today?"]} class="text-red-600">
+                  LTP <%= number_to_currency(holding["ltp"]) %>
+                </span>
+                <span>
+                  (<%= holding["ltp_percent"]
+                  |> Float.floor(2) %>%)
+                </span>
+              </div>
             </dd>
           </div>
           <div>
@@ -107,20 +118,27 @@ defmodule AngelTradingWeb.DashboardLive do
               <span>
                 Shares <%= holding["quantity"] %>
               </span>
-              <span class={[if(holding["is_gain_today?"], do: "text-green-600", else: "text-red-600")]}>
-                <%= if holding["is_gain_today?"], do: "Today's gain", else: "Today's loss" %> <%= number_to_currency(
-                  holding[
-                    "todays_profit_or_loss"
-                  ]
-                ) %> (<%= holding["todays_profit_or_loss_percent"]
-                |> Float.floor(2) %>%)
-              </span>
+              <div>
+                <span :if={holding["is_gain_today?"]} class="text-green-600">
+                  Today's gain <%= number_to_currency(
+                    holding[
+                      "todays_profit_or_loss"
+                    ]
+                  ) %>
+                </span>
+                <span :if={!holding["is_gain_today?"]} class="text-red-600">
+                  Today's Loss <%= number_to_currency(holding["todays_profit_or_loss"]) %>
+                </span>
+                <span>
+                  (<%= holding["todays_profit_or_loss_percent"] |> Float.floor(2) %>%)
+                </span>
+              </div>
             </dd>
           </div>
           <hr />
           <div>
             <dt class="sr-only">Invested Amount</dt>
-            <dd class="text-xs flex justify-between">
+            <dd class="text-xs flex justify-between pt-2">
               <span>
                 Invested <%= number_to_currency(holding["invested"], precision: 0) %>
               </span>
