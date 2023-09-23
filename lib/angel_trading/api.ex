@@ -2,10 +2,19 @@ defmodule AngelTrading.API do
   use Tesla
 
   @routes %{
+    socket: "ws://smartapisocket.angelone.in/smart-stream",
     login: "rest/auth/angelbroking/user/v1/loginByPassword",
     profile: "rest/secure/angelbroking/user/v1/getProfile",
     portfolio: "rest/secure/angelbroking/portfolio/v1/getHolding"
   }
+
+  def socket(client_code, token, feed_token) do
+    AngelTrading.WebSocket.start_link(%{
+      client_code: client_code,
+      token: token,
+      feed_token: feed_token
+    })
+  end
 
   def login(%{"clientcode" => _, "password" => _, "totp" => _} = params) do
     client()
@@ -49,7 +58,7 @@ defmodule AngelTrading.API do
       Tesla.Middleware.JSON,
       {Tesla.Middleware.Headers, headers},
       {Tesla.Middleware.Retry,
-       delay: 500,
+       delay: 1000,
        max_retries: 10,
        max_delay: 4_000,
        should_retry: fn

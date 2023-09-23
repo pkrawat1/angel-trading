@@ -19,7 +19,7 @@ defmodule AngelTradingWeb.Router do
   scope "/", AngelTradingWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
     live "/login", LoginLive
-    get "/session/:token/:refresh_token/:feed_token", SessionController, :create
+    get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :create
   end
 
   scope "/", AngelTradingWeb do

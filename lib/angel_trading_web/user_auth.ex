@@ -8,35 +8,37 @@ defmodule AngelTradingWeb.UserAuth do
   @remember_me_options [sign: true, same_site: "Lax"]
 
   def login_in_user(conn, %{
+        "client_code" => client_code,
         "token" => token,
         "refresh_token" => refresh_token,
         "feed_token" => feed_token
       }) do
     conn
-    |> put_tokens_in_session(token, refresh_token, feed_token)
+    |> put_tokens_in_session(token, refresh_token, feed_token, client_code)
     |> redirect(to: "/")
   end
 
   def fetch_user_session(conn, _opts) do
-    if get_session(conn, :token) do
-      conn
-    else
+    # if get_session(conn, :token) do
+      # conn
+    # else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      with [token, refresh_token, feed_token] <-
+      with [token, refresh_token, feed_token, client_code] <-
              String.split(conn.cookies[@remember_me_cookie] || "", "|") do
-        put_tokens_in_session(conn, token, refresh_token, feed_token)
+        put_tokens_in_session(conn, token, refresh_token, feed_token, client_code)
       else
         _ ->
           conn
       end
-    end
+    # end
   end
 
-  defp put_tokens_in_session(conn, token, refresh_token, feed_token) do
+  defp put_tokens_in_session(conn, token, refresh_token, feed_token, client_code) do
     conn
     |> configure_session(renew: true)
     |> clear_session()
+    |> put_session(:client_code, client_code)
     |> put_session(:token, token)
     |> put_session(:refresh_token, refresh_token)
     |> put_session(:feed_token, feed_token)
@@ -44,10 +46,14 @@ defmodule AngelTradingWeb.UserAuth do
       :session_expiry,
       session_valid_till()
     )
-    |> put_resp_cookie(@remember_me_cookie, token <> "|" <> refresh_token <> "|" <> feed_token, [
-      {:max_age, Timex.diff(session_valid_till(), Timex.now("Asia/Kolkata"), :seconds)}
-      | @remember_me_options
-    ])
+    |> put_resp_cookie(
+      @remember_me_cookie,
+      token <> "|" <> refresh_token <> "|" <> feed_token <> "|" <> client_code,
+      [
+        {:max_age, Timex.diff(session_valid_till(), Timex.now("Asia/Kolkata"), :seconds)}
+        | @remember_me_options
+      ]
+    )
   end
 
   def ensure_authenticated(conn, _opts) do

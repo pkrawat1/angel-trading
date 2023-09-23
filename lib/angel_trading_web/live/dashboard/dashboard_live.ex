@@ -3,13 +3,23 @@ defmodule AngelTradingWeb.DashboardLive do
   alias AngelTrading.API
   import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
 
-  def mount(_params, %{"token" => token}, socket) do
+  def mount(
+        _params,
+        %{"token" => token, "client_code" => client_code, "feed_token" => feed_token},
+        socket
+      ) do
     if connected?(socket) do
-      :ok = AngelTradingWeb.Endpoint.subscribe("dashboard")
-      :timer.send_interval(5000, self(), :tick)
+      :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+      :timer.send_interval(1000, self(), :tick)
     end
 
-    {:ok, socket |> assign(:token, token) |> get_portfolio_data()}
+    {:ok,
+     socket
+     |> assign(:token, token)
+     |> assign(:client_code, client_code)
+     |> assign(:feed_token, feed_token)
+     |> assign(:socket_client, nil)
+     |> get_portfolio_data()}
   end
 
   def render(assigns) do
@@ -153,8 +163,63 @@ defmodule AngelTradingWeb.DashboardLive do
     """
   end
 
-  def handle_info(:tick, socket) do
-    {:noreply, get_portfolio_data(socket)}
+  def handle_info(
+        :tick,
+        %{
+          assigns: %{
+            client_code: client_code,
+            token: token,
+            feed_token: feed_token,
+            socket_client: socket_client
+          }
+        } = socket
+      ) do
+    {:ok, socket_client} =
+      if is_nil(socket_client) or !Process.alive?(socket_client) do
+        AngelTrading.API.socket(client_code, token, feed_token)
+      else
+        {:ok, socket_client}
+      end
+
+    # IO.inspect socket_client
+
+    WebSockex.send_frame(
+      socket_client,
+      {:text,
+       Jason.encode!(%{
+         correlationID: "abcde12345",
+         action: 1,
+         params: %{
+           mode: 2,
+           tokenList: [
+             %{
+               exchangeType: 1,
+               tokens: Enum.map(socket.assigns.holdings, & &1["symboltoken"])
+             }
+           ]
+         }
+       })}
+    )
+
+    {:noreply, socket |> assign(:socket_client, socket_client)}
+  end
+
+  def handle_info(%{payload: quote_data}, %{assigns: %{holdings: holdings}} = socket) do
+    holdings =
+      holdings
+      |> Enum.map(fn holding ->
+        if holding["symboltoken"] == quote_data.token do
+          holding = %{holding | "ltp" => quote_data.last_traded_price / 100}
+        else
+          holding
+        end
+      end)
+      |> formatted_holdings()
+
+    {:noreply,
+     socket
+     |> calculated_overview(holdings)
+     |> assign(holdings: Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"])))}
   end
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
