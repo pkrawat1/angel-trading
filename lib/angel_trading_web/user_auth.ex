@@ -20,17 +20,18 @@ defmodule AngelTradingWeb.UserAuth do
 
   def fetch_user_session(conn, _opts) do
     # if get_session(conn, :token) do
-      # conn
+    # conn
     # else
-      conn = fetch_cookies(conn, signed: [@remember_me_cookie])
+    conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      with [token, refresh_token, feed_token, client_code] <-
-             String.split(conn.cookies[@remember_me_cookie] || "", "|") do
-        put_tokens_in_session(conn, token, refresh_token, feed_token, client_code)
-      else
-        _ ->
-          conn
-      end
+    with [token, refresh_token, feed_token, client_code] <-
+           String.split(conn.cookies[@remember_me_cookie] || "", "|") do
+      put_tokens_in_session(conn, token, refresh_token, feed_token, client_code)
+    else
+      _ ->
+        conn
+    end
+
     # end
   end
 

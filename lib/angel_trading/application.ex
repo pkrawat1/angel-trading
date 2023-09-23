@@ -15,7 +15,7 @@ defmodule AngelTrading.Application do
       # Start Finch
       {Finch, name: AngelTrading.Finch},
       # Start the Endpoint (http/https)
-      AngelTradingWeb.Endpoint,
+      AngelTradingWeb.Endpoint
       # Start a worker by calling: AngelTrading.Worker.start_link(arg)
       # {AngelTrading.Worker, arg}
     ]

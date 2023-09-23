@@ -15,7 +15,7 @@ defmodule AngelTrading.WebSocket do
         extra_headers: extra_headers
       )
 
-    :timer.send_interval(30000, pid, :tick)
+    :timer.send_interval(15000, pid, :tick)
     {:ok, pid}
   end
 
@@ -43,7 +43,7 @@ defmodule AngelTrading.WebSocket do
       close_price::little-integer-size(64), _rest::binary>> = msg
 
     AngelTradingWeb.Endpoint.broadcast("portfolio-for-#{state.client_code}", "message", %{
-      token: token |> to_charlist |> Enum.filter(& &1 != 0) |> to_string,
+      token: token |> to_charlist |> Enum.filter(&(&1 != 0)) |> to_string,
       subscription_mode: subscription_mode,
       exchange_type: exchange_type,
       last_traded_price: last_traded_price,

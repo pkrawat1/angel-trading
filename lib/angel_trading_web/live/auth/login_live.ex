@@ -49,7 +49,9 @@ defmodule AngelTradingWeb.LoginLive do
           }} <-
            API.login(params) do
       clientcode = params["clientcode"]
-      {:noreply, redirect(socket, to: ~p"/session/#{clientcode}/#{token}/#{refresh_token}/#{feed_token}")}
+
+      {:noreply,
+       redirect(socket, to: ~p"/session/#{clientcode}/#{token}/#{refresh_token}/#{feed_token}")}
     else
       {:error, %{"message" => message}} ->
         {
