@@ -35,19 +35,19 @@ defmodule AngelTradingWeb.DashboardLive do
         <small :if={@in_overall_profit?}>
           <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Overall gain
           <span class="text-green-600">
-            <%= number_to_currency(@total_overall_gain_or_loss, precision: 0) %> (%<%= Float.floor(
+            <%= number_to_currency(@total_overall_gain_or_loss, precision: 0) %> (<%= Float.floor(
               @total_overall_gain_or_loss_percent,
               2
-            ) %>)
+            ) %> %)
           </span>
         </small>
         <small :if={!@in_overall_profit?}>
           <.icon name="hero-arrow-down text-red-600" /> Overall loss
           <span class="text-red-600">
-            <%= number_to_currency(@total_overall_gain_or_loss) %> (%<%= Float.floor(
+            <%= @total_overall_gain_or_loss |> abs() |> number_to_currency() %> (<%= Float.floor(
               @total_overall_gain_or_loss_percent,
               2
-            ) %>)
+            ) %>%)
           </span>
         </small>
       </div>
@@ -59,19 +59,19 @@ defmodule AngelTradingWeb.DashboardLive do
         <small :if={@in_overall_profit_today?}>
           <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Today's gain<br />
           <span class="text-green-600">
-            <%= number_to_currency(@total_todays_gain_or_loss, precision: 0) %> (%<%= Float.floor(
+            <%= number_to_currency(@total_todays_gain_or_loss, precision: 0) %> (<%= Float.floor(
               @total_todays_gain_or_loss_percent,
               2
-            ) %>)
+            ) %>%)
           </span>
         </small>
         <small :if={!@in_overall_profit_today?}>
           <.icon name="hero-arrow-down w-4 h-4 text-red-600" /> Today's Loss<br />
           <span class="text-red-600">
-            <%= number_to_currency(@total_todays_gain_or_loss, precision: 0) %> (%<%= Float.floor(
+            <%= @total_todays_gain_or_loss |> abs() |> number_to_currency(precision: 0) %> (<%= Float.floor(
               @total_todays_gain_or_loss_percent,
               2
-            ) %>)
+            ) %>%)
           </span>
         </small>
       </div>
@@ -96,7 +96,7 @@ defmodule AngelTradingWeb.DashboardLive do
                   <%= number_to_currency(holding["overall_gain_or_loss"]) %>
                 </span>
                 <span :if={!holding["in_overall_profit?"]} class="text-red-600">
-                  <%= number_to_currency(holding["overall_gain_or_loss"]) %>
+                  <%= holding["overall_gain_or_loss"] |> abs() |> number_to_currency() %>
                 </span>
                 <small>
                   (<%= holding["overall_gain_or_loss_percent"] |> Float.floor(2) %>%)
@@ -137,7 +137,7 @@ defmodule AngelTradingWeb.DashboardLive do
                   ) %>
                 </span>
                 <span :if={!holding["is_gain_today?"]} class="text-red-600">
-                  Today's Loss <%= number_to_currency(holding["todays_profit_or_loss"]) %>
+                  Today's Loss <%= holding["todays_profit_or_loss"] |> abs() |> number_to_currency() %>
                 </span>
                 <span>
                   (<%= holding["todays_profit_or_loss_percent"] |> Float.floor(2) %>%)
