@@ -7,11 +7,20 @@
     </div>
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
       <a
+        :if={!assigns[:current_user]}
         href="https://www.angelone.in/open-demat-account"
         class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
       >
         Open Demat Account <span aria-hidden="true">&rarr;</span>
       </a>
+      <.link
+        :if={assigns[:current_user]}
+        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
+        method={:delete}
+        href={~p"/session/logout"}
+      >
+        Logout
+      </.link>
     </div>
   </div>
 </header>

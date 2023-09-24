@@ -25,6 +25,7 @@ defmodule AngelTradingWeb.Router do
   scope "/", AngelTradingWeb do
     pipe_through [:browser]
 
+    delete "/session/logout", SessionController, :delete
     live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
       live "/", DashboardLive
     end

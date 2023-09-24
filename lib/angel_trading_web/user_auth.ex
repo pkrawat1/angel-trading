@@ -18,21 +18,39 @@ defmodule AngelTradingWeb.UserAuth do
     |> redirect(to: "/")
   end
 
-  def fetch_user_session(conn, _opts) do
-    # if get_session(conn, :token) do
-    # conn
-    # else
-    conn = fetch_cookies(conn, signed: [@remember_me_cookie])
-
-    with [token, refresh_token, feed_token, client_code] <-
-           String.split(conn.cookies[@remember_me_cookie] || "", "|") do
-      put_tokens_in_session(conn, token, refresh_token, feed_token, client_code)
+  def logout_user(conn, _params) do
+    with token <- get_session(conn, :token),
+         client_code <- get_session(conn, :client_code),
+         {:ok, _} <- AngelTrading.API.logout(token, client_code) do
+      conn
+      |> configure_session(renew: true)
+      |> clear_session()
+      |> delete_resp_cookie(@remember_me_cookie)
+      |> redirect(to: ~p"/login")
     else
-      _ ->
+      {:error, _} ->
         conn
+        |> put_flash(:error, "You must log in to access this page.")
+        |> redirect(to: ~p"/login")
+        |> halt()
     end
+  end
 
-    # end
+  def fetch_user_session(conn, _opts) do
+    if get_session(conn, :token) do
+      conn
+    else
+      conn = fetch_cookies(conn, signed: [@remember_me_cookie])
+
+      with [token, refresh_token, feed_token, client_code] <-
+             String.split(conn.cookies[@remember_me_cookie] || "", "|") do
+        put_tokens_in_session(conn, token, refresh_token, feed_token, client_code)
+      else
+        _ ->
+          conn
+      end
+    end
+    |> assign(:current_user, get_session(conn, :client_code))
   end
 
   defp put_tokens_in_session(conn, token, refresh_token, feed_token, client_code) do
@@ -80,6 +98,7 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
+    socket = mount_current_user(session, socket)
     if session_valid?(session) do
       {:cont, socket}
     else
@@ -91,11 +110,16 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
+    socket = mount_current_user(session, socket)
     if session_valid?(session) do
       {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
     else
       {:cont, socket}
     end
+  end
+
+  defp mount_current_user(session, socket) do
+    Phoenix.Component.assign_new(socket, :current_user, fn -> session["client_code"] end)
   end
 
   defp signed_in_path(_conn), do: ~p"/"
