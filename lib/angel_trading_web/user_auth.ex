@@ -3,6 +3,7 @@ defmodule AngelTradingWeb.UserAuth do
 
   import Plug.Conn
   import Phoenix.Controller
+  alias AngelTrading.API
 
   @remember_me_cookie "_angel_remember_me"
   @remember_me_options [sign: true, same_site: "Lax"]
@@ -21,7 +22,7 @@ defmodule AngelTradingWeb.UserAuth do
   def logout_user(conn, _params) do
     with token <- get_session(conn, :token),
          client_code <- get_session(conn, :client_code),
-         {:ok, _} <- AngelTrading.API.logout(token, client_code) do
+         {:ok, _} <- API.logout(token, client_code) do
       conn
       |> configure_session(renew: true)
       |> clear_session()
@@ -69,7 +70,7 @@ defmodule AngelTradingWeb.UserAuth do
       @remember_me_cookie,
       token <> "|" <> refresh_token <> "|" <> feed_token <> "|" <> client_code,
       [
-        {:max_age, Timex.diff(session_valid_till(), Timex.now("Asia/Kolkata"), :seconds)}
+        {:max_age, Timex.diff(session_valid_till(), now(), :seconds)}
         | @remember_me_options
       ]
     )
@@ -99,6 +100,7 @@ defmodule AngelTradingWeb.UserAuth do
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_user(session, socket)
+
     if session_valid?(session) do
       {:cont, socket}
     else
@@ -111,6 +113,7 @@ defmodule AngelTradingWeb.UserAuth do
 
   def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
     socket = mount_current_user(session, socket)
+
     if session_valid?(session) do
       {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
     else
@@ -125,14 +128,25 @@ defmodule AngelTradingWeb.UserAuth do
   defp signed_in_path(_conn), do: ~p"/"
 
   defp session_valid?(%{"session_expiry" => session_expiry}),
-    do: Timex.after?(session_expiry, Timex.now("Asia/Kolkata"))
+    do: Timex.after?(session_expiry, now())
 
   defp session_valid?(_session), do: false
 
-  defp session_valid_till(),
-    do:
-      Timex.now("Asia/Calcutta")
+  defp session_valid_till() do
+    current_time = now()
+
+    expiry_date =
+      current_time
       |> Timex.shift(days: 1)
       |> Timex.beginning_of_day()
       |> Timex.shift(hours: 5)
+
+    if Timex.diff(expiry_date, current_time, :days) do
+      expiry_date
+    else
+      expiry_date |> Timex.shift(days: -1)
+    end
+  end
+
+  defp now(), do: Timex.now("Asia/Kolkata")
 end

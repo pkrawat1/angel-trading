@@ -5,6 +5,7 @@ defmodule AngelTrading.API do
     socket: "ws://smartapisocket.angelone.in/smart-stream",
     login: "rest/auth/angelbroking/user/v1/loginByPassword",
     logout: "rest/secure/angelbroking/user/v1/logout",
+    generate_token: "rest/auth/angelbroking/jwt/v1/generateTokens",
     profile: "rest/secure/angelbroking/user/v1/getProfile",
     portfolio: "rest/secure/angelbroking/portfolio/v1/getHolding"
   }
@@ -23,9 +24,15 @@ defmodule AngelTrading.API do
     |> gen_response()
   end
 
-  def logout(token, clientcode) do
+  def logout(token, client_code) do
     client(token)
-    |> post(@routes.logout, %{"clientcode" => clientcode})
+    |> post(@routes.logout, %{"clientcode" => client_code})
+    |> gen_response()
+  end
+
+  def generate_token(token, refresh_token) do
+    client(token)
+    |> post(@routes.generate_token, %{"refreshToken" => refresh_token})
     |> gen_response()
   end
 
