@@ -19,7 +19,7 @@ defmodule AngelTrading.MixProject do
   def application do
     [
       mod: {AngelTrading.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :websockex]
     ]
   end
 
@@ -46,7 +46,12 @@ defmodule AngelTrading.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:tesla, "~> 1.4"},
+      {:websockex, "~> 0.4.3"},
+      {:plug_cowboy, "~> 2.5"},
+      {:number, "~> 1.0"},
+      {:timex, "~> 3.0"},
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
 

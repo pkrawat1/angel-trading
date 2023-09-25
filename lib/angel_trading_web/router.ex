@@ -1,9 +1,11 @@
 defmodule AngelTradingWeb.Router do
   use AngelTradingWeb, :router
+  import AngelTradingWeb.UserAuth
 
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug :fetch_user_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {AngelTradingWeb.Layouts, :root}
     plug :protect_from_forgery
@@ -15,9 +17,20 @@ defmodule AngelTradingWeb.Router do
   end
 
   scope "/", AngelTradingWeb do
-    pipe_through :browser
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+    live_session :no_auth, on_mount: [{AngelTradingWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/login", LoginLive
+    end
+    get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :create
+  end
 
-    get "/", PageController, :home
+  scope "/", AngelTradingWeb do
+    pipe_through [:browser]
+
+    delete "/session/logout", SessionController, :delete
+    live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
+      live "/", DashboardLive
+    end
   end
 
   # Other scopes may use custom stacks.
