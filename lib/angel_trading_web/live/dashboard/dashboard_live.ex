@@ -10,7 +10,7 @@ defmodule AngelTradingWeb.DashboardLive do
       ) do
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      :timer.send_interval(3000, self(), :tick)
+      :timer.send_interval(1000, self(), :tick)
     end
 
     {:ok,
@@ -18,7 +18,6 @@ defmodule AngelTradingWeb.DashboardLive do
      |> assign(:token, token)
      |> assign(:client_code, client_code)
      |> assign(:feed_token, feed_token)
-     |> assign(:socket_client, nil)
      |> get_portfolio_data()}
   end
 
@@ -169,22 +168,18 @@ defmodule AngelTradingWeb.DashboardLive do
           assigns: %{
             client_code: client_code,
             token: token,
-            feed_token: feed_token,
-            socket_client: socket_client
+            feed_token: feed_token
           }
         } = socket
       ) do
-    {:ok, socket_client} =
-      if is_nil(socket_client) or !Process.alive?(socket_client) do
-        AngelTrading.API.socket(client_code, token, feed_token)
-      else
-        {:ok, socket_client}
-      end
+    socket_process = :"#{client_code}"
 
-    # IO.inspect socket_client
+    unless Process.whereis(socket_process) do
+      AngelTrading.API.socket(client_code, token, feed_token)
+    end
 
     WebSockex.send_frame(
-      socket_client,
+      socket_process,
       {:text,
        Jason.encode!(%{
          correlationID: "abcde12345",
@@ -201,7 +196,7 @@ defmodule AngelTradingWeb.DashboardLive do
        })}
     )
 
-    {:noreply, socket |> assign(:socket_client, socket_client)}
+    {:noreply, socket}
   end
 
   def handle_info(%{payload: quote_data}, %{assigns: %{holdings: holdings}} = socket) do
@@ -209,7 +204,7 @@ defmodule AngelTradingWeb.DashboardLive do
       holdings
       |> Enum.map(fn holding ->
         if holding["symboltoken"] == quote_data.token do
-          holding = %{holding | "ltp" => quote_data.last_traded_price / 100}
+          %{holding | "ltp" => quote_data.last_traded_price / 100}
         else
           holding
         end

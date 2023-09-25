@@ -10,13 +10,15 @@ defmodule AngelTrading.WebSocket do
       {"x-feed-token", feed_token}
     ]
 
-    {:ok, pid} =
+    name = :"#{client_code}"
+    {:ok, _} =
       WebSockex.start_link(@url, __MODULE__, %{client_code: client_code},
-        extra_headers: extra_headers
+        extra_headers: extra_headers,
+        name: name 
       )
 
-    :timer.send_interval(15000, pid, :tick)
-    {:ok, pid}
+    :timer.send_interval(15000, name, :tick)
+    {:ok, name}
   end
 
   def handle_info(
