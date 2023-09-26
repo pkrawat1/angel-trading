@@ -10,7 +10,7 @@ defmodule AngelTradingWeb.DashboardLive do
       ) do
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      :timer.send_interval(10000, self(), :subscribe_to_feed)
+      :timer.send_interval(2000, self(), :subscribe_to_feed)
     end
 
     {:ok,
@@ -35,25 +35,25 @@ defmodule AngelTradingWeb.DashboardLive do
 
     unless Process.whereis(socket_process) do
       AngelTrading.API.socket(client_code, token, feed_token)
-    end
 
-    WebSockex.send_frame(
-      socket_process,
-      {:text,
-       Jason.encode!(%{
-         correlationID: "abcde12345",
-         action: 1,
-         params: %{
-           mode: 2,
-           tokenList: [
-             %{
-               exchangeType: 1,
-               tokens: Enum.map(socket.assigns.holdings, & &1["symboltoken"])
-             }
-           ]
-         }
-       })}
-    )
+      WebSockex.send_frame(
+        socket_process,
+        {:text,
+         Jason.encode!(%{
+           correlationID: "abcde12345",
+           action: 1,
+           params: %{
+             mode: 2,
+             tokenList: [
+               %{
+                 exchangeType: 1,
+                 tokens: Enum.map(socket.assigns.holdings, & &1["symboltoken"])
+               }
+             ]
+           }
+         })}
+      )
+    end
 
     {:noreply, socket}
   end
