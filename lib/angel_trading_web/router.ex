@@ -18,9 +18,12 @@ defmodule AngelTradingWeb.Router do
 
   scope "/", AngelTradingWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
-    live_session :no_auth, on_mount: [{AngelTradingWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+
+    live_session :no_auth,
+      on_mount: [{AngelTradingWeb.UserAuth, :redirect_if_user_is_authenticated}] do
       live "/login", LoginLive
     end
+
     get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :create
   end
 
@@ -28,6 +31,7 @@ defmodule AngelTradingWeb.Router do
     pipe_through [:browser]
 
     delete "/session/logout", SessionController, :delete
+
     live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
       live "/", DashboardLive
     end
