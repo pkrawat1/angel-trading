@@ -1,6 +1,17 @@
 # AngelTrading
 
+Hey there, Elixir enthusiasts!
+
 I developed this application as a personal passion project. The primary goal is to design a comprehensive dashboard that provides a centralized hub for managing and monitoring multiple portfolios, all accessible from a single device. While it's still a work in progress, you're invited to log in and explore your portfolio, complete with real-time updates.
+
+Implements
+- Authentication
+- Portfolio Holdings
+- External(AngelOne SmarAPI) API / Socket connections using Tesla and Websockex
+- binary data parsing via pattern matching
+- syncing data feed from external web socket communication with Live view via broadcasting
+
+Demo of streams : https://lnkd.in/dqpBTh5m
 
 <div>
   <a href="https://www.loom.com/share/aa2ffe38c154459f9731eee406ba2a06">
