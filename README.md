@@ -16,6 +16,7 @@ I developed this application as a personal passion project. The primary goal is 
 
 To start your Phoenix server:
 
+  * copy and add required creds in .envrc. Credentials can be created using smartapi angel website.
   * Run `mix setup` to install and setup dependencies
   * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
