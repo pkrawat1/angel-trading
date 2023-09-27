@@ -2,8 +2,8 @@
 
 I developed this application as a personal passion project. The primary goal is to design a comprehensive dashboard that provides a centralized hub for managing and monitoring multiple portfolios, all accessible from a single device. While it's still a work in progress, you're invited to log in and explore your portfolio, complete with real-time updates.
 
-<img width="400" alt="Screenshot 2023-09-27 at 7 51 14 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/345cfa75-f77b-4d26-acb6-2791bf932faa">
-<img width="400" alt="Screenshot 2023-09-27 at 8 02 31 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/a5662719-7012-498e-bd44-dd75da0250f6">
+<img width="200" alt="Screenshot 2023-09-27 at 7 51 14 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/345cfa75-f77b-4d26-acb6-2791bf932faa">
+<img width="200" alt="Screenshot 2023-09-27 at 8 02 31 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/a5662719-7012-498e-bd44-dd75da0250f6">
 
 <div>
   <a href="https://www.loom.com/share/aa2ffe38c154459f9731eee406ba2a06">
