@@ -24,6 +24,7 @@ defmodule AngelTradingWeb.Router do
       live "/login", LoginLive
     end
 
+    # TODO : update to post, once created session sharing url
     get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :create
   end
 
