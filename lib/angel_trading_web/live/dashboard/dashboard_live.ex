@@ -15,6 +15,7 @@ defmodule AngelTradingWeb.DashboardLive do
 
     {:ok,
      socket
+     |> assign(:page_title, "Portfolio")
      |> assign(:token, token)
      |> assign(:client_code, client_code)
      |> assign(:feed_token, feed_token)
