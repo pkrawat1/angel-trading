@@ -106,24 +106,27 @@ defmodule AngelTradingWeb.DashboardLive do
   # Using float calculation as of now. Since most of the data is coming from angel api.
   # I could add ex_money to manage calculations in decimal money format.
   defp formatted_holdings(holdings) do
-    Enum.map(holdings, fn %{
-                            "authorisedquantity" => _,
-                            "averageprice" => averageprice,
-                            "close" => close,
-                            "collateralquantity" => _,
-                            "collateraltype" => _,
-                            "exchange" => _,
-                            "haircut" => _,
-                            "isin" => _,
-                            "ltp" => ltp,
-                            "product" => _,
-                            "profitandloss" => _,
-                            "quantity" => quantity,
-                            "realisedquantity" => _,
-                            "symboltoken" => symboltoken,
-                            "t1quantity" => _,
-                            "tradingsymbol" => _
-                          } = holding ->
+    holdings
+    # Filter cases where stock is in split state
+    |> Enum.filter(&(&1["symboltoken"] != ""))
+    |> Enum.map(fn %{
+                     "authorisedquantity" => _,
+                     "averageprice" => averageprice,
+                     "close" => close,
+                     "collateralquantity" => _,
+                     "collateraltype" => _,
+                     "exchange" => _,
+                     "haircut" => _,
+                     "isin" => _,
+                     "ltp" => ltp,
+                     "product" => _,
+                     "profitandloss" => _,
+                     "quantity" => quantity,
+                     "realisedquantity" => _,
+                     "symboltoken" => symboltoken,
+                     "t1quantity" => _,
+                     "tradingsymbol" => _
+                   } = holding ->
       invested = quantity * averageprice
       current = quantity * ltp
       overall_gain_or_loss = quantity * (ltp - averageprice)
