@@ -1,6 +1,6 @@
 defmodule AngelTrading.WebSocket do
   use WebSockex
-  @url "ws://smartapisocket.angelone.in/smart-stream"
+  @url "wss://smartapisocket.angelone.in/smart-stream"
 
   def start_link(%{client_code: client_code, token: token, feed_token: feed_token}) do
     extra_headers = [
