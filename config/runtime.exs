@@ -99,10 +99,13 @@ if config_env() == :prod do
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
   config :angel_trading,
-    api_endpoint: System.get_env("API_ENDPOINT"),
+    api_key: System.get_env("API_KEY")
+
+  config :trade_galleon, TradeGalleon.Brokers.AngelOne,
+    adapter: TradeGalleon.Brokers.AngelOne,
     api_key: System.get_env("API_KEY"),
-    local_ip: System.get_env("LOCAL_IP"),
-    public_ip: System.get_env("PUBLIC_IP"),
-    mac_address: System.get_env("MAC_ADDRESS"),
+    local_ip: System.get_env("LOCAL_IP", "192.168.168.168"),
+    public_ip: System.get_env("PUBLIC_IP", "106.193.147.98"),
+    mac_address: System.get_env("MAC_ADDRESS", "fe80::216e:6507:4b90:3719"),
     secret_key: System.get_env("SECRET_KEY")
 end

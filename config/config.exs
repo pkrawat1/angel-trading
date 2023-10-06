@@ -56,6 +56,9 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :angel_trading,
+  api_key: System.get_env("API_KEY")
+
 config :trade_galleon, TradeGalleon.Brokers.AngelOne,
   adapter: TradeGalleon.Brokers.AngelOne,
   api_key: System.get_env("API_KEY"),
