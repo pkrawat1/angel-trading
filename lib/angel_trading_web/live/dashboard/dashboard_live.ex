@@ -99,6 +99,7 @@ defmodule AngelTradingWeb.DashboardLive do
       )
     else
       {:error, %{"message" => message}} ->
+        IO.inspect(message)
         put_flash(socket, :error, message)
     end
   end

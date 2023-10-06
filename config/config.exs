@@ -56,8 +56,8 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :angel_trading,
-  api_endpoint: System.get_env("API_ENDPOINT"),
+config :trade_galleon, TradeGalleon.Brokers.AngelOne,
+  adapter: TradeGalleon.Brokers.AngelOne,
   api_key: System.get_env("API_KEY"),
   local_ip: System.get_env("LOCAL_IP", "192.168.168.168"),
   public_ip: System.get_env("PUBLIC_IP", "106.193.147.98"),
