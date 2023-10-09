@@ -20,20 +20,11 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   def logout_user(conn, _params) do
-    with token <- get_session(conn, :token),
-         client_code <- get_session(conn, :client_code) do
-      conn
-      |> configure_session(renew: true)
-      |> clear_session()
-      |> delete_resp_cookie(@remember_me_cookie)
-      |> redirect(to: ~p"/login")
-    else
-      {:error, _} ->
-        conn
-        |> put_flash(:error, "You must log in to access this page.")
-        |> redirect(to: ~p"/login")
-        |> halt()
-    end
+    conn
+    |> configure_session(renew: true)
+    |> clear_session()
+    |> delete_resp_cookie(@remember_me_cookie)
+    |> redirect(to: ~p"/login")
   end
 
   def fetch_user_session(conn, _opts) do
