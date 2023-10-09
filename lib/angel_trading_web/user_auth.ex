@@ -21,8 +21,7 @@ defmodule AngelTradingWeb.UserAuth do
 
   def logout_user(conn, _params) do
     with token <- get_session(conn, :token),
-         client_code <- get_session(conn, :client_code),
-         {:ok, _} <- API.logout(token, client_code) do
+         client_code <- get_session(conn, :client_code) do
       conn
       |> configure_session(renew: true)
       |> clear_session()
@@ -38,9 +37,6 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   def fetch_user_session(conn, _opts) do
-    conn = fetch_cookies(conn, signed: [@remember_me_cookie])
-    IO.inspect(get_session(conn))
-
     if get_session(conn, :token) do
       conn
     else
