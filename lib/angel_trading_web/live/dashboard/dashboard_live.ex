@@ -15,7 +15,7 @@ defmodule AngelTradingWeb.DashboardLive do
       ) do
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      # :timer.send_interval(2000, self(), :subscribe_to_feed)
+      :timer.send_interval(2000, self(), :subscribe_to_feed)
     end
 
     {:ok,
