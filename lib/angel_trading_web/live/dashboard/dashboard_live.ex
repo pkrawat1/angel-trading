@@ -5,12 +5,17 @@ defmodule AngelTradingWeb.DashboardLive do
 
   def mount(
         _params,
-        %{"token" => token, "client_code" => client_code, "feed_token" => feed_token},
+        %{
+          "token" => token,
+          "client_code" => client_code,
+          "feed_token" => feed_token,
+          "refresh_token" => refresh_token
+        },
         socket
       ) do
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      :timer.send_interval(2000, self(), :subscribe_to_feed)
+      # :timer.send_interval(2000, self(), :subscribe_to_feed)
     end
 
     {:ok,
@@ -19,6 +24,7 @@ defmodule AngelTradingWeb.DashboardLive do
      |> assign(:token, token)
      |> assign(:client_code, client_code)
      |> assign(:feed_token, feed_token)
+     |> assign(:refresh_token, refresh_token)
      |> get_portfolio_data()}
   end
 

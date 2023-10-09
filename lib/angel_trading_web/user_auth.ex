@@ -38,6 +38,9 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   def fetch_user_session(conn, _opts) do
+    conn = fetch_cookies(conn, signed: [@remember_me_cookie])
+    IO.inspect(get_session(conn))
+
     if get_session(conn, :token) do
       conn
     else
