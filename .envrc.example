@@ -6,3 +6,5 @@ export SECRET_KEY=
 export LOCAL_IP=
 export PUBLIC_IP=
 export MAC_ADDRESS=
+export FIREBASE_TOKEN=
+export FIREBASE_API=
