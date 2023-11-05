@@ -24,17 +24,19 @@ defmodule AngelTradingWeb.Router do
       live "/login", LoginLive
     end
 
-    # TODO : update to post, once created session sharing url
-    get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :create
+    get "/session/:user/:password", SessionController, :create
   end
 
   scope "/", AngelTradingWeb do
     pipe_through [:browser]
 
     delete "/session/logout", SessionController, :delete
+    get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :client_create
 
     live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
+      live "/client/login", ClientLoginLive
       live "/", DashboardLive
+      live "/client/:client_code/portfolio", PortfolioLive
     end
   end
 

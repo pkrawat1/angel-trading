@@ -3,19 +3,49 @@ defmodule AngelTradingWeb.UserAuth do
 
   import Plug.Conn
   import Phoenix.Controller
-  alias AngelTrading.API
+  alias AngelTrading.{Account}
 
   @remember_me_cookie "_angel_remember_me"
   @remember_me_options [sign: true, same_site: "Lax"]
 
-  def login_in_user(conn, %{
+  def login_user(conn, %{
+        "user" => user,
+        "password" => password
+      }) do
+    conn
+    |> put_in_session(user, password)
+    |> redirect(to: "/")
+  end
+
+  def login_client(conn, %{
         "client_code" => client_code,
         "token" => token,
         "refresh_token" => refresh_token,
         "feed_token" => feed_token
       }) do
+    case(
+      conn
+      |> get_session(:user_hash)
+      |> Account.set_tokens(%{
+        "client_code" => client_code,
+        "token" => token,
+        "refresh_token" => refresh_token,
+        "feed_token" => feed_token
+      })
+    ) do
+      :ok ->
+        conn
+        |> put_flash(:info, "Client logged in successfully.")
+        |> redirect(to: ~p"/")
+
+      :error ->
+        conn
+        |> put_flash(:error, "Unable to login at the moment. Please try again.")
+        |> redirect(to: ~p"/client/login")
+        |> halt()
+    end
+
     conn
-    |> put_tokens_in_session(token, refresh_token, feed_token, client_code)
     |> redirect(to: "/")
   end
 
@@ -33,32 +63,34 @@ defmodule AngelTradingWeb.UserAuth do
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      with [token, refresh_token, feed_token, client_code] <-
+      with [user, password] <-
              String.split(conn.cookies[@remember_me_cookie] || "", "|") do
-        put_tokens_in_session(conn, token, refresh_token, feed_token, client_code)
+        put_in_session(conn, user, password)
       else
         _ ->
           conn
       end
     end
-    |> assign(:current_user, get_session(conn, :client_code))
+    |> assign(:current_user, get_session(conn, :user))
   end
 
-  defp put_tokens_in_session(conn, token, refresh_token, feed_token, client_code) do
+  defp put_in_session(conn, user, password) do
     conn
     |> configure_session(renew: true)
     |> clear_session()
-    |> put_session(:client_code, client_code)
-    |> put_session(:token, token)
-    |> put_session(:refresh_token, refresh_token)
-    |> put_session(:feed_token, feed_token)
+    |> put_session(:user, user)
+    |> put_session(:password, password)
+    |> put_session(
+      :user_hash,
+      :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.encode64()
+    )
     |> put_session(
       :session_expiry,
       session_valid_till()
     )
     |> put_resp_cookie(
       @remember_me_cookie,
-      token <> "|" <> refresh_token <> "|" <> feed_token <> "|" <> client_code,
+      user <> "|" <> password,
       [
         {:max_age, Timex.diff(session_valid_till(), now(), :seconds)}
         | @remember_me_options
@@ -112,7 +144,7 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   defp mount_current_user(session, socket) do
-    Phoenix.Component.assign_new(socket, :current_user, fn -> session["client_code"] end)
+    Phoenix.Component.assign_new(socket, :current_user, fn -> session["user"] end)
   end
 
   defp signed_in_path(_conn), do: ~p"/"

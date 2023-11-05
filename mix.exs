@@ -52,7 +52,7 @@ defmodule AngelTrading.MixProject do
       {:number, "~> 1.0"},
       {:timex, "~> 3.0"},
       {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git"},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
     ]
   end
 
