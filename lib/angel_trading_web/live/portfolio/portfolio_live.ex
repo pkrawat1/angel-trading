@@ -112,8 +112,9 @@ defmodule AngelTradingWeb.PortfolioLive do
       )
     else
       {:error, %{"message" => message}} ->
-        IO.inspect(message)
-        put_flash(socket, :error, message)
+        socket
+        |> put_flash(:error, message)
+        |> push_navigate(to: "/")
     end
   end
 

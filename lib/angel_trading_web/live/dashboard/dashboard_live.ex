@@ -1,7 +1,7 @@
 defmodule AngelTradingWeb.DashboardLive do
   use AngelTradingWeb, :live_view
 
-  alias AngelTrading.Account
+  alias AngelTrading.{Account, API}
   alias AngelTradingWeb.Dashboard.Components.PortfolioComponent
 
   def mount(_params, %{"user_hash" => user_hash}, socket) do
@@ -33,6 +33,12 @@ defmodule AngelTradingWeb.DashboardLive do
         end
       end)
       |> Enum.filter(&(!is_nil(&1)))
+      |> Enum.filter(
+        &case API.portfolio(&1.token) do
+          {:ok, _} -> true
+          _ -> false
+        end
+      )
 
     assign(socket, :clients, clients)
   end
@@ -68,30 +74,29 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   def handle_info(%{payload: quote_data}, %{assigns: %{holdings: holdings}} = socket) do
-
     {:noreply, socket}
     # holdings =
-      # holdings
-      # |> Enum.map(fn holding ->
-        # if holding["symboltoken"] == quote_data.token do
-          # %{holding | "ltp" => quote_data.last_traded_price / 100 + Enum.take_rand(100)}
-        # else
-          # holding
-        # end
-      # end)
-      # |> formatted_holdings()
-#
+    # holdings
+    # |> Enum.map(fn holding ->
+    # if holding["symboltoken"] == quote_data.token do
+    # %{holding | "ltp" => quote_data.last_traded_price / 100 + Enum.take_rand(100)}
+    # else
+    # holding
+    # end
+    # end)
+    # |> formatted_holdings()
+    #
     # updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
-#
+    #
     # socket =
-      # if(updated_holding) do
-        # stream_insert(socket, :holdings, updated_holding, at: -1)
-      # else
-        # socket
-      # end
+    # if(updated_holding) do
+    # stream_insert(socket, :holdings, updated_holding, at: -1)
+    # else
+    # socket
+    # end
 
     # {:noreply,
-     # socket
-     # |> calculated_overview(holdings)}
+    # socket
+    # |> calculated_overview(holdings)}
   end
 end

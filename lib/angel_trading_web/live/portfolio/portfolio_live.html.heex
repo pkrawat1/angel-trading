@@ -1,14 +1,15 @@
-<div class="block w-full py-6 px-3 my-5 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700">
+<.header>
+  <.link
+    class=""
+    navigate="/"
+  >
+    <.icon name="hero-arrow-left" />
+    Back
+  </.link>
+</.header>
+<div class="block w-full py-6 px-3 my-4 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700">
   <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
     <%= String.downcase(@name) %>
-    <input
-      type="hidden"
-      id="session-share"
-      value={"#{AngelTradingWeb.Endpoint.url()}/session/#{@client_code}/#{@token}/#{@refresh_token}/#{@feed_token}"}
-    />
-    <span class="px-2" id="share-link" data-to="#session-share" phx-hook="Copy">
-      <.icon name="hero-share text-green-600" />
-    </span>
   </h5>
   <div class="text-xl">
     <%= number_to_currency(@total_current, precision: 0) %> <br />

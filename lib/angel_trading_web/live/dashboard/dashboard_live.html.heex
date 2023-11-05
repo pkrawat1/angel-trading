@@ -1,16 +1,16 @@
 <.header>
-  Dashboard
+  Dashboard 
   <:actions>
     <.link
-      class="rounded-lg bg-green-100 px-2 py-2 hover:bg-green-200/80"
+      class="rounded-lg bg-green-100 p-3 hover:bg-green-200/80"
       href={~p"/client/login"}
     >
       <.icon name="hero-plus" />
-      Add client 
+      Add Portfolio 
     </.link>
   </:actions>
 </.header>
-<section class="flex flex-col sm:flex-row space-x-5">
+<section class="grid grid-cols-1 mt-8 md:grid-cols-2 gap-4 justify-between">
   <div :for={client <- @clients} class="w-full">
     <.live_component id={client.client_code} module={PortfolioComponent} {client} />
   </div>
