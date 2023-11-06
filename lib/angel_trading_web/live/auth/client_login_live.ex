@@ -57,7 +57,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
         {
           :noreply,
           socket
-          |> push_patch(to: ~p"/login?#{params}")
+          |> push_patch(to: ~p"/client/login?#{params}")
           |> put_flash(:error, message)
         }
     end

@@ -7,6 +7,8 @@ defmodule AngelTrading.Account do
   plug Tesla.Middleware.Query, auth: Application.get_env(:angel_trading, :firebase_token, "")
   plug Tesla.Middleware.JSON
 
+  alias AngelTrading.Utils
+
   def get_client(client_code) do
     get("/clients/#{client_code}.json")
   end
@@ -23,12 +25,18 @@ defmodule AngelTrading.Account do
       }) do
     with {:ok, _} <- patch("/users/#{name}/clients.json", %{client_code => client_code}),
          {:ok, _} <-
-           put("clients/#{client_code}.json", %{
-             "client_code" => client_code,
-             "token" => token,
-             "refresh_token" => refresh_token,
-             "feed_token" => feed_token
-           }) do
+           patch(
+             "clients.json",
+             %{
+               client_code =>
+                 Utils.encrypt(:client_tokens, %{
+                   "client_code" => client_code,
+                   "token" => token,
+                   "refresh_token" => refresh_token,
+                   "feed_token" => feed_token
+                 })
+             }
+           ) do
       :ok
     else
       _ -> :error

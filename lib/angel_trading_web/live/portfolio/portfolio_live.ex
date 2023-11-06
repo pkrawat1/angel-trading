@@ -17,7 +17,9 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     socket =
       case Account.get_client(client_code) do
-        {:ok, %{body: client_data = %{}}} ->
+        {:ok, %{body: client_data}} when is_binary(client_data) ->
+          {:ok, client_data} = Utils.decrypt(:client_tokens, client_data)
+
           socket
           |> assign(:page_title, "Portfolio")
           |> assign(:token, client_data["token"])
