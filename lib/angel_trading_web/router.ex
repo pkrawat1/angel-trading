@@ -31,7 +31,10 @@ defmodule AngelTradingWeb.Router do
     pipe_through [:browser]
 
     delete "/session/logout", SessionController, :delete
-    get "/session/:client_code/:token/:refresh_token/:feed_token", SessionController, :client_create
+
+    get "/session/:client_code/:token/:refresh_token/:feed_token",
+        SessionController,
+        :client_create
 
     live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
       live "/client/login", ClientLoginLive
