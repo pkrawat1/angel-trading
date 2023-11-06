@@ -101,7 +101,9 @@ if config_env() == :prod do
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
   config :angel_trading,
-    api_key: System.get_env("API_KEY")
+    api_key: System.get_env("API_KEY"),
+    firebase_token: System.get_env("FIREBASE_TOKEN"),
+    firebase_api: System.get_env("FIREBASE_API")
 
   config :trade_galleon, TradeGalleon.Brokers.AngelOne,
     adapter: TradeGalleon.Brokers.AngelOne,
