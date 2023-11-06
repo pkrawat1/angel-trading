@@ -14,6 +14,7 @@ defmodule AngelTradingWeb.UserAuth do
       }) do
     conn
     |> put_in_session(user, password)
+    |> put_flash(:info, "logged in successfully.")
     |> redirect(to: "/")
   end
 
@@ -54,11 +55,12 @@ defmodule AngelTradingWeb.UserAuth do
     |> configure_session(renew: true)
     |> clear_session()
     |> delete_resp_cookie(@remember_me_cookie)
+    |> put_flash(:info, "logged out successfully.")
     |> redirect(to: ~p"/login")
   end
 
   def fetch_user_session(conn, _opts) do
-    if get_session(conn, :token) do
+    if get_session(conn, :user) do
       conn
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
