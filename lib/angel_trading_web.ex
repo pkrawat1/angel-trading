@@ -90,6 +90,8 @@ defmodule AngelTradingWeb do
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 
+      import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
+
       # Routes generation with the ~p sigil
       unquote(verified_routes())
     end

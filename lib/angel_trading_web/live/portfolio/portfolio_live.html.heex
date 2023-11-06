@@ -22,7 +22,7 @@
       <small :if={!@in_overall_profit?}>
         <.icon name="hero-arrow-down text-red-600" /> Overall loss
         <span class="text-red-600">
-          <%= @total_overall_gain_or_loss |> abs() |> number_to_currency(precision: 2) %> (<%= Float.floor(
+          <%= @total_overall_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
             @total_overall_gain_or_loss_percent,
             2
           ) %>%)
@@ -46,7 +46,7 @@
       <small :if={!@in_overall_profit_today?}>
         <.icon name="hero-arrow-down w-4 h-4 text-red-600" /> "Today's Loss"<br />
         <span class="text-red-600">
-          <%= @total_todays_gain_or_loss |> abs() |> number_to_currency(precision: 2) %> (<%= Float.floor(
+          <%= @total_todays_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
             @total_todays_gain_or_loss_percent,
             2
           ) %>%)
@@ -75,7 +75,7 @@
                 <%= number_to_currency(holding["overall_gain_or_loss"]) %>
               </span>
               <span :if={!holding["in_overall_profit?"]} class="text-red-600">
-                <%= holding["overall_gain_or_loss"] |> abs() |> number_to_currency() %>
+                <%= holding["overall_gain_or_loss"] |> number_to_currency() %>
               </span>
               <small>
                 (<%= holding["overall_gain_or_loss_percent"] |> Float.floor(2) %>%)
@@ -118,7 +118,7 @@
                 ) %>
               </span>
               <span :if={!holding["is_gain_today?"]} class="text-red-600">
-                <%= holding["todays_profit_or_loss"] |> abs() |> number_to_currency() %>
+                <%= holding["todays_profit_or_loss"] |> number_to_currency() %>
               </span>
               <span>
                 (<%= holding["todays_profit_or_loss_percent"] |> Float.floor(2) %>%)

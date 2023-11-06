@@ -1,6 +1,6 @@
 defmodule AngelTradingWeb.PortfolioLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.{Account, API}
+  alias AngelTrading.{Account, API, Utils}
   import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
 
   def mount(
@@ -82,7 +82,7 @@ defmodule AngelTradingWeb.PortfolioLive do
           holding
         end
       end)
-      |> formatted_holdings()
+      |> Utils.formatted_holdings()
 
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
@@ -95,16 +95,16 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     {:noreply,
      socket
-     |> calculated_overview(holdings)}
+     |> Utils.calculated_overview(holdings)}
   end
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => holdings}} <- API.portfolio(token) do
-      holdings = formatted_holdings(holdings)
+      holdings = Utils.formatted_holdings(holdings)
 
       socket
-      |> calculated_overview(holdings)
+      |> Utils.calculated_overview(holdings)
       |> assign(name: profile["name"])
       |> stream(
         :holdings,
@@ -116,70 +116,5 @@ defmodule AngelTradingWeb.PortfolioLive do
         |> put_flash(:error, message)
         |> push_navigate(to: "/")
     end
-  end
-
-  # Using float calculation as of now. Since most of the data is coming from angel api.
-  # I could add ex_money to manage calculations in decimal money format.
-  defp formatted_holdings(holdings) do
-    holdings
-    # Filter cases where stock is in split state
-    |> Enum.filter(&(&1["symboltoken"] != ""))
-    |> Enum.map(fn %{
-                     "authorisedquantity" => _,
-                     "averageprice" => averageprice,
-                     "close" => close,
-                     "collateralquantity" => _,
-                     "collateraltype" => _,
-                     "exchange" => _,
-                     "haircut" => _,
-                     "isin" => _,
-                     "ltp" => ltp,
-                     "product" => _,
-                     "profitandloss" => _,
-                     "quantity" => quantity,
-                     "realisedquantity" => _,
-                     "symboltoken" => symboltoken,
-                     "t1quantity" => _,
-                     "tradingsymbol" => _
-                   } = holding ->
-      invested = quantity * averageprice
-      current = quantity * ltp
-      overall_gain_or_loss = quantity * (ltp - averageprice)
-      overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
-      todays_profit_or_loss = quantity * (ltp - close)
-      todays_profit_or_loss_percent = todays_profit_or_loss / invested * 100
-      ltp_percent = (ltp - close) / close * 100
-
-      Map.merge(holding, %{
-        "invested" => invested,
-        "current" => current,
-        "in_overall_profit?" => current > invested,
-        "is_gain_today?" => ltp > close,
-        "overall_gain_or_loss" => overall_gain_or_loss,
-        "overall_gain_or_loss_percent" => overall_gain_or_loss_percent,
-        "todays_profit_or_loss" => todays_profit_or_loss,
-        "todays_profit_or_loss_percent" => todays_profit_or_loss_percent,
-        "ltp_percent" => ltp_percent,
-        id: symboltoken
-      })
-    end)
-  end
-
-  defp calculated_overview(socket, holdings) do
-    total_invested = holdings |> Enum.map(& &1["invested"]) |> Enum.sum()
-    total_overall_gain_or_loss = holdings |> Enum.map(& &1["overall_gain_or_loss"]) |> Enum.sum()
-    total_todays_gain_or_loss = holdings |> Enum.map(& &1["todays_profit_or_loss"]) |> Enum.sum()
-
-    assign(socket,
-      holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),
-      total_invested: total_invested,
-      total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
-      total_overall_gain_or_loss: total_overall_gain_or_loss,
-      total_todays_gain_or_loss: total_todays_gain_or_loss,
-      in_overall_profit_today?: total_todays_gain_or_loss > 0,
-      in_overall_profit?: total_overall_gain_or_loss > 0,
-      total_overall_gain_or_loss_percent: total_overall_gain_or_loss / total_invested * 100,
-      total_todays_gain_or_loss_percent: total_todays_gain_or_loss / total_invested * 100
-    )
   end
 end

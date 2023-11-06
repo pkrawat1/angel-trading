@@ -81,7 +81,7 @@ config :number,
     # "₹30.00"
     format: "%u%n",
     # "(₹30.00)"
-    negative_format: "(%u%n)"
+    negative_format: "-%u%n"
   ]
 
 # Import environment specific config. This must remain at the bottom
