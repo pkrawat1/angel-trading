@@ -60,7 +60,8 @@ config :phoenix, :json_library, Jason
 config :angel_trading,
   api_key: System.get_env("API_KEY"),
   firebase_token: System.get_env("FIREBASE_TOKEN"),
-  firebase_api: System.get_env("FIREBASE_API")
+  firebase_api: System.get_env("FIREBASE_API"),
+  encryption_key: System.get_env("ENCRYPTION_KEY")
 
 config :trade_galleon, TradeGalleon.Brokers.AngelOne,
   adapter: TradeGalleon.Brokers.AngelOne,

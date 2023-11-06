@@ -30,10 +30,10 @@ defmodule AngelTrading.Account do
              %{
                client_code =>
                  Utils.encrypt(:client_tokens, %{
-                   "client_code" => client_code,
-                   "token" => token,
-                   "refresh_token" => refresh_token,
-                   "feed_token" => feed_token
+                   client_code: client_code,
+                   token: token,
+                   refresh_token: refresh_token,
+                   feed_token: feed_token
                  })
              }
            ) do

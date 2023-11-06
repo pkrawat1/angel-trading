@@ -23,31 +23,18 @@ defmodule AngelTradingWeb.DashboardLive do
       end
       |> Enum.map(fn client_code ->
         with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
-             {:ok, data} <- Utils.decrypt(:client_tokens, data) do
-          Map.new(data, fn {key, value} ->
-            {String.to_atom(key), value}
-          end)
+             {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
+             {:ok, %{"data" => profile}} <- API.profile(token),
+             {:ok, %{"data" => holdings}} <- API.portfolio(token) do
+          Map.merge(client, %{
+            id: client.client_code,
+            holdings: Utils.formatted_holdings(holdings),
+            profile: profile
+          })
         else
           _ ->
             nil
         end
-      end)
-      |> Enum.map(fn
-        %{token: token} = client ->
-          with {:ok, %{"data" => profile}} <- API.profile(token),
-               {:ok, %{"data" => holdings}} <- API.portfolio(token) do
-            Map.merge(client, %{
-              id: client.client_code,
-              holdings: Utils.formatted_holdings(holdings),
-              profile: profile
-            })
-          else
-            _ ->
-              nil
-          end
-
-        _ ->
-          nil
       end)
       |> Enum.filter(&(!is_nil(&1)))
 

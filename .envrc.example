@@ -1,8 +1,7 @@
-export SESSION_SIGNING_SALT=
-export SECRET_KEY_BASE=
-export API_ENDPOINT=https://apiconnect.angelbroking.com
+export API_ENDPOINT=
 export API_KEY=
 export SECRET_KEY=
+export ENCRYPTION_KEY=
 export LOCAL_IP=
 export PUBLIC_IP=
 export MAC_ADDRESS=
