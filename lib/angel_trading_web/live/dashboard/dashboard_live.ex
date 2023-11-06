@@ -22,14 +22,12 @@ defmodule AngelTradingWeb.DashboardLive do
         _ -> []
       end
       |> Enum.map(fn client_code ->
-        case Account.get_client(client_code) do
-          {:ok, %{body: data}} when is_binary(data) ->
-            {:ok, data} = Utils.decrypt(:client_tokens, data)
-
-            Map.new(data, fn {key, value} ->
-              {String.to_atom(key), value}
-            end)
-
+        with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
+             {:ok, data} <- Utils.decrypt(:client_tokens, data) do
+          Map.new(data, fn {key, value} ->
+            {String.to_atom(key), value}
+          end)
+        else
           _ ->
             nil
         end
