@@ -1,16 +1,14 @@
 defmodule AngelTrading.Utils do
-  @secret Application.compile_env(:angel_trading, :encryption_key)
-
   @doc "Encrypt any Erlang term"
   @spec encrypt(atom, any) :: binary
   def encrypt(context, term) do
-    Plug.Crypto.encrypt(@secret, to_string(context), term)
+    Plug.Crypto.encrypt(secret(), to_string(context), term)
   end
 
   @doc "Decrypt cipher-text into an Erlang term"
   @spec decrypt(atom, binary) :: {:ok, any} | {:error, atom}
   def decrypt(context, ciphertext) when is_binary(ciphertext) do
-    Plug.Crypto.decrypt(@secret, to_string(context), ciphertext)
+    Plug.Crypto.decrypt(secret(), to_string(context), ciphertext)
   end
 
   # Using float calculation as of now. Since most of the data is coming from angel api.
@@ -77,4 +75,6 @@ defmodule AngelTrading.Utils do
       total_todays_gain_or_loss_percent: total_todays_gain_or_loss / total_invested * 100
     )
   end
+
+  defp secret(), do: Application.get_env(:angel_trading, :encryption_key)
 end

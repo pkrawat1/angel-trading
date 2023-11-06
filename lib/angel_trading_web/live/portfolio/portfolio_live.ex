@@ -16,18 +16,23 @@ defmodule AngelTradingWeb.PortfolioLive do
     end
 
     socket =
-      case Account.get_client(client_code) do
-        {:ok, %{body: client_data}} when is_binary(client_data) ->
-          {:ok, client_data} = Utils.decrypt(:client_tokens, client_data)
-
-          socket
-          |> assign(:page_title, "Portfolio")
-          |> assign(:token, client_data["token"])
-          |> assign(:client_code, client_data["client_code"])
-          |> assign(:feed_token, client_data["feed_token"])
-          |> assign(:refresh_token, client_data["refresh_token"])
-          |> get_portfolio_data()
-
+      with {:ok, %{body: client_data}} when is_binary(client_data) <-
+             Account.get_client(client_code),
+           {:ok,
+            %{
+              token: token,
+              client_code: client_code,
+              feed_token: feed_token,
+              refresh_token: refresh_token
+            }} <- Utils.decrypt(:client_tokens, client_data) do
+        socket
+        |> assign(:page_title, "Portfolio")
+        |> assign(:token, token)
+        |> assign(:client_code, client_code)
+        |> assign(:feed_token, feed_token)
+        |> assign(:refresh_token, refresh_token)
+        |> get_portfolio_data()
+      else
         _ ->
           socket
           |> put_flash(:error, "Invalid client")
