@@ -1,11 +1,11 @@
 defmodule AngelTradingWeb.DashboardLive do
   use AngelTradingWeb, :live_view
 
-  alias AngelTrading.{Account, API}
+  alias AngelTrading.{Account, API, Utils}
   alias AngelTradingWeb.Dashboard.Components.PortfolioComponent
 
   def mount(_params, %{"user_hash" => user_hash}, socket) do
-    # :timer.send_interval(2000, self(), :subscribe_to_feed)
+    :timer.send_interval(5000, self(), :subscribe_to_feed)
 
     {:ok,
      socket
@@ -32,19 +32,35 @@ defmodule AngelTradingWeb.DashboardLive do
             nil
         end
       end)
+      |> Enum.map(fn
+        %{token: token} = client ->
+          with {:ok, %{"data" => profile}} <- API.profile(token),
+               {:ok, %{"data" => holdings}} <- API.portfolio(token) do
+            Map.merge(client, %{
+              id: client.client_code,
+              holdings: Utils.formatted_holdings(holdings),
+              profile: profile
+            })
+          else
+            _ ->
+              nil
+          end
+
+        _ ->
+          nil
+      end)
       |> Enum.filter(&(!is_nil(&1)))
-      |> Enum.filter(
-        &case API.portfolio(&1.token) do
-          {:ok, _} -> true
-          _ -> false
-        end
-      )
 
     assign(socket, :clients, clients)
   end
 
   def handle_info(:subscribe_to_feed, %{assigns: %{clients: clients}} = socket) do
-    Enum.each(clients, fn %{client_code: client_code, token: token, feed_token: feed_token} ->
+    Enum.each(clients, fn %{
+                            client_code: client_code,
+                            token: token,
+                            feed_token: feed_token,
+                            holdings: holdings
+                          } ->
       socket_process = :"#{client_code}"
 
       unless Process.whereis(socket_process) do
@@ -54,14 +70,14 @@ defmodule AngelTradingWeb.DashboardLive do
           socket_process,
           {:text,
            Jason.encode!(%{
-             correlationID: "abcde12345",
+             correlationID: client_code,
              action: 1,
              params: %{
                mode: 2,
                tokenList: [
                  %{
                    exchangeType: 1,
-                   tokens: Enum.map(socket.assigns.holdings, & &1["symboltoken"])
+                   tokens: Enum.map(holdings, & &1["symboltoken"])
                  }
                ]
              }
@@ -73,30 +89,34 @@ defmodule AngelTradingWeb.DashboardLive do
     {:noreply, socket}
   end
 
-  def handle_info(%{payload: quote_data}, %{assigns: %{holdings: holdings}} = socket) do
-    {:noreply, socket}
-    # holdings =
-    # holdings
-    # |> Enum.map(fn holding ->
-    # if holding["symboltoken"] == quote_data.token do
-    # %{holding | "ltp" => quote_data.last_traded_price / 100 + Enum.take_rand(100)}
-    # else
-    # holding
-    # end
-    # end)
-    # |> formatted_holdings()
-    #
-    # updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
-    #
-    # socket =
-    # if(updated_holding) do
-    # stream_insert(socket, :holdings, updated_holding, at: -1)
-    # else
-    # socket
-    # end
+  def handle_info(
+        %{topic: "portfolio-for-" <> client_code, payload: quote_data},
+        %{assigns: %{clients: clients}} = socket
+      ) do
+    new_ltp = quote_data.last_traded_price / 100
+    client = Enum.find(clients, &(&1.client_code == client_code))
 
-    # {:noreply,
-    # socket
-    # |> calculated_overview(holdings)}
+    holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
+
+    if holding && holding["ltp"] != new_ltp do
+      client =
+        %{
+          client
+          | holdings:
+              client.holdings
+              |> Enum.map(fn holding ->
+                if holding["symboltoken"] == quote_data.token do
+                  %{holding | "ltp" => new_ltp}
+                else
+                  holding
+                end
+              end)
+              |> Utils.formatted_holdings()
+        }
+
+      send_update(PortfolioComponent, Map.to_list(client))
+    end
+
+    {:noreply, socket}
   end
 end
