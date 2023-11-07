@@ -5,7 +5,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   def mount(
         %{"client_code" => client_code},
-        _session,
+        %{"user_hash" => user_hash},
         socket
       ) do
     client_code = client_code |> String.upcase()
@@ -15,8 +15,15 @@ defmodule AngelTradingWeb.PortfolioLive do
       :timer.send_interval(2000, self(), :subscribe_to_feed)
     end
 
+    user_clients =
+      case Account.get_client_codes(user_hash) do
+        {:ok, %{body: data}} when is_map(data) -> Map.values(data)
+        _ -> []
+      end
+
     socket =
-      with {:ok, %{body: client_data}} when is_binary(client_data) <-
+      with true <- client_code in user_clients,
+           {:ok, %{body: client_data}} when is_binary(client_data) <-
              Account.get_client(client_code),
            {:ok,
             %{

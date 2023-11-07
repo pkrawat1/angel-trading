@@ -18,7 +18,7 @@ defmodule AngelTradingWeb.DashboardLive do
     clients =
       Account.get_client_codes(socket.assigns.user_hash)
       |> case do
-        {:ok, %{body: data}} when is_map(data) -> Map.keys(data)
+        {:ok, %{body: data}} when is_map(data) -> Map.values(data)
         _ -> []
       end
       |> Enum.map(fn client_code ->
