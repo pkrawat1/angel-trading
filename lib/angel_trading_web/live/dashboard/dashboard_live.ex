@@ -5,7 +5,7 @@ defmodule AngelTradingWeb.DashboardLive do
   alias AngelTradingWeb.Dashboard.Components.PortfolioComponent
 
   def mount(_params, %{"user_hash" => user_hash}, socket) do
-    :timer.send_interval(5000, self(), :subscribe_to_feed)
+    :timer.send_interval(2000, self(), :subscribe_to_feed)
 
     {:ok,
      socket
@@ -25,7 +25,8 @@ defmodule AngelTradingWeb.DashboardLive do
         with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
              {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
              {:ok, %{"data" => profile}} <- API.profile(token),
-             {:ok, %{"data" => holdings}} <- API.portfolio(token) do
+             {:ok, %{"data" => holdings}} <- API.portfolio(token),
+             :ok <- AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}") do
           Map.merge(client, %{
             id: client.client_code,
             holdings: Utils.formatted_holdings(holdings),

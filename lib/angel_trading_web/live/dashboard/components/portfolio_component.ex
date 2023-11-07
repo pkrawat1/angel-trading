@@ -3,7 +3,6 @@ defmodule AngelTradingWeb.Dashboard.Components.PortfolioComponent do
   alias AngelTrading.Utils
 
   def update(assigns, socket) do
-    :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{assigns.client_code}")
     {:ok, socket |> assign(assigns) |> get_portfolio_data()}
   end
 
