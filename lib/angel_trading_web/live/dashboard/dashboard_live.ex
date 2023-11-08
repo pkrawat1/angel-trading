@@ -3,6 +3,7 @@ defmodule AngelTradingWeb.DashboardLive do
 
   alias AngelTrading.{Account, API, Utils}
   alias AngelTradingWeb.Dashboard.Components.PortfolioComponent
+  require Logger
 
   def mount(_params, %{"user_hash" => user_hash}, socket) do
     :timer.send_interval(2000, self(), :subscribe_to_feed)
@@ -29,7 +30,7 @@ defmodule AngelTradingWeb.DashboardLive do
              :ok <- AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}") do
           Map.merge(client, %{
             id: client.client_code,
-            holdings: Utils.formatted_holdings(holdings),
+            holdings: holdings,
             profile: profile
           })
         else
@@ -51,9 +52,8 @@ defmodule AngelTradingWeb.DashboardLive do
                           } ->
       socket_process = :"#{client_code}"
 
-      unless Process.whereis(socket_process) do
-        AngelTrading.API.socket(client_code, token, feed_token)
-
+      with nil <- Process.whereis(socket_process),
+           {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
         WebSockex.send_frame(
           socket_process,
           {:text,
@@ -71,6 +71,15 @@ defmodule AngelTradingWeb.DashboardLive do
              }
            })}
         )
+      else
+        pid when is_pid(pid) ->
+          Logger.info(
+            "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
+          )
+
+        e ->
+          Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
+          IO.inspect(e)
       end
     end)
 
@@ -99,7 +108,6 @@ defmodule AngelTradingWeb.DashboardLive do
                   holding
                 end
               end)
-              |> Utils.formatted_holdings()
         }
 
       send_update(PortfolioComponent, Map.to_list(client))

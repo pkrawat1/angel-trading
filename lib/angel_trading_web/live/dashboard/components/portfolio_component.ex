@@ -10,7 +10,7 @@ defmodule AngelTradingWeb.Dashboard.Components.PortfolioComponent do
     holdings = Utils.formatted_holdings(holdings)
 
     socket
-    |> Utils.calculated_overview(holdings)
     |> assign(name: profile["name"])
+    |> Utils.calculated_overview(holdings)
   end
 end

@@ -2,6 +2,7 @@ defmodule AngelTradingWeb.PortfolioLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils}
   import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
+  require Logger
 
   def mount(
         %{"client_code" => client_code},
@@ -61,14 +62,13 @@ defmodule AngelTradingWeb.PortfolioLive do
       ) do
     socket_process = :"#{client_code}"
 
-    unless Process.whereis(socket_process) do
-      AngelTrading.API.socket(client_code, token, feed_token)
-
+    with nil <- Process.whereis(socket_process),
+         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
       WebSockex.send_frame(
         socket_process,
         {:text,
          Jason.encode!(%{
-           correlationID: "abcde12345",
+           correlationID: client_code,
            action: 1,
            params: %{
              mode: 2,
@@ -81,35 +81,47 @@ defmodule AngelTradingWeb.PortfolioLive do
            }
          })}
       )
+    else
+      pid when is_pid(pid) ->
+        Logger.info(
+          "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
+        )
+
+      e ->
+        Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
+        IO.inspect(e)
     end
 
     {:noreply, socket}
   end
 
   def handle_info(%{payload: quote_data}, %{assigns: %{holdings: holdings}} = socket) do
-    holdings =
-      holdings
-      |> Enum.map(fn holding ->
-        if holding["symboltoken"] == quote_data.token do
-          %{holding | "ltp" => quote_data.last_traded_price / 100}
-        else
-          holding
-        end
-      end)
-      |> Utils.formatted_holdings()
-
+    new_ltp = quote_data.last_traded_price / 100
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
     socket =
-      if(updated_holding) do
-        stream_insert(socket, :holdings, updated_holding, at: -1)
-      else
-        socket
-      end
+      if updated_holding && updated_holding["ltp"] != new_ltp do
+        updated_holding = %{updated_holding | "ltp" => new_ltp}
 
-    {:noreply,
-     socket
-     |> Utils.calculated_overview(holdings)}
+        holdings =
+          Enum.map(holdings, fn holding ->
+            if holding["symboltoken"] == quote_data.token do
+              [updated_holding]
+              |> Utils.formatted_holdings()
+              |> List.first()
+            else
+              holding
+            end
+          end)
+
+        if(updated_holding) do
+          socket
+          |> stream_insert(:holdings, updated_holding, at: -1)
+          |> Utils.calculated_overview(holdings)
+        end
+      end || socket
+
+    {:noreply, socket}
   end
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do

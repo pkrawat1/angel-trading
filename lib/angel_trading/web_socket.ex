@@ -12,14 +12,17 @@ defmodule AngelTrading.WebSocket do
 
     name = :"#{client_code}"
 
-    {:ok, _} =
-      WebSockex.start_link(@url, __MODULE__, %{client_code: client_code},
-        extra_headers: extra_headers,
-        name: name
-      )
+    case WebSockex.start_link(@url, __MODULE__, %{client_code: client_code},
+           extra_headers: extra_headers,
+           name: name
+         ) do
+      {:ok, _} ->
+        :timer.send_interval(15000, name, :tick)
+        {:ok, name}
 
-    :timer.send_interval(15000, name, :tick)
-    {:ok, name}
+      e ->
+        e
+    end
   end
 
   def handle_info(
