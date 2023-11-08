@@ -3,7 +3,8 @@ defmodule AngelTradingWeb.UserAuth do
 
   import Plug.Conn
   import Phoenix.Controller
-  alias AngelTrading.{Account}
+  alias AngelTrading.{Account, API, Utils}
+  require Logger
 
   @remember_me_cookie "_angel_remember_me"
   @remember_me_options [sign: true, same_site: "Lax"]
@@ -77,6 +78,42 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   defp put_in_session(conn, user, password) do
+    user_hash =
+      :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.encode64()
+
+    user_hash
+    |> Account.get_client_codes()
+    |> case do
+      {:ok, %{body: data}} when is_map(data) -> Map.values(data)
+      _ -> []
+    end
+    |> Enum.map(fn client_code ->
+      with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
+           {:ok, %{token: token, refresh_token: refresh_token}} <-
+             Utils.decrypt(:client_tokens, data),
+           {:ok,
+            %{
+              "data" => %{
+                "jwtToken" => token,
+                "refreshToken" => refresh_token,
+                "feedToken" => feed_token
+              }
+            }} <- API.generate_token(token, refresh_token),
+           :ok <-
+             Account.set_tokens(user_hash, %{
+               "client_code" => client_code,
+               "token" => token,
+               "refresh_token" => refresh_token,
+               "feed_token" => feed_token
+             }) do
+        Logger.info("User client[#{client_code}] tokens refreshed")
+      else
+        e ->
+          Logger.error("[UserAuth] Unable to refresh client[#{client_code}] tokens.")
+          IO.inspect(e)
+      end
+    end)
+
     conn
     |> configure_session(renew: true)
     |> clear_session()
@@ -84,7 +121,7 @@ defmodule AngelTradingWeb.UserAuth do
     |> put_session(:password, password)
     |> put_session(
       :user_hash,
-      :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.encode64()
+      user_hash
     )
     |> put_session(
       :session_expiry,
