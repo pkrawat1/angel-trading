@@ -28,7 +28,7 @@ defmodule AngelTradingWeb.Router do
   end
 
   scope "/", AngelTradingWeb do
-    pipe_through [:browser]
+    pipe_through [:browser, :ensure_authenticated]
 
     delete "/session/logout", SessionController, :delete
 
