@@ -145,11 +145,11 @@
     </li>
   </ul>
   <.modal id="quote-modal">
-    <div :if={@quote} class="text-xs uppercase">
+    <div :if={@quote} class="text-sm uppercase -mx-10">
       <.header>
         <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
       </.header>
-      <section>
+      <section class="my-5">
         <div class="flex justify-between text-center">
           <span>
             Open <br />
