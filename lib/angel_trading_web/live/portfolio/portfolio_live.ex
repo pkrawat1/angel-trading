@@ -39,6 +39,7 @@ defmodule AngelTradingWeb.PortfolioLive do
         |> assign(:client_code, client_code)
         |> assign(:feed_token, feed_token)
         |> assign(:refresh_token, refresh_token)
+        |> assign(:quote, nil)
         |> get_portfolio_data()
       else
         _ ->
@@ -120,6 +121,28 @@ defmodule AngelTradingWeb.PortfolioLive do
           |> Utils.calculated_overview(holdings)
         end
       end || socket
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "select-holding",
+        %{"exchange" => exchange, "symbol" => symbol_token},
+        %{assigns: %{token: token}} = socket
+      ) do
+    socket =
+      case API.quote(token, exchange, symbol_token) do
+        {:ok, %{"data" => %{"fetched" => [quote]}}} ->
+          show_modal(%JS{}, "quote-modal")
+
+          socket
+          |> assign(quote: quote)
+
+        {:error, %{"message" => message}} ->
+          socket
+          |> assign(quote: nil)
+          |> put_flash(:error, message)
+      end
 
     {:noreply, socket}
   end

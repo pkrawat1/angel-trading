@@ -58,8 +58,11 @@
   <ul id="holdings" phx-update="stream">
     <li
       :for={{dom_id, holding} <- @streams.holdings}
-      class="hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
+      class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       id={dom_id}
+      phx-click={JS.push("select-holding") |> show_modal("quote-modal")}
+      phx-value-symbol={holding["symboltoken"]}
+      phx-value-exchange={holding["exchange"]}
     >
       <dl class="items-center">
         <div>
@@ -141,4 +144,67 @@
       </dl>
     </li>
   </ul>
+  <.modal id="quote-modal">
+    <div :if={@quote} class="text-xs uppercase">
+      <.header>
+        <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
+      </.header>
+      <section>
+        <div class="flex justify-between text-center">
+          <span>
+            Open <br />
+            <b><%= @quote["open"] %></b>
+          </span>
+          <span>
+            High <br />
+            <b><%= @quote["high"] %></b>
+          </span>
+          <span>
+            Low <br />
+            <b><%= @quote["low"] %></b>
+          </span>
+          <span>
+            Close <br />
+            <b><%= @quote["close"] %></b>
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 my-2">
+          <table class="table w-full">
+            <thead class="border-y">
+              <th class="text-left">Qty</th>
+              <th class="text-right">Buy Price</th>
+            </thead>
+            <tbody>
+              <tr :for={buy <- @quote["depth"]["buy"]}>
+                <td><%= buy["quantity"] %></td>
+                <td class="text-right text-green-600"><%= buy["price"] %></td>
+              </tr>
+              <tr class="border-y">
+                <td><%= @quote["depth"]["buy"] |> Enum.map(& &1["quantity"]) |> Enum.sum() %></td>
+                <td class="text-right">Total</td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="table w-full">
+            <thead class="border-y">
+              <th class="text-left">Qty</th>
+              <th class="text-right">Sell Price</th>
+            </thead>
+            <tbody>
+              <tr :for={sell <- @quote["depth"]["sell"]}>
+                <td class="text-left text-red-600"><%= sell["price"] %></td>
+                <td class="text-right"><%= sell["quantity"] %></td>
+              </tr>
+              <tr class="border-y">
+                <td>Total</td>
+                <td class="text-right">
+                  <%= @quote["depth"]["sell"] |> Enum.map(& &1["quantity"]) |> Enum.sum() %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </.modal>
 </section>

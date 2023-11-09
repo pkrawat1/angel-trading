@@ -32,4 +32,16 @@ defmodule AngelTrading.API do
   def portfolio(token) do
     TradeGalleon.call(AngelOne, :portfolio, token: token)
   end
+
+  def quote(token, exchange, symbol_token) do
+    TradeGalleon.call(AngelOne, :quote,
+      token: token,
+      params: %{
+        mode: "FULL",
+        exchangeTokens: %{
+          exchange => [symbol_token]
+        }
+      }
+    )
+  end
 end
