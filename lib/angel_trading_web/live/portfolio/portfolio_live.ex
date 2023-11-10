@@ -85,11 +85,11 @@ defmodule AngelTradingWeb.PortfolioLive do
     else
       pid when is_pid(pid) ->
         Logger.info(
-          "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
+          "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
       e ->
-        Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
+        Logger.error("[Portfolio] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end
 
