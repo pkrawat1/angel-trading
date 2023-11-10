@@ -152,7 +152,7 @@
           <%= @quote["exchange"] %>
         </small>
         <br />
-        <div>
+        <div class="text-sm">
           <span :if={@quote["is_gain_today?"]} class="text-green-600">
             <%= number_to_currency(@quote["ltp"]) %>
             <.icon name="hero-arrow-up" />
