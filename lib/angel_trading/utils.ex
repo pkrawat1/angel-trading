@@ -30,11 +30,12 @@ defmodule AngelTrading.Utils do
                      "product" => _,
                      "profitandloss" => _,
                      "quantity" => quantity,
-                     "realisedquantity" => _,
+                     "realisedquantity" => realisedquantity,
                      "symboltoken" => symboltoken,
                      "t1quantity" => _,
                      "tradingsymbol" => _
                    } = holding ->
+      close = if realisedquantity > 0, do: close, else: averageprice
       invested = quantity * averageprice
       current = quantity * ltp
       overall_gain_or_loss = quantity * (ltp - averageprice)
