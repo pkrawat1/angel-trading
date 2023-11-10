@@ -39,7 +39,8 @@ defmodule AngelTradingWeb.Router do
     live_session :require_auth, on_mount: [{AngelTradingWeb.UserAuth, :ensure_authenticated}] do
       live "/client/login", ClientLoginLive
       live "/", DashboardLive
-      live "/client/:client_code/portfolio", PortfolioLive
+      live "/client/:client_code/portfolio", PortfolioLive, :show
+      live "/client/:client_code/portfolio/quote", PortfolioLive, :quote
     end
   end
 

@@ -51,6 +51,8 @@ defmodule AngelTradingWeb.PortfolioLive do
     {:ok, socket}
   end
 
+  def handle_params(_, _, socket), do: {:noreply, socket}
+
   def handle_info(
         :subscribe_to_feed,
         %{
@@ -102,14 +104,15 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     socket =
       if updated_holding && updated_holding["ltp"] != new_ltp do
-        updated_holding = %{updated_holding | "ltp" => new_ltp}
+        updated_holding =
+          [%{updated_holding | "ltp" => new_ltp}]
+          |> Utils.formatted_holdings()
+          |> List.first()
 
         holdings =
           Enum.map(holdings, fn holding ->
             if holding["symboltoken"] == quote_data.token do
-              [updated_holding]
-              |> Utils.formatted_holdings()
-              |> List.first()
+              updated_holding
             else
               holding
             end
@@ -162,6 +165,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
           socket
           |> assign(quote: quote)
+          |> push_patch(to: ~p"/client/#{socket.assigns.client_code}/portfolio/quote")
 
         {:error, %{"message" => message}} ->
           socket
