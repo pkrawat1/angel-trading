@@ -148,6 +148,24 @@
     <div :if={@quote} class="text-sm uppercase -mx-10">
       <.header>
         <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
+        <small class="text-xs text-blue-500">
+          <%= @quote["exchange"] %>
+        </small>
+        <br />
+        <div>
+          <span :if={@quote["is_gain_today?"]} class="text-green-600">
+            <%= number_to_currency(@quote["ltp"]) %>
+            <.icon name="hero-arrow-up" />
+          </span>
+          <span :if={!@quote["is_gain_today?"]} class="text-red-600">
+            <%= number_to_currency(@quote["ltp"]) %>
+            <.icon name="hero-arrow-down" />
+          </span>
+          <span>
+            <%= (@quote["ltp"] - @quote["close"]) |> Float.floor(2) %> (<%= @quote["ltp_percent"]
+            |> Float.floor(2) %>%)
+          </span>
+        </div>
       </.header>
       <section class="my-5">
         <div class="flex justify-between text-center">

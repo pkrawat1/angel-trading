@@ -122,6 +122,23 @@ defmodule AngelTradingWeb.PortfolioLive do
         end
       end || socket
 
+    socket =
+      if(updated_holding["symboltoken"] == socket.assigns.quote["symbolToken"]) do
+        {_, socket} =
+          handle_event(
+            "select-holding",
+            %{
+              "exchange" => updated_holding["exchange"],
+              "symbol" => updated_holding["symboltoken"]
+            },
+            socket
+          )
+
+        socket
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 
@@ -134,6 +151,14 @@ defmodule AngelTradingWeb.PortfolioLive do
       case API.quote(token, exchange, symbol_token) do
         {:ok, %{"data" => %{"fetched" => [quote]}}} ->
           show_modal(%JS{}, "quote-modal")
+          %{"ltp" => ltp, "close" => close} = quote
+          ltp_percent = (ltp - close) / close * 100
+
+          quote =
+            Map.merge(quote, %{
+              "ltp_percent" => ltp_percent,
+              "is_gain_today?" => ltp > close
+            })
 
           socket
           |> assign(quote: quote)
