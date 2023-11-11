@@ -44,4 +44,17 @@ defmodule AngelTrading.API do
       }
     )
   end
+
+  def candle_data(token, exchange, symbol_token, interval, from, to) do
+    TradeGalleon.call(AngelOne, :candle_data,
+      token: token,
+      params: %{
+        "exchange" => exchange,
+        "symboltoken" => symbol_token,
+        "interval" => interval,
+        "fromdate" => from,
+        "todate" => to
+      }
+    )
+  end
 end

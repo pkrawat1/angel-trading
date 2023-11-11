@@ -1,4 +1,15 @@
 export default {
+  /*
+   * Usage
+   * <input
+      type="hidden"
+      id="data-copy"
+      value={"Any value"}
+    />
+    <span data-to="#data-copy" phx-hook="Copy">
+      <.icon name="hero-share text-green-600" />
+    </span>
+  */
   mounted() {
     let { to } = this.el.dataset;
     this.el.addEventListener("click", (ev) => {

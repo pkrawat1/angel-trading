@@ -77,5 +77,21 @@ defmodule AngelTrading.Utils do
     )
   end
 
+  def formatted_candle_data(candle_data) do
+    Enum.map(
+      candle_data,
+      fn [timestamp, open, high, low, close, volume] ->
+        %{
+          time: Timex.parse!(timestamp, "{ISO:Extended:Z}") |> Timex.to_unix(),
+          open: open,
+          high: high,
+          low: low,
+          close: close,
+          volume: volume
+        }
+      end
+    )
+  end
+
   defp secret(), do: Application.get_env(:angel_trading, :encryption_key)
 end

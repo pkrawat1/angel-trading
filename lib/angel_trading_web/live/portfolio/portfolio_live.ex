@@ -40,6 +40,7 @@ defmodule AngelTradingWeb.PortfolioLive do
         |> assign(:feed_token, feed_token)
         |> assign(:refresh_token, refresh_token)
         |> assign(:quote, nil)
+        |> assign(:candle_data, nil)
         |> get_portfolio_data()
       else
         _ ->
@@ -151,22 +152,31 @@ defmodule AngelTradingWeb.PortfolioLive do
         %{assigns: %{token: token}} = socket
       ) do
     socket =
-      case API.quote(token, exchange, symbol_token) do
-        {:ok, %{"data" => %{"fetched" => [quote]}}} ->
-          show_modal(%JS{}, "quote-modal")
-          %{"ltp" => ltp, "close" => close} = quote
-          ltp_percent = (ltp - close) / close * 100
+      with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+             API.quote(token, exchange, symbol_token),
+           {:ok, %{"data" => candle_data}} <-
+             API.candle_data(
+               token,
+               exchange,
+               symbol_token,
+               "FIFTEEN_MINUTE",
+               Timex.now()
+               |> Timex.shift(weeks: -2)
+               |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
+               Timex.now() |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
+             ) do
+        %{"ltp" => ltp, "close" => close} = quote
+        ltp_percent = (ltp - close) / close * 100
 
-          quote =
-            Map.merge(quote, %{
-              "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close
-            })
+        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
 
-          socket
-          |> assign(quote: quote)
-          |> push_patch(to: ~p"/client/#{socket.assigns.client_code}/portfolio/quote")
+        candle_data = candle_data |> Utils.formatted_candle_data() |> Jason.encode!()
 
+        socket
+        |> assign(quote: quote)
+        |> assign(candle_data: candle_data)
+        |> push_patch(to: ~p"/client/#{socket.assigns.client_code}/portfolio/quote")
+      else
         {:error, %{"message" => message}} ->
           socket
           |> assign(quote: nil)
