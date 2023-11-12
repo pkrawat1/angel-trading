@@ -60,7 +60,9 @@
       :for={{dom_id, holding} <- @streams.holdings}
       class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       id={dom_id}
-      phx-click="select-holding"
+      phx-click={
+        JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/portfolio/quote")
+      }
       phx-value-symbol={holding["symboltoken"]}
       phx-value-exchange={holding["exchange"]}
     >
@@ -148,7 +150,7 @@
     :if={@live_action == :quote}
     show
     id="quote-modal"
-    on_cancel={JS.patch(~p"/client/#{@client_code}/portfolio")}
+    on_cancel={JS.navigate(~p"/client/#{@client_code}/portfolio")}
   >
     <div :if={@quote} class="text-sm uppercase -mx-10">
       <.header>
@@ -227,10 +229,14 @@
             </tbody>
           </table>
         </div>
+        <section
+          class="h-[400px] -mr-2.5 mt-5 shadow-inner"
+          id={"quote-chart-target-#{@quote["symbolToken"]}"}
+        />
         <div
-          class="w-full h-[400px]"
-          id="quote-chart"
+          id={"quote-chart-#{@quote["symbolToken"]}"}
           data-candle={@candle_data}
+          data-target={"quote-chart-target-#{@quote["symbolToken"]}"}
           phx-hook="CandleChart"
         />
       </section>

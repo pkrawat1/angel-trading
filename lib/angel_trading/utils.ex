@@ -78,11 +78,14 @@ defmodule AngelTrading.Utils do
   end
 
   def formatted_candle_data(candle_data) do
+    temp = List.last(candle_data)
+
     Enum.map(
       candle_data,
       fn [timestamp, open, high, low, close, volume] ->
         %{
           time: Timex.parse!(timestamp, "{ISO:Extended:Z}") |> Timex.to_unix(),
+          timestamp: timestamp,
           open: open,
           high: high,
           low: low,
@@ -91,6 +94,22 @@ defmodule AngelTrading.Utils do
         }
       end
     )
+
+    # ++
+    # [
+    # %{
+    # time: Timex.now() |> Timex.shift(hours: Enum.random(1..100)) |> Timex.to_unix(),
+    # timestamp:
+    # Timex.now("Asia/Kolkata")
+    # |> Timex.shift(hours: Enum.random(1..100))
+    # |> Timex.format!("%FT%T%:z", :strftime),
+    # open: Enum.at(temp, 1) + Enum.random(-2..5),
+    # high: Enum.at(temp, 2),
+    # low: Enum.at(temp, 3),
+    # close: Enum.at(temp, 4),
+    # volume: Enum.at(temp, 5)
+    # }
+    # ]
   end
 
   defp secret(), do: Application.get_env(:angel_trading, :encryption_key)

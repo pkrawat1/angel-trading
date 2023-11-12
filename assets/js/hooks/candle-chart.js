@@ -14,16 +14,33 @@ export default {
     ]
   */
   mounted() {
+    this.renderChart();
+  },
+  updated() {
+    this.renderChart();
+  },
+  renderChart() {
     let LightweightCharts = window.LightweightCharts;
     let data = JSON.parse(this.el.dataset.candle);
-    let chart = LightweightCharts.createChart(this.el, {
+    if(this.chart) {
+      this.chart.remove();
+      // prevData = this.candleSeries.data().slice().pop();
+      // data.filter(({time}) => time > prevData.time)
+          // .forEach(item => this.candleSeries.update(item))
+      // return;
+    }
+    this.chart = LightweightCharts.createChart(document.getElementById(this.el.dataset.target), {
       autoSize: true,
       crosshair: {
         mode: LightweightCharts.CrosshairMode.Normal,
       },
     });
-    let candleSeries = chart.addCandlestickSeries();
-    candleSeries.setData(data);
-    console.log(data);
-  },
+    this.chart.timeScale().applyOptions({
+        barSpacing: 10,
+        timeVisible: true
+    });
+    this.candleSeries = this.chart.addCandlestickSeries();
+    this.candleSeries.setData(data);
+  }
+
 }

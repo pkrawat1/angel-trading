@@ -52,6 +52,14 @@ defmodule AngelTradingWeb.PortfolioLive do
     {:ok, socket}
   end
 
+  def handle_params(
+        _,
+        _,
+        %{assigns: %{live_action: :quote, quote: quote, client_code: client_code}} = socket
+      )
+      when is_nil(quote),
+      do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/portfolio")}
+
   def handle_params(_, _, socket), do: {:noreply, socket}
 
   def handle_info(
@@ -99,7 +107,34 @@ defmodule AngelTradingWeb.PortfolioLive do
     {:noreply, socket}
   end
 
-  def handle_info(%{payload: quote_data}, %{assigns: %{holdings: holdings}} = socket) do
+  def handle_info(
+        %{payload: quote},
+        %{assigns: %{live_action: :quote}} = socket
+      ) do
+    socket =
+      if(quote.token == socket.assigns.quote["symbolToken"]) do
+        {_, socket} =
+          handle_event(
+            "select-holding",
+            %{
+              "exchange" => socket.assigns.quote["exchange"],
+              "symbol" => quote.token
+            },
+            socket
+          )
+
+        socket
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %{payload: quote_data},
+        %{assigns: %{holdings: holdings}} = socket
+      ) do
     new_ltp = quote_data.last_traded_price / 100
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
@@ -125,23 +160,6 @@ defmodule AngelTradingWeb.PortfolioLive do
           |> Utils.calculated_overview(holdings)
         end
       end || socket
-
-    socket =
-      if(updated_holding["symboltoken"] == socket.assigns.quote["symbolToken"]) do
-        {_, socket} =
-          handle_event(
-            "select-holding",
-            %{
-              "exchange" => updated_holding["exchange"],
-              "symbol" => updated_holding["symboltoken"]
-            },
-            socket
-          )
-
-        socket
-      else
-        socket
-      end
 
     {:noreply, socket}
   end
@@ -175,12 +193,11 @@ defmodule AngelTradingWeb.PortfolioLive do
         socket
         |> assign(quote: quote)
         |> assign(candle_data: candle_data)
-        |> push_patch(to: ~p"/client/#{socket.assigns.client_code}/portfolio/quote")
       else
-        {:error, %{"message" => message}} ->
+        _ ->
           socket
           |> assign(quote: nil)
-          |> put_flash(:error, message)
+          |> put_flash(:error, "[Quote] : Failed to fetch quote")
       end
 
     {:noreply, socket}
