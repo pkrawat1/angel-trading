@@ -23,7 +23,7 @@ export default {
     let LightweightCharts = window.LightweightCharts;
     let data = JSON.parse(this.el.dataset.candle);
     if(this.chart) {
-      // this.chart.remove();
+      this.chart.remove();
       // prevData = this.candleSeries.data().slice().pop();
       // data.filter(({time}) => time > prevData.time)
           // .forEach(item => this.candleSeries.update(item))
