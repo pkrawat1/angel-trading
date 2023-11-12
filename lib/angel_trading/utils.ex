@@ -78,13 +78,16 @@ defmodule AngelTrading.Utils do
   end
 
   def formatted_candle_data(candle_data) do
-    temp = List.last(candle_data)
+    # temp = List.last(candle_data)
 
     Enum.map(
       candle_data,
       fn [timestamp, open, high, low, close, volume] ->
         %{
-          time: Timex.parse!(timestamp, "{ISO:Extended:Z}") |> Timex.to_unix(),
+          time:
+            Timex.parse!(timestamp, "{ISO:Extended:Z}")
+            |> Timex.to_datetime("Asia/Kolkata")
+            |> Timex.to_unix(),
           timestamp: timestamp,
           open: open,
           high: high,

@@ -178,10 +178,12 @@ defmodule AngelTradingWeb.PortfolioLive do
                exchange,
                symbol_token,
                "ONE_MINUTE",
-               Timex.now()
+               Timex.now("Asia/Kolkata")
                |> Timex.shift(weeks: -2)
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
-               Timex.now() |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
+               Timex.now("Asia/Kolkata")
+               |> Timex.shift(hours: 1)
+               |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
              ) do
         %{"ltp" => ltp, "close" => close} = quote
         ltp_percent = (ltp - close) / close * 100
