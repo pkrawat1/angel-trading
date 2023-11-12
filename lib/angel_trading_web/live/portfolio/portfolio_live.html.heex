@@ -229,14 +229,10 @@
             </tbody>
           </table>
         </div>
-        <section
-          class="h-[400px] -mr-2.5 mt-5 shadow-inner"
-          id={"quote-chart-target-#{@quote["symbolToken"]}"}
-        />
         <div
-          id={"quote-chart-#{@quote["symbolToken"]}"}
+          class="h-[400px] -mr-2.5 mt-5 shadow-inner"
+          id="quote-chart"
           data-candle={@candle_data}
-          data-target={"quote-chart-target-#{@quote["symbolToken"]}"}
           phx-hook="CandleChart"
         />
       </section>

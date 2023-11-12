@@ -177,7 +177,7 @@ defmodule AngelTradingWeb.PortfolioLive do
                token,
                exchange,
                symbol_token,
-               "FIFTEEN_MINUTE",
+               "ONE_MINUTE",
                Timex.now()
                |> Timex.shift(weeks: -2)
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
