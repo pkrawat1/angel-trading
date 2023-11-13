@@ -17,6 +17,8 @@ defmodule AngelTrading.Utils do
     holdings
     # Filter cases where stock is in split state
     |> Enum.filter(&(&1["symboltoken"] != ""))
+    |> Enum.filter(&(&1["quantity"] != 0))
+    |> Enum.filter(&(&1 != nil))
     |> Enum.map(fn %{
                      "authorisedquantity" => _,
                      "averageprice" => averageprice,
@@ -84,11 +86,13 @@ defmodule AngelTrading.Utils do
       candle_data,
       fn [timestamp, open, high, low, close, volume] ->
         %{
+          # read timestamp as UTC
           time:
-            Timex.parse!(timestamp, "{ISO:Extended:Z}")
-            |> Timex.to_datetime("Asia/Kolkata")
+            timestamp
+            |> String.split("+")
+            |> List.first()
+            |> Timex.parse!("{ISO:Extended:Z}")
             |> Timex.to_unix(),
-          timestamp: timestamp,
           open: open,
           high: high,
           low: low,
