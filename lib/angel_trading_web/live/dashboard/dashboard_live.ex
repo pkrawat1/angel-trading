@@ -93,26 +93,41 @@ defmodule AngelTradingWeb.DashboardLive do
     new_ltp = quote_data.last_traded_price / 100
     client = Enum.find(clients, &(&1.client_code == client_code))
 
-    holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
+    updated_holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
 
-    if holding && holding["ltp"] != new_ltp do
-      client =
+    updated_client =
+      if updated_holding && updated_holding["ltp"] != new_ltp do
+        updated_holding =
+          [%{updated_holding | "ltp" => new_ltp}]
+          |> Utils.formatted_holdings()
+          |> List.first()
+
         %{
           client
           | holdings:
               client.holdings
               |> Enum.map(fn holding ->
                 if holding["symboltoken"] == quote_data.token do
-                  %{holding | "ltp" => new_ltp}
+                  updated_holding
                 else
                   holding
                 end
               end)
         }
+      else
+        client
+      end
 
-      send_update(PortfolioComponent, Map.to_list(client))
-    end
-
-    {:noreply, socket}
+    {:noreply,
+     assign(socket,
+       clients:
+         Enum.map(clients, fn client ->
+           if client.client_code == updated_client.client_code do
+             updated_client
+           else
+             client
+           end
+         end)
+     )}
   end
 end

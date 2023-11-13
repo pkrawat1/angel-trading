@@ -177,7 +177,7 @@ defmodule AngelTradingWeb.PortfolioLive do
                token,
                exchange,
                symbol_token,
-               "ONE_MINUTE",
+               "FIFTEEN_MINUTE",
                Timex.now("Asia/Kolkata")
                |> Timex.shift(weeks: -2)
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
