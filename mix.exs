@@ -19,7 +19,7 @@ defmodule AngelTrading.MixProject do
   def application do
     [
       mod: {AngelTrading.Application, []},
-      extra_applications: [:wx, :observer, :logger, :runtime_tools, :websockex]
+      extra_applications: [:logger, :runtime_tools, :websockex]
     ]
   end
 
