@@ -205,7 +205,7 @@
                 <td class="text-right text-green-600"><%= buy["price"] %></td>
               </tr>
               <tr class="border-y">
-                <td><%= @quote["depth"]["buy"] |> Enum.map(& &1["quantity"]) |> Enum.sum() %></td>
+                <td><%= @quote["totBuyQuan"] %></td>
                 <td class="text-right">Total</td>
               </tr>
             </tbody>
@@ -223,7 +223,7 @@
               <tr class="border-y">
                 <td>Total</td>
                 <td class="text-right">
-                  <%= @quote["depth"]["sell"] |> Enum.map(& &1["quantity"]) |> Enum.sum() %>
+                  <%= @quote["totSellQuan"] %>
                 </td>
               </tr>
             </tbody>
