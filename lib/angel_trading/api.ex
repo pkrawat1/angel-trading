@@ -57,4 +57,16 @@ defmodule AngelTrading.API do
       }
     )
   end
+
+  def funds(token) do
+    TradeGalleon.call(AngelOne, :funds, token: token)
+  end
+
+  def order_book(token) do
+    TradeGalleon.call(AngelOne, :order_book, token: token)
+  end
+
+  def trade_book(token) do
+    TradeGalleon.call(AngelOne, :trade_book, token: token)
+  end
 end

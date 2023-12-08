@@ -9,7 +9,7 @@ defmodule AngelTradingWeb.PortfolioLive do
         %{"user_hash" => user_hash},
         socket
       ) do
-    client_code = client_code |> String.upcase()
+    client_code = String.upcase(client_code)
 
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
@@ -207,12 +207,14 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
-         {:ok, %{"data" => holdings}} <- API.portfolio(token) do
+         {:ok, %{"data" => holdings}} <- API.portfolio(token),
+         {:ok, %{"data" => funds}} <- API.funds(token) do
       holdings = Utils.formatted_holdings(holdings)
 
       socket
       |> Utils.calculated_overview(holdings)
       |> assign(name: profile["name"])
+      |> assign(funds: funds)
       |> stream(
         :holdings,
         Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"]))

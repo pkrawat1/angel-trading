@@ -1,7 +1,15 @@
 <.header>
   <.link class="" navigate={~p"/"}>
-    <.icon name="hero-arrow-left" /> Back
+    <.icon name="hero-home" /> Dashboard
   </.link>
+  <:actions>
+    <.link
+      class="rounded-lg bg-purple-200 p-3 hover:bg-purple-300/80"
+      navigate={~p"/client/#{@client_code}/orders"}
+    >
+      <.icon name="hero-clipboard" /> Orders
+    </.link>
+  </:actions>
 </.header>
 <section class="m-auto lg:w-1/2 mt-5 md:w/2">
   <div class="block py-6 px-3 mb-4 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700">
@@ -53,6 +61,14 @@
         </span>
       </small>
     </div>
+    <div class="text-xl text-right mt-5 flex justify-between">
+      <small class="text-left">
+        Available Cash
+        <span class="text-green-600">
+          <%= number_to_currency(@funds["availablecash"], precision: 2) %> <br />
+        </span>
+      </small>
+    </div>
   </div>
 
   <ul id="holdings" phx-update="stream">
@@ -71,7 +87,7 @@
           <dd class="flex font-semibold text-slate-900 justify-between">
             <span>
               <%= holding["tradingsymbol"] |> String.split("-") |> List.first() %>
-              <small class="text-xs text-blue-500">
+              <small class="text-xs bg-gray-100 text-blue-500 px-1 py-0.5 rounded">
                 <%= holding["exchange"] %>
               </small>
             </span>

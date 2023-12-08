@@ -41,6 +41,7 @@ defmodule AngelTradingWeb.Router do
       live "/", DashboardLive
       live "/client/:client_code/portfolio", PortfolioLive, :show
       live "/client/:client_code/portfolio/quote", PortfolioLive, :quote
+      live "/client/:client_code/orders", OrdersLive, :index
     end
   end
 

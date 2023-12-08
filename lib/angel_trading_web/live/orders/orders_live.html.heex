@@ -1,0 +1,74 @@
+<.header>
+  <.link class="" navigate={~p"/"}>
+    <.icon name="hero-home" /> Dashboard
+  </.link>
+  <:actions>
+    <.link
+      class="rounded-lg bg-blue-200 p-3 hover:bg-blue-300/80"
+      navigate={~p"/client/#{@client_code}/portfolio"}
+    >
+      <.icon name="hero-folder" /> Portfolio
+    </.link>
+  </:actions>
+</.header>
+<section class="m-auto lg:w-1/2 mt-5 md:w/2">
+  <ul id="orders">
+    <li
+      :for={order <- @order_book}
+      class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
+      id={order["orderid"]}
+    >
+      <dl class="items-center">
+        <div>
+          <dd class="flex font-semibold text-slate-900 justify-between">
+            <span>
+              <%= order["tradingsymbol"] |> String.split("-") |> List.first() %>
+            </span>
+            <div>
+              <span class="text-green-600">
+                <%= number_to_currency(order["averageprice"]) %>
+              </span>
+            </div>
+          </dd>
+        </div>
+        <div>
+          <dd class="my-2 flex text-xs text-slate-900 justify-between">
+            <span>
+              <small class={[
+                if(order["transactiontype"] == "SELL",
+                  do: "bg-red-100 text-red-600",
+                  else: "bg-green-200 text-green-600"
+                ),
+                "text-xs me-2 px-1 py-0.5 rounded"
+              ]}>
+                <%= order["transactiontype"] %>
+              </small>
+              <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+                <%= order["exchange"] %>
+              </small>
+              <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+                <%= order["producttype"] %>
+              </small>
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dd class="my-2 flex text-xs text-slate-900 justify-between">
+            <span>
+              <%= order["filledshares"] %>/<%= order["quantity"] %> Shares
+            </span>
+            <span class={[
+              if(order["status"] != "complete",
+                do: "bg-red-100 text-red-600",
+                else: "bg-green-200 text-green-600"
+              ),
+              "px-1 py-0.5 rounded uppercase"
+            ]}>
+              <%= order["status"] %>
+            </span>
+          </dd>
+        </div>
+      </dl>
+    </li>
+  </ul>
+</section>
