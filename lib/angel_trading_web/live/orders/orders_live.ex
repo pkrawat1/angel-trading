@@ -54,8 +54,8 @@ defmodule AngelTradingWeb.OrdersLive do
       socket
       |> assign(name: profile["name"])
       |> assign(funds: funds)
-      |> assign(order_book: order_book)
-      |> assign(trade_book: trade_book)
+      |> assign(order_book: order_book || [])
+      |> assign(trade_book: trade_book || [])
     else
       {:error, %{"message" => message}} ->
         socket
