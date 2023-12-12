@@ -34,7 +34,9 @@ defmodule AngelTradingWeb.UserAuth do
         "client_code" => client_code,
         "token" => token,
         "refresh_token" => refresh_token,
-        "feed_token" => feed_token
+        "feed_token" => feed_token,
+        "pin" => pin,
+        "totp_secret" => totp_secret
       }) do
     case(
       conn
@@ -43,7 +45,9 @@ defmodule AngelTradingWeb.UserAuth do
         "client_code" => client_code,
         "token" => token,
         "refresh_token" => refresh_token,
-        "feed_token" => feed_token
+        "feed_token" => feed_token,
+        "pin" => pin,
+        "totp_secret" => totp_secret
       })
     ) do
       :ok ->
@@ -99,7 +103,7 @@ defmodule AngelTradingWeb.UserAuth do
     end
     |> Enum.map(fn client_code ->
       with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
-           {:ok, %{token: token, refresh_token: refresh_token}} <-
+           {:ok, %{pin: pin, totp_secret: totp_secret}} <-
              Utils.decrypt(:client_tokens, data),
            {:ok,
             %{
@@ -108,13 +112,20 @@ defmodule AngelTradingWeb.UserAuth do
                 "refreshToken" => refresh_token,
                 "feedToken" => feed_token
               }
-            }} <- API.generate_token(token, refresh_token),
+            }} <-
+             API.login(%{
+               "clientcode" => client_code,
+               "password" => pin,
+               "totp" => AngelTrading.TOTP.totp_now(totp_secret)
+             }),
            :ok <-
              Account.set_tokens(user_hash, %{
                "client_code" => client_code,
                "token" => token,
                "refresh_token" => refresh_token,
-               "feed_token" => feed_token
+               "feed_token" => feed_token,
+               "pin" => pin,
+               "totp_secret" => totp_secret
              }) do
         Logger.info("User client[#{client_code}] tokens refreshed")
       else

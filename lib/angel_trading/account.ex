@@ -23,7 +23,9 @@ defmodule AngelTrading.Account do
         "client_code" => client_code,
         "token" => token,
         "refresh_token" => refresh_token,
-        "feed_token" => feed_token
+        "feed_token" => feed_token,
+        "pin" => pin,
+        "totp_secret" => totp_secret
       }) do
     with {:ok, _} <- patch("/users/#{user_hash}/clients.json", %{client_code => client_code}),
          {:ok, _} <-
@@ -35,7 +37,9 @@ defmodule AngelTrading.Account do
                    client_code: client_code,
                    token: token,
                    refresh_token: refresh_token,
-                   feed_token: feed_token
+                   feed_token: feed_token,
+                   pin: pin,
+                   totp_secret: totp_secret
                  })
              }
            ) do

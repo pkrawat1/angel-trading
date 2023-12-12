@@ -23,13 +23,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
           maxlength="4"
           minlength="4"
         />
-        <.input
-          field={f[:totp]}
-          value={@params["totp"]}
-          placeholder="Totp"
-          maxlength="6"
-          minlength="6"
-        />
+        <.input field={f[:totp_secret]} value={@params["totp_secret"]} placeholder="Totp secret" />
         <:actions>
           <.button class="w-full">Login</.button>
         </:actions>
@@ -38,7 +32,15 @@ defmodule AngelTradingWeb.ClientLoginLive do
     """
   end
 
-  def handle_event("login", %{"user" => params}, socket) do
+  def handle_event(
+        "login",
+        %{
+          "user" =>
+            %{"clientcode" => clientcode, "password" => password, "totp_secret" => totp_secret} =
+              params
+        },
+        socket
+      ) do
     with {:ok,
           %{
             "data" => %{
@@ -47,11 +49,18 @@ defmodule AngelTradingWeb.ClientLoginLive do
               "feedToken" => feed_token
             }
           }} <-
-           API.login(params) do
+           API.login(%{
+             "clientcode" => clientcode,
+             "password" => password,
+             "totp" => AngelTrading.TOTP.totp_now(params["totp_secret"])
+           }) do
       clientcode = params["clientcode"]
 
       {:noreply,
-       redirect(socket, to: ~p"/session/#{clientcode}/#{token}/#{refresh_token}/#{feed_token}")}
+       redirect(socket,
+         to:
+           ~p"/session/#{clientcode}/#{token}/#{refresh_token}/#{feed_token}/#{password}/#{totp_secret}"
+       )}
     else
       {:error, %{"message" => message}} ->
         {

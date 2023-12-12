@@ -32,7 +32,7 @@ defmodule AngelTradingWeb.Router do
 
     delete "/session/logout", SessionController, :delete
 
-    get "/session/:client_code/:token/:refresh_token/:feed_token",
+    get "/session/:client_code/:token/:refresh_token/:feed_token/:pin/:totp_secret",
         SessionController,
         :client_create
 
