@@ -19,7 +19,7 @@ defmodule AngelTradingWeb.LoginLive do
           type="password"
           value={@params["password"]}
           placeholder="Password"
-          maxlength="8"
+          maxlength="32"
           minlength="8"
         />
         <:actions>
@@ -30,7 +30,17 @@ defmodule AngelTradingWeb.LoginLive do
     """
   end
 
-  def handle_event("login", %{"user" => %{"user" => user, "password" => password}}, socket) do
+  def handle_event("login", %{"user" => %{"user" => user, "password" => password}}, socket)
+      when bit_size(user) != 0 and bit_size(password) != 0 do
     {:noreply, redirect(socket, to: ~p"/session/#{user}/#{password}")}
+  end
+
+  def handle_event("login", %{"user" => params}, socket) do
+    {
+      :noreply,
+      socket
+      |> push_patch(to: ~p"/login?#{params}")
+      |> put_flash(:error, "Invalid credentials")
+    }
   end
 end

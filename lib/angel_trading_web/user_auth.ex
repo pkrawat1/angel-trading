@@ -13,10 +13,21 @@ defmodule AngelTradingWeb.UserAuth do
         "user" => user,
         "password" => password
       }) do
-    conn
-    |> put_in_session(user, password)
-    |> put_flash(:info, "logged in successfully.")
-    |> redirect(to: "/")
+    case user
+         |> create_user_hash(password)
+         |> Account.get_user() do
+      {:ok, %{body: nil}} ->
+        conn
+        |> put_flash(:error, "Invalid credentials or User not active.")
+        |> redirect(to: ~p"/login")
+        |> halt()
+
+      {:ok, %{body: %{}}} ->
+        conn
+        |> put_in_session(user, password)
+        |> put_flash(:info, "logged in successfully.")
+        |> redirect(to: "/")
+    end
   end
 
   def login_client(conn, %{
@@ -78,8 +89,7 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   defp put_in_session(conn, user, password) do
-    user_hash =
-      :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.encode64()
+    user_hash = create_user_hash(user, password)
 
     user_hash
     |> Account.get_client_codes()
@@ -210,4 +220,7 @@ defmodule AngelTradingWeb.UserAuth do
   end
 
   defp now(), do: Timex.now("Asia/Kolkata")
+
+  defp create_user_hash(user, password),
+    do: :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.encode64()
 end

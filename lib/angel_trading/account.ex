@@ -13,17 +13,19 @@ defmodule AngelTrading.Account do
     get("/clients/#{client_code}.json")
   end
 
-  def get_client_codes(name) do
-    get("/users/#{name}/clients.json")
+  def get_client_codes(user_hash) do
+    get("/users/#{user_hash}/clients.json")
   end
 
-  def set_tokens(name, %{
+  def get_user(user_hash), do: get("/users/#{user_hash}.json")
+
+  def set_tokens(user_hash, %{
         "client_code" => client_code,
         "token" => token,
         "refresh_token" => refresh_token,
         "feed_token" => feed_token
       }) do
-    with {:ok, _} <- patch("/users/#{name}/clients.json", %{client_code => client_code}),
+    with {:ok, _} <- patch("/users/#{user_hash}/clients.json", %{client_code => client_code}),
          {:ok, _} <-
            patch(
              "clients.json",
