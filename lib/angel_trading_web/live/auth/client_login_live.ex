@@ -41,7 +41,8 @@ defmodule AngelTradingWeb.ClientLoginLive do
         },
         socket
       ) do
-    with {:ok,
+    with {:ok, totp} <- AngelTrading.TOTP.totp_now(params["totp_secret"]),
+         {:ok,
           %{
             "data" => %{
               "jwtToken" => token,
@@ -52,7 +53,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
            API.login(%{
              "clientcode" => clientcode,
              "password" => password,
-             "totp" => AngelTrading.TOTP.totp_now(params["totp_secret"])
+             "totp" => totp
            }) do
       clientcode = params["clientcode"]
 
@@ -62,7 +63,13 @@ defmodule AngelTradingWeb.ClientLoginLive do
            ~p"/session/#{clientcode}/#{token}/#{refresh_token}/#{feed_token}/#{password}/#{totp_secret}"
        )}
     else
-      {:error, %{"message" => message}} ->
+      {:error, error} ->
+        message =
+          case error do
+            <<message::binary>> -> message
+            %{"message" => message} -> message
+          end
+
         {
           :noreply,
           socket

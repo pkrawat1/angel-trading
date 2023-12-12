@@ -1,4 +1,4 @@
-# NIF for Elixir.AngellTrading.TOTP
+# NIF for Elixir.AngelTrading.TOTP
 
 ## To build the NIF module:
 
@@ -7,7 +7,7 @@
 ## To load the NIF:
 
 ```elixir
-defmodule AngellTrading.TOTP do
+defmodule AngelTrading.TOTP do
   use Rustler, otp_app: :angel_trading, crate: "rust_totp"
 
   # When your NIF is loaded, it will override this function.

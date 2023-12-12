@@ -105,6 +105,7 @@ defmodule AngelTradingWeb.UserAuth do
       with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
            {:ok, %{pin: pin, totp_secret: totp_secret}} <-
              Utils.decrypt(:client_tokens, data),
+           {:ok, totp} <- AngelTrading.TOTP.totp_now(totp_secret),
            {:ok,
             %{
               "data" => %{
@@ -116,7 +117,7 @@ defmodule AngelTradingWeb.UserAuth do
              API.login(%{
                "clientcode" => client_code,
                "password" => pin,
-               "totp" => AngelTrading.TOTP.totp_now(totp_secret)
+               "totp" => totp
              }),
            :ok <-
              Account.set_tokens(user_hash, %{
