@@ -3,4 +3,11 @@ defmodule AngelTrading.TOTP do
 
   # When your NIF is loaded, it will override this function.
   def totp_now(_secret), do: :erlang.nif_error(:nif_not_loaded)
+
+  def valid?(secret, totp) do
+    case totp_now(secret) do
+      {:ok, ^totp} -> true
+      _ -> false
+    end
+  end
 end
