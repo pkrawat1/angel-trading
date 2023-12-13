@@ -8,6 +8,7 @@ defmodule AngelTradingWeb.UserAuth do
 
   @remember_me_cookie "_angel_remember_me"
   @remember_me_options [sign: true, same_site: "Lax"]
+  @session_valid_days 5
 
   def login_user(conn, %{
         "user" => user,
@@ -216,19 +217,7 @@ defmodule AngelTradingWeb.UserAuth do
   defp session_valid?(_session), do: false
 
   defp session_valid_till() do
-    current_time = now()
-
-    expiry_date =
-      current_time
-      |> Timex.shift(days: 1)
-      |> Timex.beginning_of_day()
-      |> Timex.shift(hours: 5)
-
-    if Timex.diff(expiry_date, current_time, :days) do
-      expiry_date
-    else
-      expiry_date |> Timex.shift(days: -1)
-    end
+    Timex.shift(now(), days: @session_valid_days)
   end
 
   defp now(), do: Timex.now("Asia/Kolkata")
