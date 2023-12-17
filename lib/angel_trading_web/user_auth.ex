@@ -132,6 +132,9 @@ defmodule AngelTradingWeb.UserAuth do
         Logger.info("User client[#{client_code}] tokens refreshed")
       else
         e ->
+          {:ok, %{body: data}} = Account.get_client(client_code)
+          {:ok, %{pin: pin, totp_secret: totp_secret}} = Utils.decrypt(:client_tokens, data)
+          IO.inspect({client_code, pin, totp_secret, AngelTrading.TOTP.totp_secret(totp_secret)})
           Logger.error("[UserAuth] Unable to refresh client[#{client_code}] tokens.")
           IO.inspect(e)
       end
@@ -217,9 +220,9 @@ defmodule AngelTradingWeb.UserAuth do
   defp session_valid?(_session), do: false
 
   defp session_valid_till() do
-     now() 
-      |> Timex.shift(days: @session_valid_days)
-      |> Timex.beginning_of_day()
+    now()
+    |> Timex.shift(days: @session_valid_days)
+    |> Timex.beginning_of_day()
   end
 
   defp now(), do: Timex.now("Asia/Kolkata")

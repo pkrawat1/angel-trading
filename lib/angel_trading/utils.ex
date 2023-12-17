@@ -1,14 +1,16 @@
 defmodule AngelTrading.Utils do
+  @max_age 604_800
+
   @doc "Encrypt any Erlang term"
-  @spec encrypt(atom, any) :: binary
-  def encrypt(context, term) do
-    Plug.Crypto.encrypt(secret(), to_string(context), term)
+  @spec encrypt(atom, any, integer) :: binary
+  def encrypt(context, term, max_age \\ @max_age) do
+    Plug.Crypto.encrypt(secret(), to_string(context), term, max_age: max_age)
   end
 
   @doc "Decrypt cipher-text into an Erlang term"
-  @spec decrypt(atom, binary) :: {:ok, any} | {:error, atom}
-  def decrypt(context, ciphertext) when is_binary(ciphertext) do
-    Plug.Crypto.decrypt(secret(), to_string(context), ciphertext)
+  @spec decrypt(atom, binary, integer) :: {:ok, any} | {:error, atom}
+  def decrypt(context, ciphertext, max_age \\ @max_age) when is_binary(ciphertext) do
+    Plug.Crypto.decrypt(secret(), to_string(context), ciphertext, max_age: max_age)
   end
 
   # Using float calculation as of now. Since most of the data is coming from angel api.
