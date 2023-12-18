@@ -6,8 +6,8 @@ defmodule AngelTrading.TOTP do
 
   def valid?(secret, totp) do
     case totp_now(secret) do
-      {:ok, ^totp} -> true
-      _ -> false
+      {:ok, ^totp} -> :ok
+      _ -> {:error, :invalid_totp}
     end
   end
 end

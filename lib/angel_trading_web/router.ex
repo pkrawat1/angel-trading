@@ -24,7 +24,7 @@ defmodule AngelTradingWeb.Router do
       live "/login", LoginLive
     end
 
-    get "/session/:user/:password", SessionController, :create
+    get "/session/:user/:password/:totp", SessionController, :create
   end
 
   scope "/", AngelTradingWeb do

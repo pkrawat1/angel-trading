@@ -13,7 +13,7 @@ defmodule AngelTradingWeb.LoginLive do
     ~H"""
     <div class="flex justify-center">
       <.simple_form :let={f} for={%{}} as={:user} autocomplete="off" phx-submit="login">
-        <.input field={f[:user]} value={@params["user"]} placeholder="User" />
+        <.input required field={f[:user]} value={@params["user"]} placeholder="User" />
         <.input
           field={f[:password]}
           type="password"
@@ -21,6 +21,15 @@ defmodule AngelTradingWeb.LoginLive do
           placeholder="Password"
           maxlength="32"
           minlength="8"
+          required
+        />
+        <.input
+          required
+          field={f[:totp]}
+          value={@params["totp"]}
+          placeholder="Totp"
+          maxlength="6"
+          minlength="6"
         />
         <:actions>
           <.button class="w-full">Login</.button>
@@ -30,9 +39,13 @@ defmodule AngelTradingWeb.LoginLive do
     """
   end
 
-  def handle_event("login", %{"user" => %{"user" => user, "password" => password}}, socket)
-      when bit_size(user) != 0 and bit_size(password) != 0 do
-    {:noreply, redirect(socket, to: ~p"/session/#{user}/#{password}")}
+  def handle_event(
+        "login",
+        %{"user" => %{"user" => user, "password" => password, "totp" => totp}},
+        socket
+      )
+      when bit_size(user) != 0 and bit_size(password) != 0 and bit_size(totp) != 0 do
+    {:noreply, redirect(socket, to: ~p"/session/#{user}/#{password}/#{totp}")}
   end
 
   def handle_event("login", %{"user" => params}, socket) do

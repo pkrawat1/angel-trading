@@ -12,22 +12,30 @@ defmodule AngelTradingWeb.UserAuth do
 
   def login_user(conn, %{
         "user" => user,
-        "password" => password
+        "password" => password,
+        "totp" => totp
       }) do
-    case user
-         |> create_user_hash(password)
-         |> Account.get_user() do
+    with {:ok, %{body: %{"totp_secret" => totp_secret}}} <-
+           user |> create_user_hash(password) |> Account.get_user(),
+         {:ok, totp_secret} <-
+           Utils.decrypt(:totp_secret, totp_secret),
+         :ok <- AngelTrading.TOTP.valid?(totp_secret, totp) do
+      conn
+      |> put_in_session(user, password)
+      |> put_flash(:info, "logged in successfully.")
+      |> redirect(to: "/")
+    else
       {:ok, %{body: nil}} ->
         conn
         |> put_flash(:error, "Invalid credentials or User not active.")
         |> redirect(to: ~p"/login")
         |> halt()
 
-      {:ok, %{body: %{}}} ->
+      {:error, :invalid_totp} ->
         conn
-        |> put_in_session(user, password)
-        |> put_flash(:info, "logged in successfully.")
-        |> redirect(to: "/")
+        |> put_flash(:error, "Invalid totp. Please try again.")
+        |> redirect(to: ~p"/login?user=#{user}&password=#{password}")
+        |> halt()
     end
   end
 
@@ -132,9 +140,6 @@ defmodule AngelTradingWeb.UserAuth do
         Logger.info("User client[#{client_code}] tokens refreshed")
       else
         e ->
-          {:ok, %{body: data}} = Account.get_client(client_code)
-          {:ok, %{pin: pin, totp_secret: totp_secret}} = Utils.decrypt(:client_tokens, data)
-          IO.inspect({client_code, pin, totp_secret, AngelTrading.TOTP.totp_secret(totp_secret)})
           Logger.error("[UserAuth] Unable to refresh client[#{client_code}] tokens.")
           IO.inspect(e)
       end
