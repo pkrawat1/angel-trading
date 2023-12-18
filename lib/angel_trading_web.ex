@@ -84,7 +84,7 @@ defmodule AngelTradingWeb do
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components and translation
-      import AngelTradingWeb.CoreComponents
+      use AngelTradingWeb.Components
       import AngelTradingWeb.Gettext
 
       # Shortcut for generating JS commands

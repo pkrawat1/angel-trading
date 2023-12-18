@@ -1,20 +1,34 @@
-<.header>
-  <.link class="" navigate={~p"/"}>
-    <.icon name="hero-home" /> Dashboard
-  </.link>
-  <:actions>
+<div class="border-b-2 border-gray-100">
+  <nav class="-mb-0.5 flex space-x-6">
+    <% color_classes = fn status ->
+      [
+        "py-4 px-1 inline-flex items-center gap-2 border-b-2 text-sm font-medium whitespace-nowrap focus:outline-none focus:text-blue-800",
+        if(status, do: "border-blue-500 text-blue-600", else: "border-transparent text-gray-500")
+      ]
+    end %>
     <.link
-      class="rounded-lg bg-blue-200 p-3 hover:bg-blue-300/80"
-      navigate={~p"/client/#{@client_code}/portfolio"}
+      class={color_classes.(@params["status"] in [nil, "open"])}
+      patch={~p"/client/#{@client_code}/orders?status=open"}
     >
-      <.icon name="hero-folder" /> Portfolio
+      Open
     </.link>
-  </:actions>
-</.header>
+    <.link
+      class={color_classes.(@params["status"] == "positions")}
+      patch={~p"/client/#{@client_code}/orders?status=positions"}
+      aria-current="page"
+    >
+      Positions
+    </.link>
+  </nav>
+</div>
 <section class="m-auto lg:w-1/2 mt-5 md:w/2">
-  <ul id="orders" phx-update="stream">
+  <ul id="orders" phx-update="stream" }>
     <li
       :for={{dom_id, order} <- @streams.order_book}
+      :if={
+        (order["status"] == "pending" and @params["status"] == "open") or
+          (order["status"] == "complete" and @params["status"] == "positions")
+      }
       class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       id={dom_id}
     >
@@ -25,8 +39,15 @@
               <%= order["tradingsymbol"] |> String.split("-") |> List.first() %>
             </span>
             <div>
-              <span class="text-green-600">
-                <%= number_to_currency(order["averageprice"]) %>
+              <span class={[
+                if(
+                  (order["transactiontype"] == "BUY" and order["price"] > order["ltp"]) ||
+                    (order["transactiontype"] == "SELL" and order["price"] < order["ltp"]),
+                  do: "text-red-600",
+                  else: "text-green-600"
+                )
+              ]}>
+                <%= number_to_currency(order["price"]) %>
               </span>
             </div>
           </dd>
@@ -86,3 +107,4 @@
     </li>
   </ul>
 </section>
+<.bottom_nav client_code={@client_code} />

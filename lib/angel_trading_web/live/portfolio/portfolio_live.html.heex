@@ -1,16 +1,3 @@
-<.header>
-  <.link class="" navigate={~p"/"}>
-    <.icon name="hero-home" /> Dashboard
-  </.link>
-  <:actions>
-    <.link
-      class="rounded-lg bg-purple-200 p-3 hover:bg-purple-300/80"
-      navigate={~p"/client/#{@client_code}/orders"}
-    >
-      <.icon name="hero-clipboard" /> Orders
-    </.link>
-  </:actions>
-</.header>
 <section class="m-auto lg:w-1/2 mt-5 md:w/2">
   <div class="block py-6 px-3 mb-4 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700">
     <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
@@ -255,3 +242,4 @@
     </div>
   </.modal>
 </section>
+<.bottom_nav client_code={@client_code} />

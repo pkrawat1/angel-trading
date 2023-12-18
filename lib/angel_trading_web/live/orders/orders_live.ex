@@ -46,6 +46,8 @@ defmodule AngelTradingWeb.OrdersLive do
     {:ok, socket}
   end
 
+  def handle_params(params, _, socket), do: {:noreply, assign(socket, params: params)}
+
   def handle_info(
         :subscribe_to_feed,
         %{
@@ -109,23 +111,10 @@ defmodule AngelTradingWeb.OrdersLive do
           |> Map.put_new("ltp_percent", ltp_percent)
           |> Map.put_new("is_gain_today?", close < new_ltp)
 
-        order_book =
-          Enum.map(order_book, fn order ->
-            if order["symboltoken"] == quote_data.token do
-              updated_order
-            else
-              order
-            end
-          end)
-
         socket
         |> stream_insert(
           :order_book,
-          updated_order
-          |> Map.put_new("ltp", new_ltp)
-          |> Map.put_new("close", close)
-          |> Map.put_new("ltp_percent", ltp_percent)
-          |> Map.put_new("is_gain_today?", close < new_ltp),
+          updated_order,
           at: -1
         )
       end || socket
@@ -136,14 +125,12 @@ defmodule AngelTradingWeb.OrdersLive do
   defp get_order_data(%{assigns: %{token: token}} = socket) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => funds}} <- API.funds(token),
-         {:ok, %{"data" => order_book}} <- API.order_book(token),
-         {:ok, %{"data" => trade_book}} <- API.trade_book(token) do
+         {:ok, %{"data" => order_book}} <- API.order_book(token) do
       socket
       |> assign(name: profile["name"])
       |> assign(funds: funds)
       |> stream_configure(:order_book, dom_id: &"order-#{&1["orderid"]}")
       |> stream(:order_book, order_book || [])
-      |> assign(trade_book: trade_book || [])
       |> assign(order_book: order_book || [])
     else
       {:error, %{"message" => message}} ->
