@@ -154,11 +154,9 @@ defmodule AngelTradingWeb.PortfolioLive do
             end
           end)
 
-        if(updated_holding) do
-          socket
-          |> stream_insert(:holdings, updated_holding, at: -1)
-          |> Utils.calculated_overview(holdings)
-        end
+        socket
+        |> stream_insert(:holdings, updated_holding, at: -1)
+        |> Utils.calculated_overview(holdings)
       end || socket
 
     {:noreply, socket}

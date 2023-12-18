@@ -12,11 +12,11 @@
   </:actions>
 </.header>
 <section class="m-auto lg:w-1/2 mt-5 md:w/2">
-  <ul id="orders">
+  <ul id="orders" phx-update="stream">
     <li
-      :for={order <- @order_book}
+      :for={{dom_id, order} <- @streams.order_book}
       class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
-      id={order["orderid"]}
+      id={dom_id}
     >
       <dl class="items-center">
         <div>
@@ -50,6 +50,19 @@
                 <%= order["producttype"] %>
               </small>
             </span>
+            <div>
+              LTP
+              <span :if={order["is_gain_today?"]} class="text-green-600">
+                <%= number_to_currency(order["ltp"]) %>
+              </span>
+              <span :if={!order["is_gain_today?"]} class="text-red-600">
+                <%= number_to_currency(order["ltp"]) %>
+              </span>
+              <span>
+                (<%= (order["ltp_percent"] || 0.0)
+                |> Float.floor(2) %>%)
+              </span>
+            </div>
           </dd>
         </div>
         <div>

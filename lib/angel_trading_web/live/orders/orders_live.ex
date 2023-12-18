@@ -1,15 +1,15 @@
 defmodule AngelTradingWeb.OrdersLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils}
-  import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
+  import Number.Currency, only: [number_to_currency: 1]
   require Logger
 
   def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
     client_code = String.upcase(client_code)
 
     if connected?(socket) do
-      :ok = AngelTradingWeb.Endpoint.subscribe("orders-for-#{client_code}")
-      # :timer.send_interval(2000, self(), :subscribe_to_feed)
+      :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+      :timer.send_interval(2000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -46,6 +46,93 @@ defmodule AngelTradingWeb.OrdersLive do
     {:ok, socket}
   end
 
+  def handle_info(
+        :subscribe_to_feed,
+        %{
+          assigns: %{
+            client_code: client_code,
+            token: token,
+            feed_token: feed_token
+          }
+        } = socket
+      ) do
+    socket_process = :"#{client_code}"
+
+    with nil <- Process.whereis(socket_process),
+         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+      WebSockex.send_frame(
+        socket_process,
+        {:text,
+         Jason.encode!(%{
+           correlationID: client_code,
+           action: 1,
+           params: %{
+             mode: 2,
+             tokenList: [
+               %{
+                 exchangeType: 1,
+                 tokens: Enum.map(socket.assigns.order_book, & &1["symboltoken"])
+               }
+             ]
+           }
+         })}
+      )
+    else
+      pid when is_pid(pid) ->
+        Logger.info(
+          "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
+        )
+
+      e ->
+        Logger.error("[Portfolio] Error connecting to web socket (#{socket_process})")
+        IO.inspect(e)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %{payload: quote_data},
+        %{assigns: %{order_book: order_book}} = socket
+      ) do
+    new_ltp = quote_data.last_traded_price / 100
+    close = quote_data.close_price / 100
+    ltp_percent = (new_ltp - close) / close * 100
+    updated_order = Enum.find(order_book, &(&1["symboltoken"] == quote_data.token))
+
+    socket =
+      if updated_order && updated_order["ltp"] != new_ltp do
+        updated_order =
+          updated_order
+          |> Map.put_new("ltp", new_ltp)
+          |> Map.put_new("close", close)
+          |> Map.put_new("ltp_percent", ltp_percent)
+          |> Map.put_new("is_gain_today?", close < new_ltp)
+
+        order_book =
+          Enum.map(order_book, fn order ->
+            if order["symboltoken"] == quote_data.token do
+              updated_order
+            else
+              order
+            end
+          end)
+
+        socket
+        |> stream_insert(
+          :order_book,
+          updated_order
+          |> Map.put_new("ltp", new_ltp)
+          |> Map.put_new("close", close)
+          |> Map.put_new("ltp_percent", ltp_percent)
+          |> Map.put_new("is_gain_today?", close < new_ltp),
+          at: -1
+        )
+      end || socket
+
+    {:noreply, socket}
+  end
+
   defp get_order_data(%{assigns: %{token: token}} = socket) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => funds}} <- API.funds(token),
@@ -54,8 +141,10 @@ defmodule AngelTradingWeb.OrdersLive do
       socket
       |> assign(name: profile["name"])
       |> assign(funds: funds)
-      |> assign(order_book: order_book || [])
+      |> stream_configure(:order_book, dom_id: &"order-#{&1["orderid"]}")
+      |> stream(:order_book, order_book || [])
       |> assign(trade_book: trade_book || [])
+      |> assign(order_book: order_book || [])
     else
       {:error, %{"message" => message}} ->
         socket

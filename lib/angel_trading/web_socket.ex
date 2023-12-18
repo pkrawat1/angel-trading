@@ -41,7 +41,7 @@ defmodule AngelTrading.WebSocket do
 
     <<subscription_mode::little-integer-size(8), exchange_type::little-integer-size(8),
       token::binary-size(25), _sequence_number::little-integer-size(64),
-      _exchange_timestamp::little-integer-size(64), last_traded_price::little-integer-size(32),
+      _exchange_timestamp::little-integer-size(64), last_traded_price::little-integer-size(64),
       last_traded_quantity::little-integer-size(64), avg_traded_price::little-integer-size(64),
       vol_traded::little-integer-size(64), total_buy_quantity::float-size(64),
       total_sell_quantity::float-size(64), open_price_day::little-integer-size(64),
