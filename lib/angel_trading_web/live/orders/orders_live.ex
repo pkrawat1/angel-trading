@@ -101,6 +101,7 @@ defmodule AngelTradingWeb.OrdersLive do
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
     updated_order = Enum.find(order_book, &(&1["symboltoken"] == quote_data.token))
+    {total_qty, _} = Integer.parse(updated_order["filledshares"])
 
     socket =
       if updated_order && updated_order["ltp"] != new_ltp do
@@ -110,7 +111,7 @@ defmodule AngelTradingWeb.OrdersLive do
           |> Map.put_new("close", close)
           |> Map.put_new("ltp_percent", ltp_percent)
           |> Map.put_new("is_gain_today?", close < new_ltp)
-          |> Map.put_new("gains_or_loss", updated_order["price"] * (new_ltp - close))
+          |> Map.put_new("gains_or_loss", total_qty * (new_ltp - updated_order["averageprice"]))
 
         socket
         |> stream_insert(
