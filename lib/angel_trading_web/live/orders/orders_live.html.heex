@@ -8,13 +8,13 @@
     end %>
     <.link
       class={color_classes.(@params["status"] in [nil, "open"])}
-      patch={~p"/client/#{@client_code}/orders?status=open"}
+      navigate={~p"/client/#{@client_code}/orders?status=open"}
     >
       Open
     </.link>
     <.link
       class={color_classes.(@params["status"] == "positions")}
-      patch={~p"/client/#{@client_code}/orders?status=positions"}
+      navigate={~p"/client/#{@client_code}/orders?status=positions"}
       aria-current="page"
     >
       Positions
@@ -22,13 +22,10 @@
   </nav>
 </div>
 <section class="m-auto lg:w-1/2 mt-5 md:w/2">
-  <ul id="orders" phx-update="stream" }>
+  <ul :if={@params["status"] in [nil, "open"]} id="open-orders" phx-update="stream">
     <li
       :for={{dom_id, order} <- @streams.order_book}
-      :if={
-        (order["status"] == "pending" and @params["status"] == "open") or
-          (order["status"] == "complete" and @params["status"] == "positions")
-      }
+      :if={order["status"] == "pending"}
       class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       id={dom_id}
     >
@@ -100,6 +97,80 @@
             ]}>
               <.icon name="hero-clock h-4 w-4" />
               <%= order["status"] %>
+            </span>
+          </dd>
+        </div>
+      </dl>
+    </li>
+  </ul>
+  <ul :if={@params["status"] == "positions"} id="position-orders" phx-update="stream">
+    <li
+      :for={{dom_id, order} <- @streams.order_book}
+      :if={order["status"] == "complete"}
+      class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
+      id={dom_id}
+    >
+      <dl class="items-center">
+        <div>
+          <dd class="flex font-semibold text-slate-900 justify-between">
+            <span>
+              <%= order["tradingsymbol"] |> String.split("-") |> List.first() %>
+            </span>
+            <div>
+              <span class={[
+                if(
+                  (order["transactiontype"] == "BUY" and order["price"] > order["ltp"]) ||
+                    (order["transactiontype"] == "SELL" and order["price"] < order["ltp"]),
+                  do: "text-red-600",
+                  else: "text-green-600"
+                )
+              ]}>
+                <%= number_to_currency(order["gains_or_loss"] || 0) %>
+              </span>
+            </div>
+          </dd>
+        </div>
+        <div>
+          <dd class="my-2 flex text-xs text-slate-900 justify-between">
+            <span>
+              <small class={[
+                if(order["transactiontype"] == "SELL",
+                  do: "bg-red-100 text-red-600",
+                  else: "bg-green-200 text-green-600"
+                ),
+                "text-xs me-2 px-1 py-0.5 rounded"
+              ]}>
+                <%= order["transactiontype"] %>
+              </small>
+              <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+                <%= order["exchange"] %>
+              </small>
+              <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+                <%= order["producttype"] %>
+              </small>
+            </span>
+            <div>
+              LTP
+              <span :if={order["is_gain_today?"]} class="text-green-600">
+                <%= number_to_currency(order["ltp"]) %>
+              </span>
+              <span :if={!order["is_gain_today?"]} class="text-red-600">
+                <%= number_to_currency(order["ltp"]) %>
+              </span>
+              <span>
+                (<%= (order["ltp_percent"] || 0.0)
+                |> Float.floor(2) %>%)
+              </span>
+            </div>
+          </dd>
+        </div>
+        <div>
+          <dd class="my-2 flex text-xs text-slate-900 justify-between">
+            <span>
+              Shares <%= order["filledshares"] %>
+            </span>
+            <span>
+              Avg <%= number_to_currency(order["averageprice"]) %>
             </span>
           </dd>
         </div>
