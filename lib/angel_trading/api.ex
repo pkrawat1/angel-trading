@@ -69,4 +69,14 @@ defmodule AngelTrading.API do
   def trade_book(token) do
     TradeGalleon.call(AngelOne, :trade_book, token: token)
   end
+
+  def search_token(token, exchange, query) do
+    TradeGalleon.call(AngelOne, :search_token,
+      token: token,
+      params: %{
+        "exchange" => exchange,
+        "searchscrip" => query
+      }
+    )
+  end
 end
