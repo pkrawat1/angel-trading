@@ -7,6 +7,8 @@ defmodule AngelTrading.Account do
   plug Tesla.Middleware.Query, auth: Application.get_env(:angel_trading, :firebase_token, "")
   plug Tesla.Middleware.JSON
 
+  require Logger
+
   alias AngelTrading.Utils
 
   def get_client(client_code) do
@@ -19,6 +21,18 @@ defmodule AngelTrading.Account do
 
   def get_user(user_hash), do: get("/users/#{user_hash}.json")
 
+  def update_watchlist(user_hash, watchlist) do
+    case patch("/users/#{user_hash}.json", %{watchlist: watchlist}) do
+      {:ok, %{body: %{"watchlist" => _}}} ->
+        :ok
+
+      e ->
+        Logger.error("[API][Watchlist] Error updating watchlist.")
+        IO.inspect(e)
+        :error
+    end
+  end
+
   def set_tokens(user_hash, %{
         "client_code" => client_code,
         "token" => token,
@@ -27,8 +41,9 @@ defmodule AngelTrading.Account do
         "pin" => pin,
         "totp_secret" => totp_secret
       }) do
-    with {:ok, _} <- patch("/users/#{user_hash}/clients.json", %{client_code => client_code}),
-         {:ok, _} <-
+    with {:ok, %{body: %{^client_code => ^client_code}}} <-
+           patch("/users/#{user_hash}/clients.json", %{client_code => client_code}),
+         {:ok, %{body: %{^client_code => data}}} when is_bitstring(data) <-
            patch(
              "clients.json",
              %{
@@ -45,7 +60,10 @@ defmodule AngelTrading.Account do
            ) do
       :ok
     else
-      _ -> :error
+      e ->
+        Logger.error("[API][Tokens] Error saving tokens")
+        IO.inspect(e)
+        :error
     end
   end
 end

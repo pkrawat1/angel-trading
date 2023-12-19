@@ -6,20 +6,23 @@ defmodule AngelTradingWeb.WatchlistLive do
   def mount(_params, %{"user_hash" => user_hash}, socket) do
     # :timer.send_interval(2000, self(), :subscribe_to_feed)
     socket =
-      with {:ok, %{body: %{"client_code" => client_code}}} <- Account.get_user(user_hash),
+      with {:ok, %{body: %{"client_code" => client_code, "watchlist" => watchlist}}} <-
+             Account.get_user(user_hash),
            {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
            {:ok, %{token: token}} <- Utils.decrypt(:client_tokens, data) do
-        assign(socket, token: token)
+        assign(socket, token: token, watchlist: watchlist)
       else
-        _ -> socket
+        _ ->
+          socket
+          |> put_flash(:error, "Unable to fetch data")
+          |> push_navigate(to: "/")
       end
 
     {:ok,
      socket
      |> assign(:page_title, "Watchlist")
      |> assign(:user_hash, user_hash)
-     |> assign(:token_list, [])
-     |> get_watchlist_data()}
+     |> assign(:token_list, [])}
   end
 
   def handle_event("search", %{"search" => query}, %{assigns: %{token: token}} = socket) do
@@ -35,11 +38,23 @@ defmodule AngelTradingWeb.WatchlistLive do
     {:noreply, assign(socket, :token_list, token_list)}
   end
 
-  def handle_event("toggle-token-watchlist", %{"token" => "17971"}, socket) do
-    {:noreply, socket}
-  end
+  def handle_event(
+        "toggle-token-watchlist",
+        %{"token" => token},
+        %{assigns: %{watchlist: watchlist, user_hash: user_hash}} = socket
+      ) do
+    watchlist = Enum.uniq([token | watchlist])
 
-  defp get_watchlist_data(socket) do
-    socket
+    socket =
+      case Account.update_watchlist(user_hash, watchlist) do
+        :ok ->
+          assign(socket, watchlist: watchlist)
+
+        _ ->
+          socket
+          |> put_flash(:error, "Failed to update watchlist.")
+      end
+
+    {:noreply, socket}
   end
 end
