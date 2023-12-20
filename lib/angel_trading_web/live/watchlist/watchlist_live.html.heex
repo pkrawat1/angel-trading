@@ -1,6 +1,7 @@
-<section class="m-auto lg:w-1/2 mt-5 md:w/2">
+<section class="m-auto lg:w-1/2 md:w/2">
   <.header>
-    <.simple_form :let={f} for={%{}} phx-change="search" phx-submit="search">
+    Watchlist
+    <.simple_form :let={f} class="-mt-5" for={%{}} phx-change="search" phx-submit="search">
       <.input
         type="search"
         field={f[:search]}
