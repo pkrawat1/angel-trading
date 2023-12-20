@@ -81,12 +81,10 @@ defmodule AngelTradingWeb.OrdersLive do
       )
     else
       pid when is_pid(pid) ->
-        Logger.info(
-          "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
-        )
+        Logger.info("[Order] web socket (#{socket_process} #{inspect(pid)}) already established")
 
       e ->
-        Logger.error("[Portfolio] Error connecting to web socket (#{socket_process})")
+        Logger.error("[Order] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end
 
