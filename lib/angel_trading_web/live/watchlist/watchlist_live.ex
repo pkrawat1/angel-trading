@@ -45,8 +45,7 @@ defmodule AngelTradingWeb.WatchlistLive do
           assigns: %{
             client_code: client_code,
             token: token,
-            feed_token: feed_token,
-            watchlist: watchlist
+            feed_token: feed_token
           }
         } = socket
       ) do

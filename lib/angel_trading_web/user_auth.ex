@@ -15,13 +15,13 @@ defmodule AngelTradingWeb.UserAuth do
         "password" => password,
         "totp" => totp
       }) do
-    with {:ok, %{body: %{"totp_secret" => totp_secret, "client_code" => client_code}}} <-
+    with {:ok, %{body: %{"totp_secret" => totp_secret}}} <-
            user |> create_user_hash(password) |> Account.get_user(),
          {:ok, totp_secret} <-
            Utils.decrypt(:totp_secret, totp_secret),
          :ok <- AngelTrading.TOTP.valid?(totp_secret, totp) do
       conn
-      |> put_in_session(user, password, client_code)
+      |> put_in_session(user, password)
       |> put_flash(:info, "logged in successfully.")
       |> redirect(to: "/")
     else
@@ -90,9 +90,9 @@ defmodule AngelTradingWeb.UserAuth do
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      with [user, password, client_code] <-
+      with [user, password] <-
              String.split(conn.cookies[@remember_me_cookie] || "", "|") do
-        put_in_session(conn, user, password, client_code)
+        put_in_session(conn, user, password)
       else
         _ ->
           conn
@@ -101,7 +101,7 @@ defmodule AngelTradingWeb.UserAuth do
     |> assign(:current_user, get_session(conn, :user))
   end
 
-  defp put_in_session(conn, user, password, client_code) do
+  defp put_in_session(conn, user, password) do
     user_hash = create_user_hash(user, password)
 
     user_hash
@@ -150,7 +150,6 @@ defmodule AngelTradingWeb.UserAuth do
     |> clear_session()
     |> put_session(:user, user)
     |> put_session(:password, password)
-    |> put_session(:client_code, client_code)
     |> put_session(:user_hash, user_hash)
     |> put_session(:session_expiry, session_valid_till())
     |> put_resp_cookie(
