@@ -74,6 +74,8 @@ defmodule AngelTradingWeb.WatchlistLive do
         %{assigns: %{watchlist: watchlist}} = socket
       ) do
     new_ltp = quote_data.last_traded_price / 100
+    close = quote_data.close_price / 100
+    ltp_percent = (new_ltp - close) / close * 100
 
     updated_watchlist_quote =
       Enum.find(watchlist, &(&1["symboltoken"] == quote_data.token))
@@ -83,6 +85,9 @@ defmodule AngelTradingWeb.WatchlistLive do
         updated_watchlist_quote =
           updated_watchlist_quote
           |> Map.put_new("ltp", new_ltp)
+          |> Map.put_new("close", close)
+          |> Map.put_new("ltp_percent", ltp_percent)
+          |> Map.put_new("is_gain_today?", close < new_ltp)
 
         socket
         |> stream_insert(

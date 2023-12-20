@@ -43,16 +43,13 @@
               <%= watchlist["tradingsymbol"] |> String.split("-") |> List.first() %>
             </span>
             <div>
-              LTP
               <span :if={watchlist["is_gain_today?"]} class="text-green-600">
                 <%= number_to_currency(watchlist["ltp"]) %>
+                <.icon name="hero-arrow-up" />
               </span>
               <span :if={!watchlist["is_gain_today?"]} class="text-red-600">
                 <%= number_to_currency(watchlist["ltp"]) %>
-              </span>
-              <span>
-                (<%= (watchlist["ltp_percent"] || 0.0)
-                |> Float.floor(2) %>%)
+                <.icon name="hero-arrow-down" />
               </span>
             </div>
           </dd>
@@ -62,15 +59,10 @@
             <small class="text-xs text-blue-600 bg-gray-100 me-2 px-1 py-0.5 rounded">
               <%= watchlist["exchange"] %>
             </small>
-            <span class={[
-              if(watchlist["status"] != "complete",
-                do: "bg-red-100 text-red-600",
-                else: "bg-green-200 text-green-600"
-              ),
-              "px-1 py-0.5 rounded uppercase"
-            ]}>
-              <.icon name="hero-clock h-4 w-4" />
-              <%= watchlist["status"] %>
+            <span>
+              <%= ((watchlist["ltp"] || 0.0) - (watchlist["close"] || 0.0))
+              |> Float.floor(2) %> (<%= (watchlist["ltp_percent"] || 0.0)
+              |> Float.floor(2) %>%)
             </span>
           </dd>
         </div>
