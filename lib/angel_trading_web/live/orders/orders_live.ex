@@ -98,26 +98,56 @@ defmodule AngelTradingWeb.OrdersLive do
     new_ltp = quote_data.last_traded_price / 100
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
-    updated_order = Enum.find(order_book, &(&1["symboltoken"] == quote_data.token))
-    {total_qty, _} = Integer.parse(updated_order["filledshares"])
+    updated_orders = Enum.filter(order_book, &(&1["symboltoken"] == quote_data.token))
 
     socket =
-      if updated_order && updated_order["ltp"] != new_ltp do
-        updated_order =
-          updated_order
-          |> Map.put_new("ltp", new_ltp)
-          |> Map.put_new("close", close)
-          |> Map.put_new("ltp_percent", ltp_percent)
-          |> Map.put_new("is_gain_today?", close < new_ltp)
-          |> Map.put_new("gains_or_loss", total_qty * (new_ltp - updated_order["averageprice"]))
+      if updated_orders != [] do
+        updated_orders
+        |> Enum.filter(&(&1["ltp"] != new_ltp))
+        |> Enum.reduce(socket, fn updated_order, socket ->
+          {total_qty, _} = Integer.parse(updated_order["filledshares"])
 
+          updated_order =
+            updated_order
+            |> Map.put_new("ltp", new_ltp)
+            |> Map.put_new("close", close)
+            |> Map.put_new("ltp_percent", ltp_percent)
+            |> Map.put_new("is_gain_today?", close < new_ltp)
+            |> Map.put_new("gains_or_loss", total_qty * (new_ltp - updated_order["averageprice"]))
+
+          socket
+          |> stream_insert(
+            :order_book,
+            updated_order,
+            at: -1
+          )
+        end)
+      else
         socket
-        |> stream_insert(
-          :order_book,
-          updated_order,
-          at: -1
-        )
-      end || socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "cancel-order",
+        %{"id" => order_id},
+        %{assigns: %{token: token, client_code: client_code}} = socket
+      ) do
+    socket =
+      with {:ok, %{"data" => %{"orderid" => order_id}}} <- API.cancel_order(token, order_id) do
+        socket
+        |> push_navigate(to: ~p"/client/#{client_code}/orders")
+        |> put_flash(:info, "Order[#{order_id}] cancelled.")
+      else
+        e ->
+          Logger.error("[Order] Error cancelling order.")
+          IO.inspect(e)
+
+          socket
+          |> push_navigate(to: ~p"/client/#{client_code}/orders")
+          |> put_flash(:error, "Failed to place order.")
+      end
 
     {:noreply, socket}
   end
@@ -126,6 +156,8 @@ defmodule AngelTradingWeb.OrdersLive do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => funds}} <- API.funds(token),
          {:ok, %{"data" => order_book}} <- API.order_book(token) do
+      order_book = Enum.sort(order_book, &(&1["orderid"] >= &2["orderid"]))
+
       socket
       |> assign(name: profile["name"])
       |> assign(funds: funds)

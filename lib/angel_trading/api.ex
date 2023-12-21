@@ -79,4 +79,42 @@ defmodule AngelTrading.API do
       }
     )
   end
+
+  def place_order(token, %{
+        exchange: exchange,
+        trading_symbol: trading_symbol,
+        symbol_token: symbol_token,
+        quantity: quantity,
+        transaction_type: transaction_type,
+        order_type: order_type,
+        variety: variety,
+        product_type: product_type,
+        price: price
+      }) do
+    TradeGalleon.call(AngelOne, :place_order,
+      token: token,
+      params: %{
+        "exchange" => exchange,
+        "tradingsymbol" => trading_symbol,
+        "symboltoken" => symbol_token,
+        "quantity" => quantity,
+        "transactiontype" => transaction_type,
+        "ordertype" => order_type,
+        "variety" => variety,
+        "duration" => "DAY",
+        "producttype" => product_type,
+        "price" => price
+      }
+    )
+  end
+
+  def cancel_order(token, order_id) do
+    TradeGalleon.call(AngelOne, :cancel_order,
+      token: token,
+      params: %{
+        "variety" => "NORMAL",
+        "orderid" => order_id
+      }
+    )
+  end
 end

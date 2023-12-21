@@ -21,7 +21,9 @@ defmodule AngelTradingWeb.WatchlistLive do
           token: token,
           feed_token: feed_token,
           client_code: client_code,
-          watchlist: watchlist
+          watchlist: watchlist,
+          quote: nil,
+          order: %{type: "LIMIT", price: nil, quantity: nil}
         )
         |> stream_configure(:watchlist, dom_id: &"watchlist-quote-#{&1["symboltoken"]}")
         |> stream(:watchlist, watchlist)
@@ -38,6 +40,16 @@ defmodule AngelTradingWeb.WatchlistLive do
      |> assign(:user_hash, user_hash)
      |> assign(:token_list, [])}
   end
+
+  def handle_params(
+        _,
+        _,
+        %{assigns: %{live_action: :quote, quote: quote}} = socket
+      )
+      when is_nil(quote),
+      do: {:noreply, push_patch(socket, to: ~p"/watchlist")}
+
+  def handle_params(_, _, socket), do: {:noreply, socket}
 
   def handle_info(
         :subscribe_to_feed,
@@ -64,6 +76,30 @@ defmodule AngelTradingWeb.WatchlistLive do
         Logger.error("[Watchlist] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %{payload: new_quote},
+        %{assigns: %{live_action: :quote, quote: quote}} = socket
+      ) do
+    socket =
+      if(new_quote.token == quote["symbolToken"]) do
+        {_, socket} =
+          handle_event(
+            "select-holding",
+            %{
+              "exchange" => quote["exchange"],
+              "symbol" => new_quote.token
+            },
+            socket
+          )
+
+        socket
+      else
+        socket
+      end
 
     {:noreply, socket}
   end
@@ -147,6 +183,77 @@ defmodule AngelTradingWeb.WatchlistLive do
         _ ->
           socket
           |> put_flash(:error, "Failed to update watchlist.")
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "select-holding",
+        %{"exchange" => exchange, "symbol" => symbol_token},
+        %{assigns: %{token: token}} = socket
+      ) do
+    socket =
+      with {:ok, %{"data" => %{"fetched" => [quote]}}} <- API.quote(token, exchange, symbol_token) do
+        %{"ltp" => ltp, "close" => close} = quote
+        ltp_percent = (ltp - close) / close * 100
+
+        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+
+        socket
+        |> assign(quote: quote)
+      else
+        _ ->
+          socket
+          |> assign(quote: nil)
+          |> put_flash(:error, "[Quote] : Failed to fetch quote")
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "validate-order",
+        %{"order" => %{"price" => price, "quantity" => quantity}},
+        socket
+      ) do
+    {:noreply, assign(socket, order: %{socket.assigns.order | price: price, quantity: quantity})}
+  end
+
+  def handle_event("toggle-order-type", %{"type" => type}, socket) do
+    {:noreply, assign(socket, order: %{socket.assigns.order | type: type})}
+  end
+
+  def handle_event(
+        "place-order",
+        %{"order" => %{"price" => price, "quantity" => quantity}},
+        %{assigns: %{quote: quote, order: order, token: token}} = socket
+      ) do
+    socket =
+      with {:ok, %{"data" => %{"orderid" => order_id}}} <-
+             API.place_order(token, %{
+               exchange: quote["exchange"],
+               trading_symbol: quote["tradingSymbol"],
+               symbol_token: quote["symbolToken"],
+               quantity: quantity,
+               transaction_type: "BUY",
+               order_type: order.type,
+               variety: "NORMAL",
+               product_type: "DELIVERY",
+               price: price
+             }) do
+        socket
+        |> push_patch(to: ~p"/watchlist")
+        |> put_flash(:info, "Order[#{order_id}] placed successfully")
+        |> assign(order: %{type: "LIMIT", price: nil, quantity: nil})
+      else
+        e ->
+          Logger.error("[Watchlist][Order] Error placing order")
+          IO.inspect(e)
+
+          socket
+          |> push_patch(to: ~p"/watchlist")
+          |> put_flash(:error, "Failed to place order.")
       end
 
     {:noreply, socket}

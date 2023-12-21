@@ -35,8 +35,15 @@
       :for={{dom_id, watchlist} <- @streams.watchlist}
       class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       id={dom_id}
+      phx-click={JS.push("select-holding") |> JS.patch(~p"/watchlist/quote")}
+      phx-value-symbol={watchlist["symboltoken"]}
+      phx-value-exchange={watchlist["exchange"]}
     >
-      <dl class="items-center">
+      <ul :if={!watchlist["ltp"]} class="space-y-3">
+        <li class="w-full h-4 bg-gray-200 rounded-full"></li>
+        <li class="w-full h-4 bg-gray-200 rounded-full"></li>
+      </ul>
+      <dl :if={watchlist["ltp"]} class="items-center">
         <div>
           <dd class="flex font-semibold text-slate-900 justify-between">
             <span>
@@ -69,5 +76,144 @@
       </dl>
     </li>
   </ul>
+  <.modal :if={@live_action == :quote} show id="buy-modal" on_cancel={JS.patch(~p"/watchlist")}>
+    <div :if={@quote} class="text-sm uppercase -mx-10">
+      <.header>
+        <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
+        <small class="text-xs text-blue-500">
+          <%= @quote["exchange"] %>
+        </small>
+        <br />
+        <div class="text-sm">
+          <span :if={@quote["is_gain_today?"]} class="text-green-600">
+            <%= number_to_currency(@quote["ltp"]) %>
+            <.icon name="hero-arrow-up" />
+          </span>
+          <span :if={!@quote["is_gain_today?"]} class="text-red-600">
+            <%= number_to_currency(@quote["ltp"]) %>
+            <.icon name="hero-arrow-down" />
+          </span>
+          <span>
+            <%= (@quote["ltp"] - @quote["close"]) |> Float.floor(2) %> (<%= @quote["ltp_percent"]
+            |> Float.floor(2) %>%)
+          </span>
+        </div>
+      </.header>
+      <section class="my-5">
+        <div class="flex justify-between text-center">
+          <span>
+            Open <br />
+            <b><%= @quote["open"] %></b>
+          </span>
+          <span>
+            High <br />
+            <b><%= @quote["high"] %></b>
+          </span>
+          <span>
+            Low <br />
+            <b><%= @quote["low"] %></b>
+          </span>
+          <span>
+            Close <br />
+            <b><%= @quote["close"] %></b>
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 my-2">
+          <table class="table w-full">
+            <thead class="border-y">
+              <th class="text-left">Qty</th>
+              <th class="text-right">Buy Price</th>
+            </thead>
+            <tbody>
+              <tr :for={buy <- @quote["depth"]["buy"]}>
+                <td><%= buy["quantity"] %></td>
+                <td class="text-right text-green-600"><%= buy["price"] %></td>
+              </tr>
+              <tr class="border-y">
+                <td><%= @quote["totBuyQuan"] %></td>
+                <td class="text-right">Total</td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="table w-full">
+            <thead class="border-y">
+              <th class="text-left">Sell Price</th>
+              <th class="text-right">Qty</th>
+            </thead>
+            <tbody>
+              <tr :for={sell <- @quote["depth"]["sell"]}>
+                <td class="text-left text-red-600"><%= sell["price"] %></td>
+                <td class="text-right"><%= sell["quantity"] %></td>
+              </tr>
+              <tr class="border-y">
+                <td>Total</td>
+                <td class="text-right">
+                  <%= @quote["totSellQuan"] %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section id="buy-quote">
+        <.simple_form
+          :let={f}
+          for={%{}}
+          as={:order}
+          autocomplete="off"
+          phx-change="validate-order"
+          phx-submit="place-order"
+        >
+          <div class="flex">
+            <div class="flex bg-gray-100 text-sm rounded-lg transition p-1">
+              <nav class="flex">
+                <% color_classes = fn status ->
+                  [
+                    "p-2 inline-flex items-center",
+                    if(status,
+                      do: " bg-red-600 text-white rounded-lg shadow-sm",
+                      else: "text-gray-700"
+                    )
+                  ]
+                end %>
+                <a
+                  phx-click="toggle-order-type"
+                  phx-value-type="LIMIT"
+                  class={color_classes.(@order[:type] == "LIMIT")}
+                >
+                  LIMIT
+                </a>
+                <a
+                  phx-click="toggle-order-type"
+                  phx-value-type="MARKET"
+                  class={color_classes.(@order[:type] == "MARKET")}
+                >
+                  MARKET
+                </a>
+              </nav>
+            </div>
+          </div>
+          <.input
+            required
+            type="number"
+            minlength="0"
+            field={f[:quantity]}
+            value={@order[:quantity]}
+            label="No. of Shares"
+          />
+          <.input
+            required
+            type="number"
+            label={@order[:type]}
+            value={@order[:price]}
+            field={f[:price]}
+          />
+          <:actions>
+            <.button class="w-full bg-green-700">Buy</.button>
+          </:actions>
+        </.simple_form>
+      </section>
+    </div>
+  </.modal>
 </section>
 <.bottom_nav />
