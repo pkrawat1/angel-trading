@@ -48,5 +48,13 @@
         </span>
       </small>
     </div>
+    <div class="text-xl text-right mt-5 flex justify-between">
+      <small class="text-left">
+        Available Cash
+        <span class="text-green-600">
+          <%= number_to_currency(@funds["availablecash"], precision: 2) %> <br />
+        </span>
+      </small>
+    </div>
   </.link>
 </div>

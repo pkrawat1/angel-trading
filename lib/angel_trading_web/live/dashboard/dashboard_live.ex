@@ -27,11 +27,13 @@ defmodule AngelTradingWeb.DashboardLive do
              {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
              {:ok, %{"data" => profile}} <- API.profile(token),
              {:ok, %{"data" => holdings}} <- API.portfolio(token),
+             {:ok, %{"data" => funds}} <- API.funds(token),
              :ok <- AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}") do
           Map.merge(client, %{
             id: client.client_code,
             holdings: holdings,
-            profile: profile
+            profile: profile,
+            funds: funds
           })
         else
           _ ->
