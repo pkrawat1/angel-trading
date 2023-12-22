@@ -3,17 +3,19 @@ defmodule AngelTradingWeb.WatchlistLive do
   alias AngelTrading.{Account, API, Utils}
   require Logger
 
-  def mount(_params, %{"user_hash" => user_hash}, socket) do
-    if connected?(socket) do
-      :timer.send_interval(2000, self(), :subscribe_to_feed)
-    end
-
+  def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
     socket =
-      with {:ok, %{body: %{"client_code" => client_code} = user}} <-
+      with {:ok, %{body: %{"clients" => clients} = user}} <-
              Account.get_user(user_hash),
+           user_clients <- Map.values(clients),
+           {:valid_client, true} <- {:valid_client, client_code in user_clients},
            {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
-           {:ok, %{token: token, feed_token: feed_token}} <- Utils.decrypt(:client_tokens, data),
-           :ok <- AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}") do
+           {:ok, %{token: token, feed_token: feed_token}} <- Utils.decrypt(:client_tokens, data) do
+        if connected?(socket) do
+          :timer.send_interval(2000, self(), :subscribe_to_feed)
+          :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+        end
+
         watchlist = user["watchlist"] || []
 
         socket
@@ -28,9 +30,11 @@ defmodule AngelTradingWeb.WatchlistLive do
         |> stream_configure(:watchlist, dom_id: &"watchlist-quote-#{&1["symboltoken"]}")
         |> stream(:watchlist, watchlist)
       else
-        _ ->
+        e ->
+          IO.inspect(e)
+
           socket
-          |> put_flash(:error, "Unable to fetch data")
+          |> put_flash(:error, "Invalid client")
           |> push_navigate(to: "/")
       end
 
@@ -44,10 +48,10 @@ defmodule AngelTradingWeb.WatchlistLive do
   def handle_params(
         _,
         _,
-        %{assigns: %{live_action: :quote, quote: quote}} = socket
+        %{assigns: %{live_action: :quote, quote: quote, client_code: client_code}} = socket
       )
       when is_nil(quote),
-      do: {:noreply, push_patch(socket, to: ~p"/watchlist")}
+      do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/watchlist")}
 
   def handle_params(_, _, socket), do: {:noreply, socket}
 
@@ -227,7 +231,7 @@ defmodule AngelTradingWeb.WatchlistLive do
   def handle_event(
         "place-order",
         %{"order" => %{"price" => price, "quantity" => quantity}},
-        %{assigns: %{quote: quote, order: order, token: token}} = socket
+        %{assigns: %{quote: quote, order: order, token: token, client_code: client_code}} = socket
       ) do
     socket =
       with {:ok, %{"data" => %{"orderid" => order_id}}} <-
@@ -243,7 +247,7 @@ defmodule AngelTradingWeb.WatchlistLive do
                price: price
              }) do
         socket
-        |> push_patch(to: ~p"/watchlist")
+        |> push_patch(to: ~p"/client/#{client_code}/watchlist")
         |> put_flash(:info, "Order[#{order_id}] placed successfully")
         |> assign(order: %{type: "LIMIT", price: nil, quantity: nil})
       else
@@ -252,7 +256,7 @@ defmodule AngelTradingWeb.WatchlistLive do
           IO.inspect(e)
 
           socket
-          |> push_patch(to: ~p"/watchlist")
+          |> push_patch(to: ~p"/client/#{client_code}/watchlist")
           |> put_flash(:error, "Failed to place order.")
       end
 

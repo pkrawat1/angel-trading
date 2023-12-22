@@ -18,7 +18,8 @@ defmodule AngelTradingWeb.Components.BottomNav do
           <span class="text-gray-500 group-hover:text-blue-600">Home</span>
         </.link>
         <.link
-          navigate={~p"/watchlist"}
+          :if={assigns[:client_code]}
+          navigate={~p"/client/#{@client_code}/watchlist"}
           type="button"
           class="inline-flex flex-col items-center justify-center group"
         >

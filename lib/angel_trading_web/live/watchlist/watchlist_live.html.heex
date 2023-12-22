@@ -35,7 +35,7 @@
       :for={{dom_id, watchlist} <- @streams.watchlist}
       class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
       id={dom_id}
-      phx-click={JS.push("select-holding") |> JS.patch(~p"/watchlist/quote")}
+      phx-click={JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/watchlist/quote")}
       phx-value-symbol={watchlist["symboltoken"]}
       phx-value-exchange={watchlist["exchange"]}
     >
@@ -76,7 +76,7 @@
       </dl>
     </li>
   </ul>
-  <.modal :if={@live_action == :quote} show id="buy-modal" on_cancel={JS.patch(~p"/watchlist")}>
+  <.modal :if={@live_action == :quote} show id="buy-modal" on_cancel={JS.patch(~p"/client/#{@client_code}/watchlist")}>
     <div :if={@quote} class="text-sm uppercase -mx-10">
       <.header>
         <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
@@ -216,4 +216,4 @@
     </div>
   </.modal>
 </section>
-<.bottom_nav />
+<.bottom_nav client_code={@client_code} />
