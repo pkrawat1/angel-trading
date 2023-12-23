@@ -1,7 +1,6 @@
 defmodule AngelTradingWeb.PortfolioLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils}
-  import Number.Currency, only: [number_to_currency: 1, number_to_currency: 2]
   require Logger
 
   def mount(

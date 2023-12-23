@@ -162,63 +162,28 @@
           </table>
         </div>
       </section>
-      <section id="buy-quote">
-        <.simple_form
-          :let={f}
-          for={%{}}
-          as={:order}
-          autocomplete="off"
-          phx-change="validate-order"
-          phx-submit="place-order"
-        >
-          <div class="flex">
-            <div class="flex bg-gray-100 text-sm rounded-lg transition p-1">
-              <nav class="flex">
-                <% color_classes = fn status ->
-                  [
-                    "p-2 inline-flex items-center",
-                    if(status,
-                      do: " bg-red-600 text-white rounded-lg shadow-sm",
-                      else: "text-gray-700"
-                    )
-                  ]
-                end %>
-                <a
-                  phx-click="toggle-order-type"
-                  phx-value-type="LIMIT"
-                  class={color_classes.(@order[:type] == "LIMIT")}
-                >
-                  LIMIT
-                </a>
-                <a
-                  phx-click="toggle-order-type"
-                  phx-value-type="MARKET"
-                  class={color_classes.(@order[:type] == "MARKET")}
-                >
-                  MARKET
-                </a>
-              </nav>
-            </div>
-          </div>
-          <.input
-            required
-            type="number"
-            minlength="0"
-            field={f[:quantity]}
-            value={@order[:quantity]}
-            label="No. of Shares"
-          />
-          <.input
-            required
-            type="number"
-            label={@order[:type]}
-            value={@order[:price]}
-            field={f[:price]}
-          />
-          <:actions>
-            <.button class="w-full bg-green-700">Buy</.button>
-          </:actions>
-        </.simple_form>
+      <section id="order-place bottom-0">
+        <div class="w-full inline-flex rounded-md text-center" role="group">
+          <% order_params = %{
+            symbol_token: @quote["symbolToken"],
+            exchange: @quote["exchange"],
+            transaction_type: "BUY"
+          } %>
+          <.link
+            navigate={~p"/client/#{@client_code}/order/new?#{order_params}"}
+            class="w-1/2 px-4 py-2 text-white bg-green-600 border border-gray-200 rounded-s-lg"
+          >
+            BUY
+          </.link>
+          <.link
+            navigate={
+              ~p"/client/#{@client_code}/order/new?#{%{order_params | transaction_type: "SELL"}}"
+            }
+            class="w-1/2 px-4 py-2 text-white bg-red-600 border border-gray-200 rounded-e-lg"
+          >
+            SELL
+          </.link>
+        </div>
       </section>
     </div>
   </.modal>

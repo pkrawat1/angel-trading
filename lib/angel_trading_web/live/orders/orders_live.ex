@@ -1,7 +1,6 @@
 defmodule AngelTradingWeb.OrdersLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils}
-  import Number.Currency, only: [number_to_currency: 1]
   require Logger
 
   def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
@@ -156,7 +155,7 @@ defmodule AngelTradingWeb.OrdersLive do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => funds}} <- API.funds(token),
          {:ok, %{"data" => order_book}} <- API.order_book(token) do
-      order_book = Enum.sort(order_book, &(&1["orderid"] >= &2["orderid"]))
+      order_book = Enum.sort(order_book || [], &(&1["orderid"] >= &2["orderid"]))
 
       socket
       |> assign(name: profile["name"])
