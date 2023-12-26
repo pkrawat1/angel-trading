@@ -1,103 +1,90 @@
-<div :if={@quote} class="text-sm uppercase -mx-10">
+<div class="text-sm uppercase">
+  <.header class="text-center mb-3">
+    <%= @name %>
+  </.header>
   <.header>
-    <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
+    <%= @order[:trading_symbol] |> String.split("-") |> List.first() %>
     <small class="text-xs text-blue-500">
-      <%= @quote["exchange"] %>
+      <%= @order[:exchange] %>
     </small>
     <br />
     <div class="text-sm">
-      <span :if={@quote["is_gain_today?"]} class="text-green-600">
-        <%= number_to_currency(@quote["ltp"]) %>
+      <span :if={@order[:is_gain_today?]} class="text-green-600">
+        <%= number_to_currency(@order[:ltp]) %>
         <.icon name="hero-arrow-up" />
       </span>
-      <span :if={!@quote["is_gain_today?"]} class="text-red-600">
-        <%= number_to_currency(@quote["ltp"]) %>
+      <span :if={!@order[:is_gain_today?]} class="text-red-600">
+        <%= number_to_currency(@order[:ltp]) %>
         <.icon name="hero-arrow-down" />
       </span>
       <span>
-        <%= (@quote["ltp"] - @quote["close"]) |> Float.floor(2) %> (<%= @quote["ltp_percent"]
+        <%= (@order[:ltp] - @order[:close]) |> Float.floor(2) %> (<%= @order[:ltp_percent]
         |> Float.floor(2) %>%)
       </span>
     </div>
   </.header>
-  <section class="my-5">
-    <div class="flex justify-between text-center">
-      <span>
-        Open <br />
-        <b><%= @quote["open"] %></b>
-      </span>
-      <span>
-        High <br />
-        <b><%= @quote["high"] %></b>
-      </span>
-      <span>
-        Low <br />
-        <b><%= @quote["low"] %></b>
-      </span>
-      <span>
-        Close <br />
-        <b><%= @quote["close"] %></b>
-      </span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 my-2">
-      <table class="table w-full">
-        <thead class="border-y">
-          <th class="text-left">Qty</th>
-          <th class="text-right">Buy Price</th>
-        </thead>
-        <tbody>
-          <tr :for={buy <- @quote["depth"]["buy"]}>
-            <td><%= buy["quantity"] %></td>
-            <td class="text-right text-green-600"><%= buy["price"] %></td>
-          </tr>
-          <tr class="border-y">
-            <td><%= @quote["totBuyQuan"] %></td>
-            <td class="text-right">Total</td>
-          </tr>
-        </tbody>
-      </table>
-      <table class="table w-full">
-        <thead class="border-y">
-          <th class="text-left">Sell Price</th>
-          <th class="text-right">Qty</th>
-        </thead>
-        <tbody>
-          <tr :for={sell <- @quote["depth"]["sell"]}>
-            <td class="text-left text-red-600"><%= sell["price"] %></td>
-            <td class="text-right"><%= sell["quantity"] %></td>
-          </tr>
-          <tr class="border-y">
-            <td>Total</td>
-            <td class="text-right">
-              <%= @quote["totSellQuan"] %>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-  <section id="order-place bottom-0">
-    <div class="w-full inline-flex rounded-md text-center" role="group">
-      <% order_params = %{
-        symbol_token: @quote["symbolToken"],
-        exchange: @quote["exchange"],
-        transaction_type: "BUY"
-      } %>
-      <.link
-        navigate={~p"/client/#{@client_code}/order/new?#{order_params}"}
-        class="w-1/2 px-4 py-2 text-white bg-green-600 border border-gray-200 rounded-s-lg"
-      >
-        BUY
-      </.link>
-      <.link
-        navigate={
-          ~p"/client/#{@client_code}/order/new?#{%{order_params | transaction_type: "SELL"}}"
-        }
-        class="w-1/2 px-4 py-2 text-white bg-red-600 border border-gray-200 rounded-e-lg"
-      >
-        SELL
-      </.link>
-    </div>
+  <section id="buy-quote">
+    <.simple_form
+      :let={f}
+      for={%{}}
+      as={:order}
+      autocomplete="off"
+      phx-change="validate-order"
+      phx-submit="place-order"
+    >
+      <% is_market_order? = @order[:type] == "MARKET" %>
+      <div class="flex">
+        <div class="flex bg-gray-100 text-sm rounded-lg transition p-1">
+          <nav class="flex">
+            <% color_classes = fn status ->
+              [
+                "p-2 inline-flex items-center",
+                if(status,
+                  do: " bg-red-600 text-white rounded-lg shadow-sm",
+                  else: "text-gray-700"
+                )
+              ]
+            end %>
+            <a
+              phx-click="toggle-order-type"
+              phx-value-type="LIMIT"
+              class={color_classes.(!is_market_order?)}
+            >
+              LIMIT
+            </a>
+            <a
+              phx-click="toggle-order-type"
+              phx-value-type="MARKET"
+              class={color_classes.(is_market_order?)}
+            >
+              MARKET
+            </a>
+          </nav>
+        </div>
+      </div>
+      <.input
+        required
+        type="number"
+        minlength="0"
+        field={f[:quantity]}
+        value={@order[:quantity]}
+        label="No. of Shares"
+      />
+      <.input
+        required
+        type="number"
+        label={@order[:type]}
+        value={if is_market_order?, do: @order[:ltp], else: @order[:price]}
+        field={f[:price]}
+        disabled={is_market_order?}
+        class="text-gray-100"
+      />
+      <:actions>
+        <% is_sell_order? = @order.transaction_type == "SELL" %>
+        <.button :if={!is_sell_order?} class="w-full bg-green-700">Buy</.button>
+        <.button :if={is_sell_order?} class="w-full bg-red-700">Sell</.button>
+      </:actions>
+    </.simple_form>
   </section>
 </div>
 <.bottom_nav client_code={@client_code} />

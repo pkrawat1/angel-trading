@@ -167,7 +167,8 @@
           <% order_params = %{
             symbol_token: @quote["symbolToken"],
             exchange: @quote["exchange"],
-            transaction_type: "BUY"
+            transaction_type: "BUY",
+            trading_symbol: @quote["tradingSymbol"]
           } %>
           <.link
             navigate={~p"/client/#{@client_code}/order/new?#{order_params}"}

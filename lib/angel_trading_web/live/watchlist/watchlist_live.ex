@@ -216,53 +216,6 @@ defmodule AngelTradingWeb.WatchlistLive do
     {:noreply, socket}
   end
 
-  def handle_event(
-        "validate-order",
-        %{"order" => %{"price" => price, "quantity" => quantity}},
-        socket
-      ) do
-    {:noreply, assign(socket, order: %{socket.assigns.order | price: price, quantity: quantity})}
-  end
-
-  def handle_event("toggle-order-type", %{"type" => type}, socket) do
-    {:noreply, assign(socket, order: %{socket.assigns.order | type: type})}
-  end
-
-  def handle_event(
-        "place-order",
-        %{"order" => %{"price" => price, "quantity" => quantity}},
-        %{assigns: %{quote: quote, order: order, token: token, client_code: client_code}} = socket
-      ) do
-    socket =
-      with {:ok, %{"data" => %{"orderid" => order_id}}} <-
-             API.place_order(token, %{
-               exchange: quote["exchange"],
-               trading_symbol: quote["tradingSymbol"],
-               symbol_token: quote["symbolToken"],
-               quantity: quantity,
-               transaction_type: "BUY",
-               order_type: order.type,
-               variety: "NORMAL",
-               product_type: "DELIVERY",
-               price: price
-             }) do
-        socket
-        |> push_patch(to: ~p"/client/#{client_code}/watchlist")
-        |> put_flash(:info, "Order[#{order_id}] placed successfully")
-        |> assign(order: %{type: "LIMIT", price: nil, quantity: nil})
-      else
-        e ->
-          Logger.error("[Watchlist][Order] Error placing order")
-          IO.inspect(e)
-
-          socket
-          |> push_patch(to: ~p"/client/#{client_code}/watchlist")
-          |> put_flash(:error, "Failed to place order.")
-      end
-
-    {:noreply, socket}
-  end
-
   defp subscribe_to_quote_feed(
          %{assigns: %{client_code: client_code, watchlist: watchlist}} = socket
        ) do

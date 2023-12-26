@@ -8,7 +8,8 @@ defmodule AngelTradingWeb.OrderLive do
           "client_code" => client_code,
           "symbol_token" => symbol_token,
           "exchange" => exchange,
-          "transaction_type" => transaction_type
+          "transaction_type" => transaction_type,
+          "trading_symbol" => trading_symbol
         },
         %{"user_hash" => user_hash},
         socket
@@ -43,15 +44,18 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(:client_code, client_code)
         |> assign(:feed_token, feed_token)
         |> assign(:refresh_token, refresh_token)
-        |> assign(:symbol_token, symbol_token)
-        |> assign(:quote, nil)
         |> assign(:order, %{
           type: "LIMIT",
           price: nil,
           quantity: nil,
           transaction_type: transaction_type,
           exchange: exchange,
-          symbol_token: symbol_token
+          symbol_token: symbol_token,
+          trading_symbol: trading_symbol,
+          ltp: 0.0,
+          close: 0.0,
+          ltp_percent: 0.0,
+          is_gain_today?: true
         })
         |> get_profile_data()
       else
@@ -61,6 +65,7 @@ defmodule AngelTradingWeb.OrderLive do
           |> push_navigate(to: "/")
       end
 
+    IO.inspect(socket.assigns.order)
     {:ok, socket}
   end
 
@@ -94,11 +99,76 @@ defmodule AngelTradingWeb.OrderLive do
   end
 
   def handle_info(
-        %{payload: new_quote},
+        %{payload: quote_data},
         socket
       ) do
-    IO.inspect(new_quote)
-    {:noreply, assign(socket, quote: new_quote)}
+    new_ltp = quote_data.last_traded_price / 100
+    close = quote_data.close_price / 100
+    ltp_percent = (new_ltp - close) / close * 100
+    updated_order = socket.assigns.order
+
+    socket =
+      if updated_order[:ltp] != new_ltp do
+        updated_order =
+          %{
+            updated_order
+            | ltp: new_ltp,
+              close: close,
+              ltp_percent: ltp_percent,
+              is_gain_today?: new_ltp > close
+          }
+
+        assign(socket, order: updated_order)
+      end || socket
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "validate-order",
+        %{"order" => %{"price" => price, "quantity" => quantity}},
+        socket
+      ) do
+    {:noreply, assign(socket, order: %{socket.assigns.order | price: price, quantity: quantity})}
+  end
+
+  def handle_event("toggle-order-type", %{"type" => type}, socket) do
+    {:noreply, assign(socket, order: %{socket.assigns.order | type: type})}
+  end
+
+  def handle_event(
+        "place-order",
+        %{"order" => %{"price" => price, "quantity" => quantity}},
+        %{assigns: %{order: order, token: token, client_code: client_code}} = socket
+      ) do
+    socket =
+      with {:ok, %{"data" => %{"orderid" => order_id}}} <-
+             API.place_order(token, %{
+               exchange: order.exchange,
+               trading_symbol: order.trading_symbol,
+               symbol_token: order.symbol_token,
+               quantity: quantity,
+               transaction_type: order.transaction_type,
+               order_type: order.type,
+               variety: "NORMAL",
+               product_type: "DELIVERY",
+               price: price
+             }) do
+        socket
+        |> push_navigate(to: ~p"/client/#{client_code}/orders")
+        |> put_flash(:info, "Order[#{order_id}] placed successfully")
+        |> assign(order: %{type: "LIMIT", price: nil, quantity: nil})
+      else
+        e ->
+          Logger.error("[Watchlist][Order] Error placing order")
+          IO.inspect(e)
+
+          socket
+          |> push_navigate(to: ~p"/client/#{client_code}/orders")
+          |> put_flash(:error, "Failed to place order.")
+      end
+
+    {:noreply, socket}
   end
 
   defp get_profile_data(%{assigns: %{token: token}} = socket) do
@@ -127,7 +197,7 @@ defmodule AngelTradingWeb.OrderLive do
            tokenList: [
              %{
                exchangeType: 1,
-               tokens: order.symbol_token
+               tokens: [order.symbol_token]
              }
            ]
          }
