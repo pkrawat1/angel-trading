@@ -91,8 +91,8 @@
         </span>
       </section>
       <:actions>
-        <.button :if={!is_sell_order?} class="w-full bg-green-700">BUY</.button>
-        <.button :if={is_sell_order?} class="w-full bg-red-700">SELL</.button>
+        <.button :if={!is_sell_order?} class="w-full !bg-green-700">BUY</.button>
+        <.button :if={is_sell_order?} class="w-full !bg-red-700">SELL</.button>
       </:actions>
     </.simple_form>
   </section>
