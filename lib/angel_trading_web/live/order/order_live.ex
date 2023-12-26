@@ -55,7 +55,8 @@ defmodule AngelTradingWeb.OrderLive do
           ltp: 0.0,
           close: 0.0,
           ltp_percent: 0.0,
-          is_gain_today?: true
+          is_gain_today?: true,
+          margin_required: 0.0
         })
         |> get_profile_data()
       else
@@ -65,7 +66,6 @@ defmodule AngelTradingWeb.OrderLive do
           |> push_navigate(to: "/")
       end
 
-    IO.inspect(socket.assigns.order)
     {:ok, socket}
   end
 
@@ -129,7 +129,18 @@ defmodule AngelTradingWeb.OrderLive do
         %{"order" => %{"price" => price, "quantity" => quantity}},
         socket
       ) do
-    {:noreply, assign(socket, order: %{socket.assigns.order | price: price, quantity: quantity})}
+    {quantity, ""} = Integer.parse("0" <> quantity)
+    {price, ""} = Float.parse(if price == "", do: "#{socket.assigns.order.ltp}", else: price)
+
+    {:noreply,
+     assign(socket,
+       order: %{
+         socket.assigns.order
+         | price: price,
+           quantity: quantity,
+           margin_required: price * quantity
+       }
+     )}
   end
 
   def handle_event("toggle-order-type", %{"type" => type}, socket) do
@@ -174,6 +185,11 @@ defmodule AngelTradingWeb.OrderLive do
   defp get_profile_data(%{assigns: %{token: token}} = socket) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => funds}} <- API.funds(token) do
+      funds = %{
+        funds
+        | "net" => Float.parse(funds["net"]) |> Tuple.to_list() |> List.first() |> Float.floor(2)
+      }
+
       socket
       |> assign(name: profile["name"])
       |> assign(funds: funds)

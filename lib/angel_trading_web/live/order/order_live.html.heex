@@ -24,6 +24,7 @@
     </div>
   </.header>
   <section id="buy-quote">
+    <% is_sell_order? = @order.transaction_type == "SELL" %>
     <.simple_form
       :let={f}
       for={%{}}
@@ -79,10 +80,19 @@
         disabled={is_market_order?}
         class="text-gray-100"
       />
+      <section class="flex justify-between capitalize">
+        <span class={if @order.margin_required > @funds["net"], do: "text-red-600"}>
+          Margin Required<br />
+          <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
+        </span>
+        <span class="text-right">
+          Avilable Funds<br />
+          <%= @funds["net"] %>
+        </span>
+      </section>
       <:actions>
-        <% is_sell_order? = @order.transaction_type == "SELL" %>
-        <.button :if={!is_sell_order?} class="w-full bg-green-700">Buy</.button>
-        <.button :if={is_sell_order?} class="w-full bg-red-700">Sell</.button>
+        <.button :if={!is_sell_order?} class="w-full bg-green-700">BUY</.button>
+        <.button :if={is_sell_order?} class="w-full bg-red-700">SELL</.button>
       </:actions>
     </.simple_form>
   </section>
