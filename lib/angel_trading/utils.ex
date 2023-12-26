@@ -1,5 +1,5 @@
 defmodule AngelTrading.Utils do
-  @max_age 604_800
+  @max_age :infinity 
 
   @doc "Encrypt any Erlang term"
   @spec encrypt(atom, any, integer) :: binary
