@@ -153,7 +153,7 @@ defmodule AngelTradingWeb.OrderLive do
         %{assigns: %{order: order, token: token, client_code: client_code}} = socket
       ) do
     socket =
-      with {:ok, %{"data" => %{"orderid" => order_id}}} <-
+      with {:ok, %{"data" => %{"uniqueorderid" => unique_order_id}}} <-
              API.place_order(token, %{
                exchange: order.exchange,
                trading_symbol: order.trading_symbol,
@@ -164,11 +164,15 @@ defmodule AngelTradingWeb.OrderLive do
                variety: "NORMAL",
                product_type: "DELIVERY",
                price: price
-             }) do
+             }),
+           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
+             API.order_status(token, unique_order_id) do
+        flash_status = if order_status in ["open", "complete"], do: :info, else: :error
+
         socket
         |> push_navigate(to: ~p"/client/#{client_code}/orders")
-        |> put_flash(:info, "Order[#{order_id}] placed successfully")
-        |> assign(order: %{type: "LIMIT", price: nil, quantity: nil})
+        |> put_flash(flash_status, message)
+        |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
       else
         e ->
           Logger.error("[Watchlist][Order] Error placing order")

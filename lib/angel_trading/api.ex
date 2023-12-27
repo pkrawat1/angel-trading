@@ -117,4 +117,13 @@ defmodule AngelTrading.API do
       }
     )
   end
+
+  def order_status(token, unique_order_id) do
+    TradeGalleon.call(AngelOne, :order_status,
+      token: token,
+      params: %{
+        "unique_order_id" => unique_order_id 
+      }
+    )
+  end
 end
