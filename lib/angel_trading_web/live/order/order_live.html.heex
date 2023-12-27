@@ -4,10 +4,10 @@
       <.link class="mr-2 col-span-1" navigate={~p"/client/#{@client_code}/portfolio"}>
         <.icon name="hero-arrow-left" />
       </.link>
-      <div class="col-span-3">
+      <div class="col-span-3 leading-none">
         <%= @order[:trading_symbol] |> String.split("-") |> List.first() %>
         <br />
-        <span class="-mt-1 text-blue-500">
+        <span class="text-xs -mt-5 text-blue-500">
           <%= @order[:exchange] %>
         </span>
       </div>
@@ -86,23 +86,25 @@
         field={f[:price]}
         class="text-gray-100"
       />
-      <section class="fixed bottom-[80px] p-5 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
-        <div class="flex justify-between mx-auto max-w-6xl mb-16">
+      <section class="capitalize fixed bottom-[65px] px-5 pt-3 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
+        <div class="flex justify-between mx-auto max-w-6xl">
           <span class={
             if !is_sell_order? && @order.margin_required > @funds["net"], do: "text-red-600"
           }>
             Margin Required<br />
-            <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
+            <%= number_to_currency(
+              if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2))
+            ) %>
           </span>
           <span class="text-right">
-            Avilable Funds (<b><%= @name %></b>)<br />
-            <%= @funds["net"] %>
+            Avilable Cash(<small><b><%= @name %></b></small>)<br />
+            <%= number_to_currency(@funds["net"]) %>
           </span>
         </div>
       </section>
       <:actions>
         <div class="px-5 fixed bottom-0 left-0 z-50 w-full h-14 bg-white">
-          <div class="flex mx-auto max-w-6xl mb-16">
+          <div class="flex mx-auto max-w-6xl">
             <.button :if={!is_sell_order?} class="w-full !bg-green-700">PLACE BUY ORDER</.button>
             <.button :if={is_sell_order?} class="w-full !bg-red-700">PLACE SELL ORDER</.button>
           </div>

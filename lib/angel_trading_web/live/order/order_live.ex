@@ -208,7 +208,7 @@ defmodule AngelTradingWeb.OrderLive do
       }
 
       socket
-      |> assign(name: profile["name"])
+      |> assign(name: profile["name"] |> String.split(" ") |> List.first())
       |> assign(funds: funds)
       |> assign(selected_holding: Enum.find(holdings, &(&1["symboltoken"] == symbol_token)))
     else
