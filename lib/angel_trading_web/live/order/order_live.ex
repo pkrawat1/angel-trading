@@ -168,6 +168,7 @@ defmodule AngelTradingWeb.OrderLive do
            {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
              API.order_status(token, unique_order_id) do
         flash_status = if order_status in ["open", "complete"], do: :info, else: :error
+        message = if message == "", do: "Order placed successfully", else: message
 
         socket
         |> push_navigate(to: ~p"/client/#{client_code}/orders")
