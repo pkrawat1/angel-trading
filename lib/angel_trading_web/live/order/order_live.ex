@@ -125,7 +125,7 @@ defmodule AngelTradingWeb.OrderLive do
               ltp_percent: ltp_percent,
               is_gain_today?: new_ltp > close,
               price: order.price || new_ltp,
-              max: Float.floor(max, 0)
+              max: floor(max)
           }
         )
       end || socket

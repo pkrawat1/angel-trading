@@ -71,12 +71,13 @@
       <.input
         required
         type="number"
-        minlength="0"
+        min={0}
+        max={@order[:max]}
         field={f[:quantity]}
         value={@order[:quantity]}
         label="No. of Shares"
       />
-      <i>Max : <%= @order[:max] %></i>
+      <small>Max shares: <%= @order[:max] %></small>
       <.input
         required
         type="number"
@@ -88,7 +89,7 @@
       />
       <section class="fixed bottom-[80px] p-5 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
         <div class="flex justify-between mx-auto max-w-6xl mb-16">
-          <span class={if @order.margin_required > @funds["net"], do: "text-red-600"}>
+          <span class={if !is_sell_order? && @order.margin_required > @funds["net"], do: "text-red-600"}>
             Margin Required<br />
             <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
           </span>
