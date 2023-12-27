@@ -80,17 +80,22 @@ defmodule AngelTrading.API do
     )
   end
 
-  def place_order(token, %{
-        exchange: exchange,
-        trading_symbol: trading_symbol,
-        symbol_token: symbol_token,
-        quantity: quantity,
-        transaction_type: transaction_type,
-        order_type: order_type,
-        variety: variety,
-        product_type: product_type,
-        price: price
-      }) do
+  def place_order(
+        token,
+        %{
+          exchange: exchange,
+          trading_symbol: trading_symbol,
+          symbol_token: symbol_token,
+          quantity: quantity,
+          transaction_type: transaction_type,
+          order_type: order_type,
+          variety: variety,
+          product_type: product_type,
+          price: price
+        } = params
+      ) do
+    IO.inspect(params)
+
     TradeGalleon.call(AngelOne, :place_order,
       token: token,
       params: %{

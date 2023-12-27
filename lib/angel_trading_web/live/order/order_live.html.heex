@@ -71,7 +71,7 @@
       <.input
         required
         type="number"
-        min={0}
+        min={1}
         max={@order[:max]}
         field={f[:quantity]}
         value={@order[:quantity]}
@@ -84,12 +84,13 @@
         label={@order[:type]}
         value={if is_market_order?, do: @order[:ltp], else: @order[:price]}
         field={f[:price]}
-        disabled={is_market_order?}
         class="text-gray-100"
       />
       <section class="fixed bottom-[80px] p-5 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
         <div class="flex justify-between mx-auto max-w-6xl mb-16">
-          <span class={if !is_sell_order? && @order.margin_required > @funds["net"], do: "text-red-600"}>
+          <span class={
+            if !is_sell_order? && @order.margin_required > @funds["net"], do: "text-red-600"
+          }>
             Margin Required<br />
             <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
           </span>
