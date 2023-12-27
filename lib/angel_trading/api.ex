@@ -122,7 +122,7 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :order_status,
       token: token,
       params: %{
-        "unique_order_id" => unique_order_id 
+        "unique_order_id" => unique_order_id
       }
     )
   end

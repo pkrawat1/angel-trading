@@ -1,26 +1,31 @@
 <div class="text-sm uppercase">
-  <.header class="text-center mb-3">
-    <%= @name %>
-  </.header>
   <.header>
-    <%= @order[:trading_symbol] |> String.split("-") |> List.first() %>
-    <small class="text-xs text-blue-500">
-      <%= @order[:exchange] %>
-    </small>
-    <br />
-    <div class="text-sm">
-      <span :if={@order[:is_gain_today?]} class="text-green-600">
-        <%= number_to_currency(@order[:ltp]) %>
-        <.icon name="hero-arrow-up" />
-      </span>
-      <span :if={!@order[:is_gain_today?]} class="text-red-600">
-        <%= number_to_currency(@order[:ltp]) %>
-        <.icon name="hero-arrow-down" />
-      </span>
-      <span>
-        <%= (@order[:ltp] - @order[:close]) |> Float.floor(2) %> (<%= @order[:ltp_percent]
-        |> Float.floor(2) %>%)
-      </span>
+    <div class="text-base grid grid-cols-12 items-center">
+      <.link class="mr-2 col-span-1" navigate={~p"/client/#{@client_code}/portfolio"}>
+        <.icon name="hero-arrow-left" />
+      </.link>
+      <div class="col-span-3">
+        <%= @order[:trading_symbol] |> String.split("-") |> List.first() %>
+        <br />
+        <span class="-mt-1 text-blue-500">
+          <%= @order[:exchange] %>
+        </span>
+      </div>
+      <div class="text-right col-span-8 justify-self-end">
+        <span :if={@order[:is_gain_today?]} class="text-green-600">
+          <%= number_to_currency(@order[:ltp]) %>
+          <.icon name="hero-arrow-up" />
+        </span>
+        <span :if={!@order[:is_gain_today?]} class="text-red-600">
+          <%= number_to_currency(@order[:ltp]) %>
+          <.icon name="hero-arrow-down" />
+        </span>
+        <br />
+        <span>
+          <%= (@order[:ltp] - @order[:close]) |> Float.floor(2) %> (<%= @order[:ltp_percent]
+          |> Float.floor(2) %>%)
+        </span>
+      </div>
     </div>
   </.header>
   <section id="buy-quote">
@@ -71,6 +76,7 @@
         value={@order[:quantity]}
         label="No. of Shares"
       />
+      <i>Max : <%= @order[:max] %></i>
       <.input
         required
         type="number"
@@ -80,21 +86,26 @@
         disabled={is_market_order?}
         class="text-gray-100"
       />
-      <section class="flex justify-between capitalize">
-        <span class={if @order.margin_required > @funds["net"], do: "text-red-600"}>
-          Margin Required<br />
-          <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
-        </span>
-        <span class="text-right">
-          Avilable Funds<br />
-          <%= @funds["net"] %>
-        </span>
+      <section class="fixed bottom-[80px] p-5 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
+        <div class="flex justify-between mx-auto max-w-6xl mb-16">
+          <span class={if @order.margin_required > @funds["net"], do: "text-red-600"}>
+            Margin Required<br />
+            <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
+          </span>
+          <span class="text-right">
+            Avilable Funds<br />
+            <%= @funds["net"] %>
+          </span>
+        </div>
       </section>
       <:actions>
-        <.button :if={!is_sell_order?} class="w-full !bg-green-700">BUY</.button>
-        <.button :if={is_sell_order?} class="w-full !bg-red-700">SELL</.button>
+        <div class="px-5 fixed bottom-0 left-0 z-50 w-full h-14 bg-white">
+          <div class="flex mx-auto max-w-6xl mb-16">
+            <.button :if={!is_sell_order?} class="w-full !bg-green-700">PLACE BUY ORDER</.button>
+            <.button :if={is_sell_order?} class="w-full !bg-red-700">PLACE SELL ORDER</.button>
+          </div>
+        </div>
       </:actions>
     </.simple_form>
   </section>
 </div>
-<.bottom_nav client_code={@client_code} />

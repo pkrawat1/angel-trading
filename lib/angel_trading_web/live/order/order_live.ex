@@ -44,6 +44,7 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(:client_code, client_code)
         |> assign(:feed_token, feed_token)
         |> assign(:refresh_token, refresh_token)
+        |> assign(:no_header, true)
         |> assign(:order, %{
           type: "LIMIT",
           price: nil,
@@ -56,7 +57,8 @@ defmodule AngelTradingWeb.OrderLive do
           close: 0.0,
           ltp_percent: 0.0,
           is_gain_today?: true,
-          margin_required: 0.0
+          margin_required: 0.0,
+          max: 0
         })
         |> get_profile_data()
       else
@@ -100,25 +102,32 @@ defmodule AngelTradingWeb.OrderLive do
 
   def handle_info(
         %{payload: quote_data},
-        socket
+        %{assigns: %{funds: funds, order: order, selected_holding: selected_holding}} = socket
       ) do
     new_ltp = quote_data.last_traded_price / 100
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
-    updated_order = socket.assigns.order
+
+    max =
+      if order.transaction_type == "BUY" do
+        funds["net"] / (order.price || new_ltp)
+      else
+        (selected_holding || %{"quantity" => 0})["quantity"]
+      end
 
     socket =
-      if updated_order[:ltp] != new_ltp do
-        updated_order =
-          %{
-            updated_order
+      if order[:ltp] != new_ltp do
+        assign(socket,
+          order: %{
+            order
             | ltp: new_ltp,
               close: close,
               ltp_percent: ltp_percent,
-              is_gain_today?: new_ltp > close
+              is_gain_today?: new_ltp > close,
+              price: order.price || new_ltp,
+              max: Float.floor(max, 0)
           }
-
-        assign(socket, order: updated_order)
+        )
       end || socket
 
     {:noreply, socket}
@@ -187,8 +196,11 @@ defmodule AngelTradingWeb.OrderLive do
     {:noreply, socket}
   end
 
-  defp get_profile_data(%{assigns: %{token: token}} = socket) do
+  defp get_profile_data(
+         %{assigns: %{token: token, order: %{symbol_token: symbol_token}}} = socket
+       ) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
+         {:ok, %{"data" => holdings}} <- API.portfolio(token),
          {:ok, %{"data" => funds}} <- API.funds(token) do
       funds = %{
         funds
@@ -198,6 +210,7 @@ defmodule AngelTradingWeb.OrderLive do
       socket
       |> assign(name: profile["name"])
       |> assign(funds: funds)
+      |> assign(selected_holding: Enum.find(holdings, &(&1["symboltoken"] == symbol_token)))
     else
       {:error, %{"message" => message}} ->
         socket
