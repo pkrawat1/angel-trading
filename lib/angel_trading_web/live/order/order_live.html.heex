@@ -95,7 +95,7 @@
             <%= if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2)) %>
           </span>
           <span class="text-right">
-            Avilable Funds<br />
+            Avilable Funds (<b><%= @name %></b>)<br />
             <%= @funds["net"] %>
           </span>
         </div>
