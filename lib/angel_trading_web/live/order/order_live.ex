@@ -108,15 +108,15 @@ defmodule AngelTradingWeb.OrderLive do
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
 
-    max =
-      if order.transaction_type == "BUY" do
-        funds["net"] / (order.price || new_ltp)
-      else
-        (selected_holding || %{"quantity" => 0})["quantity"]
-      end
-
     socket =
-      if order[:ltp] != new_ltp do
+      if order[:symbol_token] == quote_data.token && order[:ltp] != new_ltp do
+        max =
+          if order.transaction_type == "BUY" do
+            funds["net"] / (order.price || new_ltp)
+          else
+            (selected_holding || %{"quantity" => 0})["quantity"]
+          end
+
         assign(socket,
           order: %{
             order
