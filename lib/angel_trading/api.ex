@@ -33,13 +33,13 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :portfolio, token: token)
   end
 
-  def quote(token, exchange, symbol_token) do
+  def quote(token, exchange, symbol_tokens) do
     TradeGalleon.call(AngelOne, :quote,
       token: token,
       params: %{
         mode: "FULL",
         exchangeTokens: %{
-          exchange => [symbol_token]
+          exchange => symbol_tokens
         }
       }
     )
@@ -92,10 +92,8 @@ defmodule AngelTrading.API do
           variety: variety,
           product_type: product_type,
           price: price
-        } = params
+        }
       ) do
-    IO.inspect(params)
-
     TradeGalleon.call(AngelOne, :place_order,
       token: token,
       params: %{

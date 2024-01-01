@@ -168,7 +168,7 @@ defmodule AngelTradingWeb.PortfolioLive do
       ) do
     socket =
       with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
-             API.quote(token, exchange, symbol_token),
+             API.quote(token, exchange, [symbol_token]),
            {:ok, %{"data" => candle_data}} <-
              API.candle_data(
                token,

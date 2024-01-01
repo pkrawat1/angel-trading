@@ -16,7 +16,7 @@ defmodule AngelTradingWeb.WatchlistLive do
           :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
         end
 
-        watchlist = user["watchlist"] || []
+        watchlist = assign_quotes(user["watchlist"] || [], token)
 
         socket
         |> assign(
@@ -123,10 +123,10 @@ defmodule AngelTradingWeb.WatchlistLive do
       if updated_watchlist_quote && updated_watchlist_quote["ltp"] != new_ltp do
         updated_watchlist_quote =
           updated_watchlist_quote
-          |> Map.put_new("ltp", new_ltp)
-          |> Map.put_new("close", close)
-          |> Map.put_new("ltp_percent", ltp_percent)
-          |> Map.put_new("is_gain_today?", close < new_ltp)
+          |> Map.put("ltp", new_ltp)
+          |> Map.put("close", close)
+          |> Map.put("ltp_percent", ltp_percent)
+          |> Map.put("is_gain_today?", close < new_ltp)
 
         socket
         |> stream_insert(
@@ -155,9 +155,20 @@ defmodule AngelTradingWeb.WatchlistLive do
   def handle_event(
         "toggle-token-watchlist",
         %{"token" => token},
-        %{assigns: %{watchlist: watchlist, token_list: token_list, user_hash: user_hash}} = socket
+        %{
+          assigns: %{
+            token: user_token,
+            watchlist: watchlist,
+            token_list: token_list,
+            user_hash: user_hash
+          }
+        } = socket
       ) do
-    new_watch = Enum.find(token_list, &(&1["symboltoken"] == token))
+    [new_watch] =
+      token_list
+      |> Enum.filter(&(&1["symboltoken"] == token))
+      |> assign_quotes(user_token)
+
     token_exist? = watchlist |> Enum.find(&(&1["symboltoken"] == token))
 
     watchlist =
@@ -198,7 +209,8 @@ defmodule AngelTradingWeb.WatchlistLive do
         %{assigns: %{token: token}} = socket
       ) do
     socket =
-      with {:ok, %{"data" => %{"fetched" => [quote]}}} <- API.quote(token, exchange, symbol_token) do
+      with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+             API.quote(token, exchange, [symbol_token]) do
         %{"ltp" => ltp, "close" => close} = quote
         ltp_percent = (ltp - close) / close * 100
 
@@ -238,5 +250,29 @@ defmodule AngelTradingWeb.WatchlistLive do
     )
 
     socket
+  end
+
+  defp assign_quotes(watchlist, token) do
+    with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+           API.quote(token, "NSE", Enum.map(watchlist, & &1["symboltoken"])) do
+      watchlist_map =
+        Enum.reduce(watchlist, %{}, fn w, acc ->
+          Map.merge(acc, %{w["symboltoken"] => w})
+        end)
+
+      Enum.map(quotes, fn %{"symbolToken" => symbol_token, "ltp" => ltp, "close" => close} ->
+        watch = watchlist_map[symbol_token]
+        ltp_percent = (ltp - close) / close * 100
+
+        watch
+        |> Map.put("ltp", ltp)
+        |> Map.put("close", close)
+        |> Map.put("ltp_percent", ltp_percent)
+        |> Map.put("is_gain_today?", close < ltp)
+      end)
+    else
+      _ ->
+        watchlist
+    end
   end
 end
