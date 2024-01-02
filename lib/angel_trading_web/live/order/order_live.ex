@@ -93,6 +93,23 @@ defmodule AngelTradingWeb.OrderLive do
         )
 
       e ->
+        with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+               API.quote(token, "NSE", [socket.assigns.order.symbol_token]) do
+          Enum.each(quotes, fn quote_data ->
+            send(
+              self(),
+              %{
+                payload:
+                  Map.merge(quote_data, %{
+                    last_traded_price: quote_data["ltp"] * 100,
+                    token: quote_data["symbolToken"],
+                    close_price: quote_data["close"] * 100
+                  })
+              }
+            )
+          end)
+        end
+
         Logger.error("[Watchlist] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end

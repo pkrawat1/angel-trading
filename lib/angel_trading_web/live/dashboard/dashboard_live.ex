@@ -80,6 +80,23 @@ defmodule AngelTradingWeb.DashboardLive do
           )
 
         e ->
+          with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+                 API.quote(token, "NSE", Enum.map(holdings, & &1["symboltoken"])) do
+            Enum.each(quotes, fn quote_data ->
+              send(
+                self(),
+                %{
+                  topic: "portfolio-for-" <> client_code,
+                  payload:
+                    Map.merge(quote_data, %{
+                      last_traded_price: quote_data["ltp"] * 100,
+                      token: quote_data["symbolToken"]
+                    })
+                }
+              )
+            end)
+          end
+
           Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
           IO.inspect(e)
       end

@@ -83,6 +83,23 @@ defmodule AngelTradingWeb.OrdersLive do
         Logger.info("[Order] web socket (#{socket_process} #{inspect(pid)}) already established")
 
       e ->
+        with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+               API.quote(token, "NSE", Enum.map(socket.assigns.order_book, & &1["symboltoken"])) do
+          Enum.each(quotes, fn quote_data ->
+            send(
+              self(),
+              %{
+                payload:
+                  Map.merge(quote_data, %{
+                    last_traded_price: quote_data["ltp"] * 100,
+                    token: quote_data["symbolToken"],
+                    close_price: quote_data["close"] * 100
+                  })
+              }
+            )
+          end)
+        end
+
         Logger.error("[Order] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end
