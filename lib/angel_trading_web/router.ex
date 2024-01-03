@@ -44,6 +44,7 @@ defmodule AngelTradingWeb.Router do
       live "/client/:client_code/portfolio", PortfolioLive, :show
       live "/client/:client_code/portfolio/quote", PortfolioLive, :quote
       live "/client/:client_code/orders", OrdersLive, :index
+      live "/client/:client_code/orders/quote", OrdersLive, :quote
       live "/client/:client_code/order/new", OrderLive, :new
       live "/client/:client_code/order/edit", OrderLive, :edit
     end

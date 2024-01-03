@@ -10,7 +10,7 @@ defmodule AngelTradingWeb.OrderLive do
           "exchange" => exchange,
           "transaction_type" => transaction_type,
           "trading_symbol" => trading_symbol
-        },
+        } = params,
         %{"user_hash" => user_hash},
         socket
       ) do
@@ -38,6 +38,9 @@ defmodule AngelTradingWeb.OrderLive do
               feed_token: feed_token,
               refresh_token: refresh_token
             }} <- Utils.decrypt(:client_tokens, client_data) do
+        {quantity, _} = params |> Map.get("quantity", "0") |> Integer.parse()
+        {price, _} = params |> Map.get("price", "0") |> Integer.parse()
+
         socket
         |> assign(:page_title, "New Orders")
         |> assign(:token, token)
@@ -46,9 +49,10 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(:refresh_token, refresh_token)
         |> assign(:no_header, true)
         |> assign(:order, %{
-          type: "LIMIT",
-          price: nil,
-          quantity: nil,
+          order_id: params["order_id"],
+          type: params["order_type"] || "LIMIT",
+          price: price,
+          quantity: quantity,
           transaction_type: transaction_type,
           exchange: exchange,
           symbol_token: symbol_token,
@@ -127,9 +131,11 @@ defmodule AngelTradingWeb.OrderLive do
 
     socket =
       if order[:symbol_token] == quote_data.token && order[:ltp] != new_ltp do
+        price = (order.price != 0 && order.price) || new_ltp
+
         max =
           if order.transaction_type == "BUY" do
-            funds["net"] / (order.price || new_ltp)
+            funds["net"] / price
           else
             (selected_holding || %{"quantity" => 0})["quantity"]
           end
@@ -141,7 +147,7 @@ defmodule AngelTradingWeb.OrderLive do
               close: close,
               ltp_percent: ltp_percent,
               is_gain_today?: new_ltp > close,
-              price: order.price || new_ltp,
+              price: price,
               max: floor(max)
           }
         )
@@ -155,8 +161,8 @@ defmodule AngelTradingWeb.OrderLive do
         %{"order" => %{"price" => price, "quantity" => quantity}},
         socket
       ) do
-    {quantity, ""} = Integer.parse("0" <> quantity)
-    {price, ""} = Float.parse(if price == "", do: "#{socket.assigns.order.ltp}", else: price)
+    {quantity, _} = Integer.parse("0" <> quantity)
+    {price, _} = Float.parse(if price == "", do: "#{socket.assigns.order.ltp}", else: price)
 
     {:noreply,
      assign(socket,
@@ -191,7 +197,7 @@ defmodule AngelTradingWeb.OrderLive do
                product_type: "DELIVERY",
                price: price
              }),
-           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
+           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message} = order_info}} <-
              API.order_status(token, unique_order_id) do
         flash_status = if order_status in ["open", "complete"], do: :info, else: :error
         message = if message == "", do: "Order placed successfully", else: message
@@ -208,6 +214,47 @@ defmodule AngelTradingWeb.OrderLive do
           socket
           |> push_navigate(to: ~p"/client/#{client_code}/orders")
           |> put_flash(:error, "Failed to place order.")
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "modify-order",
+        %{"order" => %{"price" => price, "quantity" => quantity}},
+        %{assigns: %{order: order, token: token, client_code: client_code}} = socket
+      ) do
+    socket =
+      with {:ok, %{"data" => %{"uniqueorderid" => unique_order_id}}} <-
+             API.modify_order(token, %{
+               exchange: order.exchange,
+               trading_symbol: order.trading_symbol,
+               symbol_token: order.symbol_token,
+               quantity: quantity,
+               transaction_type: order.transaction_type,
+               order_type: order.type,
+               variety: "NORMAL",
+               product_type: "DELIVERY",
+               order_id: order.order_id,
+               price: price
+             }),
+           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
+             API.order_status(token, unique_order_id) do
+        flash_status = if order_status in ["open", "complete"], do: :info, else: :error
+        message = if message == "", do: "Order modified successfully", else: message
+
+        socket
+        |> push_navigate(to: ~p"/client/#{client_code}/orders")
+        |> put_flash(flash_status, message)
+        |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
+      else
+        e ->
+          Logger.error("[Orders][Order] Error modifying order")
+          IO.inspect(e)
+
+          socket
+          |> push_navigate(to: ~p"/client/#{client_code}/orders")
+          |> put_flash(:error, "Failed to modify order.")
       end
 
     {:noreply, socket}

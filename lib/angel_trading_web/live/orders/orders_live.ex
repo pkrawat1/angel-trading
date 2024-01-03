@@ -34,6 +34,7 @@ defmodule AngelTradingWeb.OrdersLive do
         |> assign(:client_code, client_code)
         |> assign(:feed_token, feed_token)
         |> assign(:refresh_token, refresh_token)
+        |> assign(:quote, nil)
         |> get_order_data()
       else
         _ ->
@@ -44,6 +45,14 @@ defmodule AngelTradingWeb.OrdersLive do
 
     {:ok, socket}
   end
+
+  def handle_params(
+        _,
+        _,
+        %{assigns: %{live_action: :quote, quote: quote, client_code: client_code}} = socket
+      )
+      when is_nil(quote),
+      do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/orders")}
 
   def handle_params(params, _, socket), do: {:noreply, assign(socket, params: params)}
 
@@ -140,6 +149,32 @@ defmodule AngelTradingWeb.OrdersLive do
         end)
       else
         socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "select-holding",
+        %{"exchange" => exchange, "symbol" => symbol_token, "selected-order-id" => order_id},
+        %{assigns: %{token: token, order_book: order_book}} = socket
+      ) do
+    socket =
+      with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+             API.quote(token, exchange, [symbol_token]) do
+        %{"ltp" => ltp, "close" => close} = quote
+        ltp_percent = (ltp - close) / close * 100
+
+        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+
+        socket
+        |> assign(quote: quote)
+        |> assign(selected_order: Enum.find(order_book, &(&1["orderid"] == order_id)))
+      else
+        _ ->
+          socket
+          |> assign(quote: nil)
+          |> put_flash(:error, "[Quote] : Failed to fetch quote")
       end
 
     {:noreply, socket}

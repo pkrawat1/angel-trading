@@ -30,13 +30,14 @@
   </.header>
   <section id="buy-quote">
     <% is_sell_order? = @order.transaction_type == "SELL" %>
+    <% is_edit_order? = @live_action == :edit %>
     <.simple_form
       :let={f}
       for={%{}}
       as={:order}
       autocomplete="off"
       phx-change="validate-order"
-      phx-submit="place-order"
+      phx-submit={if(is_edit_order?, do: "modify-order", else: "place-order")}
     >
       <% is_market_order? = @order[:type] == "MARKET" %>
       <div class="flex">
@@ -68,19 +69,10 @@
           </nav>
         </div>
       </div>
-      <.input
-        required
-        type="number"
-        min={1}
-        max={@order[:max]}
-        field={f[:quantity]}
-        value={@order[:quantity]}
-        label="No. of Shares"
-      />
+      <.input required field={f[:quantity]} value={@order[:quantity]} label="No. of Shares" />
       <small>Max shares: <%= @order[:max] %></small>
       <.input
         required
-        type="number"
         label={@order[:type]}
         value={if is_market_order?, do: @order[:ltp], else: @order[:price]}
         field={f[:price]}
@@ -105,8 +97,13 @@
       <:actions>
         <div class="px-5 fixed bottom-0 left-0 z-50 w-full h-14 bg-white">
           <div class="flex mx-auto max-w-6xl">
-            <.button :if={!is_sell_order?} class="w-full !bg-green-700">PLACE BUY ORDER</.button>
-            <.button :if={is_sell_order?} class="w-full !bg-red-700">PLACE SELL ORDER</.button>
+            <% action = if(is_edit_order?, do: "MODIFY", else: "PLACE") %>
+            <.button :if={!is_sell_order?} class="w-full !bg-green-700">
+              <%= action %> BUY ORDER
+            </.button>
+            <.button :if={is_sell_order?} class="w-full !bg-red-700">
+              <%= action %> SELL ORDER
+            </.button>
           </div>
         </div>
       </:actions>
