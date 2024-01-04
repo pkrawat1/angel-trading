@@ -39,6 +39,7 @@ defmodule AngelTrading.Utils do
                      "t1quantity" => _,
                      "tradingsymbol" => _
                    } = holding ->
+      averageprice = if averageprice > 0, do: averageprice, else: close
       close = if realisedquantity > 0, do: close, else: averageprice
       invested = quantity * averageprice
       current = quantity * ltp
