@@ -186,7 +186,8 @@ defmodule AngelTradingWeb.WatchlistLive do
 
     token_exist? = watchlist |> Enum.find(&(&1["symboltoken"] == token))
 
-    socket =
+    %{assigns: %{watchlist: watchlist}} =
+      socket =
       if token_exist? do
         socket
         |> assign(watchlist: Enum.filter(watchlist, &(&1["symboltoken"] != token)))
@@ -198,7 +199,7 @@ defmodule AngelTradingWeb.WatchlistLive do
       end
 
     socket =
-      case Account.update_watchlist(user_hash, socket.assigns.watchlist) do
+      case Account.update_watchlist(user_hash, watchlist) do
         :ok ->
           if token_exist? do
             stream_delete(socket, :watchlist, new_watch)
