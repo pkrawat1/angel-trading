@@ -35,3 +35,4 @@ angel_trading-*.tar
 npm-debug.log
 /assets/node_modules/
 .envrc
+/priv/native/
