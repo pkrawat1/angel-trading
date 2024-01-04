@@ -139,12 +139,25 @@ defmodule AngelTradingWeb.WatchlistLive do
     {:noreply, socket}
   end
 
-  def handle_event("search", %{"search" => query}, %{assigns: %{token: token}} = socket) do
+  def handle_event(
+        "search",
+        %{"search" => query},
+        %{assigns: %{watchlist: watchlist, token: token}} = socket
+      ) do
     token_list =
       with true <- bit_size(query) > 0,
            {:ok, %{"data" => token_list}} <- API.search_token(token, "NSE", query) do
+        watchlist_symbols = watchlist |> Enum.map(& &1["tradingsymbol"]) |> MapSet.new()
+
         token_list
         |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
+        |> Enum.map(
+          &Map.put_new(
+            &1,
+            "in_watchlist?",
+            MapSet.member?(watchlist_symbols, &1["tradingsymbol"])
+          )
+        )
       else
         _ -> []
       end
@@ -164,23 +177,28 @@ defmodule AngelTradingWeb.WatchlistLive do
           }
         } = socket
       ) do
-    [new_watch] =
+    new_watch =
       token_list
       |> Enum.filter(&(&1["symboltoken"] == token))
       |> assign_quotes(user_token)
+      |> List.first()
+      |> Map.put("timestamp", Timex.to_unix(Timex.now()))
 
     token_exist? = watchlist |> Enum.find(&(&1["symboltoken"] == token))
 
-    watchlist =
+    socket =
       if token_exist? do
-        watchlist
-        |> Enum.filter(&(&1["symboltoken"] != token))
+        socket
+        |> assign(watchlist: Enum.filter(watchlist, &(&1["symboltoken"] != token)))
+        |> put_flash(:info, "Removed #{new_watch["tradingsymbol"]} from watchlist.")
       else
-        [new_watch | watchlist]
+        socket
+        |> assign(watchlist: [new_watch | watchlist])
+        |> put_flash(:info, "Added #{new_watch["tradingsymbol"]} from watchlist.")
       end
 
     socket =
-      case Account.update_watchlist(user_hash, watchlist) do
+      case Account.update_watchlist(user_hash, socket.assigns.watchlist) do
         :ok ->
           if token_exist? do
             stream_delete(socket, :watchlist, new_watch)
@@ -189,10 +207,11 @@ defmodule AngelTradingWeb.WatchlistLive do
               socket,
               :watchlist,
               new_watch,
-              at: -1
+              at: 0
             )
           end
           |> assign(watchlist: watchlist)
+          |> assign(token_list: [])
           |> subscribe_to_quote_feed()
 
         _ ->
@@ -270,6 +289,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         |> Map.put("ltp_percent", ltp_percent)
         |> Map.put("is_gain_today?", close < ltp)
       end)
+      |> Enum.sort(&(&1["timestamp"] >= &2["timestamp"]))
     else
       _ ->
         watchlist

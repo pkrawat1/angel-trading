@@ -197,7 +197,7 @@ defmodule AngelTradingWeb.OrderLive do
                product_type: "DELIVERY",
                price: price
              }),
-           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message} = order_info}} <-
+           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
              API.order_status(token, unique_order_id) do
         flash_status = if order_status in ["open", "complete"], do: :info, else: :error
         message = if message == "", do: "Order placed successfully", else: message
