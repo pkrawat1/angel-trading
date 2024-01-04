@@ -156,18 +156,45 @@ defmodule AngelTradingWeb.OrderLive do
     {:noreply, socket}
   end
 
-  def handle_event(
-        "validate-order",
-        %{"order" => %{"price" => price, "quantity" => quantity}},
-        socket
-      ) do
-    {quantity, _} = Integer.parse("0" <> quantity)
-    {price, _} = Float.parse(if price == "", do: "#{socket.assigns.order.ltp}", else: price)
+  def handle_event("increase-limit", _, %{assigns: %{order: order}} = socket) do
+    price = "#{order.price}" |> Decimal.add("0.05") |> Decimal.to_float()
 
     {:noreply,
      assign(socket,
        order: %{
-         socket.assigns.order
+         order
+         | price: price,
+           margin_required: price * order.quantity
+       }
+     )}
+  end
+
+  def handle_event("decrease-limit", _, %{assigns: %{order: order}} = socket) do
+    price =
+      "#{order.price}" |> Decimal.sub("0.05") |> Decimal.to_float()
+
+    {:noreply,
+     assign(socket,
+       order: %{
+         order
+         | price: price,
+           margin_required: price * order.quantity
+       }
+     )}
+  end
+
+  def handle_event(
+        "validate-order",
+        %{"order" => %{"price" => price, "quantity" => quantity}},
+        %{assigns: %{order: order}} = socket
+      ) do
+    {quantity, _} = Integer.parse("0" <> quantity)
+    {price, _} = Float.parse(if price == "", do: "#{order.ltp}", else: price)
+
+    {:noreply,
+     assign(socket,
+       order: %{
+         order
          | price: price,
            quantity: quantity,
            margin_required: price * quantity

@@ -1,5 +1,5 @@
-<div class="text-sm uppercase">
-  <.header>
+<main class="text-sm uppercase">
+  <.header class="fixed top-0 left-0 w-full bg-white py-3 px-5 shadow">
     <div class="text-base grid grid-cols-12 items-center">
       <.link class="mr-2 col-span-1" navigate={~p"/client/#{@client_code}/portfolio"}>
         <.icon name="hero-arrow-left" />
@@ -28,7 +28,7 @@
       </div>
     </div>
   </.header>
-  <section id="buy-quote">
+  <section id="buy-quote" class="mt-20">
     <% is_sell_order? = @order.transaction_type == "SELL" %>
     <% is_edit_order? = @live_action == :edit %>
     <.simple_form
@@ -40,44 +40,50 @@
       phx-submit={if(is_edit_order?, do: "modify-order", else: "place-order")}
     >
       <% is_market_order? = @order[:type] == "MARKET" %>
-      <div class="flex">
-        <div class="flex bg-gray-100 text-sm rounded-lg transition p-1">
-          <nav class="flex">
-            <% color_classes = fn status ->
-              [
-                "p-2 inline-flex items-center cursor-pointer",
-                if(status,
-                  do: " bg-red-600 text-white rounded-lg shadow-sm",
-                  else: "text-gray-700"
-                )
-              ]
-            end %>
-            <a
-              phx-click="toggle-order-type"
-              phx-value-type="LIMIT"
-              class={color_classes.(!is_market_order?)}
-            >
-              LIMIT
-            </a>
-            <a
-              phx-click="toggle-order-type"
-              phx-value-type="MARKET"
-              class={color_classes.(is_market_order?)}
-            >
-              MARKET
-            </a>
-          </nav>
-        </div>
-      </div>
       <.input required field={f[:quantity]} value={@order[:quantity]} label="No. of Shares" />
       <small>Max shares: <%= @order[:max] %></small>
-      <.input
-        required
-        label={@order[:type]}
-        value={if is_market_order?, do: @order[:ltp], else: @order[:price]}
-        field={f[:price]}
-        class="text-gray-100"
-      />
+      <label for="order_price" class="block text-sm font-semibold text-gray-900">
+        <%= @order[:type] %>
+      </label>
+      <div class="flex space-x-2 !mt-0 items-baseline">
+        <.button type="button" phx-click="decrease-limit" class="!bg-red-100 !text-red-600">
+          <.icon name="hero-minus-solid" />
+        </.button>
+        <.input
+          required
+          value={if is_market_order?, do: @order[:ltp], else: @order[:price]}
+          field={f[:price]}
+          input_class="text-center"
+        />
+        <.button type="button" phx-click="increase-limit" class="!bg-red-100 !text-red-600">
+          <.icon name="hero-plus-solid" />
+        </.button>
+        <div class="flex h-full bg-gray-100 text-sm rounded-lg transition p-1">
+          <% color_classes = fn status ->
+            [
+              "p-2 inline-flex items-center cursor-pointer",
+              if(status,
+                do: " bg-red-600 text-white rounded-lg shadow-sm",
+                else: "text-gray-700"
+              )
+            ]
+          end %>
+          <a
+            phx-click="toggle-order-type"
+            phx-value-type="LIMIT"
+            class={color_classes.(!is_market_order?)}
+          >
+            LIMIT
+          </a>
+          <a
+            phx-click="toggle-order-type"
+            phx-value-type="MARKET"
+            class={color_classes.(is_market_order?)}
+          >
+            MARKET
+          </a>
+        </div>
+      </div>
       <section class="capitalize fixed bottom-[65px] px-5 pt-3 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
         <div class="flex justify-between mx-auto max-w-6xl">
           <span class={
@@ -85,7 +91,7 @@
           }>
             Margin Required<br />
             <%= number_to_currency(
-              if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.floor(2))
+              if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.ceil())
             ) %>
           </span>
           <span class="text-right">
@@ -109,4 +115,4 @@
       </:actions>
     </.simple_form>
   </section>
-</div>
+</main>
