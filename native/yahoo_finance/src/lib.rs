@@ -22,16 +22,6 @@ fn search(company_name: String) -> Result<Vec<YQuoteItem>, String> {
                 long_name: q.long_name.clone(),
                 symbol: q.symbol.clone(),
             }
-            // format!(
-            // "{} -> {}",
-            // q.symbol
-            // .clone()
-            // .split(".")
-            // .collect::<Vec<&str>>()
-            // .first()
-            // .unwrap(),
-            // q.long_name
-            // )
         })
         .collect::<Vec<YQuoteItem>>();
     Ok(company_symbol)

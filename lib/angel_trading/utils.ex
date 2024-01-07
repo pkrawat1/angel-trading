@@ -126,7 +126,7 @@ defmodule AngelTrading.Utils do
     symbol = trading_symbol |> String.split("-") |> List.first()
 
     case AngelTrading.YahooFinance.search(symbol) do
-      {:ok, [%{long_name: long_name}]} -> long_name
+      {:ok, [%{long_name: long_name}]} when bit_size(long_name) > 0 -> long_name
       _ -> trading_symbol
     end
   end
