@@ -1,0 +1,17 @@
+[package]
+name = "yahoo_finance"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "yahoo_finance"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.30.0"
+serde = "1.0.195"
+serde_json = "1.0.111"
+tokio-test = "0.4.3"
+yahoo_finance_api = "2.1.0"
