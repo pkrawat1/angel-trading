@@ -1,8 +1,16 @@
+use rustler::NifStruct;
 use tokio_test;
 use yahoo_finance_api as yahoo;
 
+#[derive(Debug, NifStruct)]
+#[module = "YQuoteItem"]
+struct YQuoteItem {
+    long_name: String,
+    symbol: String,
+}
+
 #[rustler::nif]
-fn search(company_name: String) -> Result<Vec<String>, String> {
+fn search(company_name: String) -> Result<Vec<YQuoteItem>, String> {
     let provider = yahoo::YahooConnector::new();
     let company_symbol = tokio_test::block_on(provider.search_ticker(&company_name))
         .unwrap()
@@ -10,18 +18,22 @@ fn search(company_name: String) -> Result<Vec<String>, String> {
         .iter()
         .filter(|q| q.exchange == "NSI")
         .map(|q| {
-            format!(
-                "{} -> {}",
-                q.symbol
-                    .clone()
-                    .split(".")
-                    .collect::<Vec<&str>>()
-                    .first()
-                    .unwrap(),
-                q.long_name
-            )
+            YQuoteItem {
+                long_name: q.long_name.clone(),
+                symbol: q.symbol.clone(),
+            }
+            // format!(
+            // "{} -> {}",
+            // q.symbol
+            // .clone()
+            // .split(".")
+            // .collect::<Vec<&str>>()
+            // .first()
+            // .unwrap(),
+            // q.long_name
+            // )
         })
-        .collect();
+        .collect::<Vec<YQuoteItem>>();
     Ok(company_symbol)
 }
 

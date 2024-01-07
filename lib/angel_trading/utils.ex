@@ -122,5 +122,14 @@ defmodule AngelTrading.Utils do
     # ]
   end
 
+  def stock_long_name(trading_symbol) do
+    symbol = trading_symbol |> String.split("-") |> List.first()
+
+    case AngelTrading.YahooFinance.search(symbol) do
+      {:ok, [%{long_name: long_name}]} -> long_name
+      _ -> trading_symbol
+    end
+  end
+
   defp secret(), do: Application.get_env(:angel_trading, :encryption_key)
 end

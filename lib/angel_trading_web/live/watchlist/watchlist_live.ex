@@ -1,6 +1,6 @@
 defmodule AngelTradingWeb.WatchlistLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.{Account, API, Utils}
+  alias AngelTrading.{Account, API, Utils, YahooFinance}
   require Logger
 
   def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
@@ -149,17 +149,43 @@ defmodule AngelTradingWeb.WatchlistLive do
            {:ok, %{"data" => token_list}} <- API.search_token(token, "NSE", query) do
         watchlist_symbols = watchlist |> Enum.map(& &1["tradingsymbol"]) |> MapSet.new()
 
-        token_list
-        |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
-        |> Enum.map(
-          &Map.put_new(
-            &1,
-            "in_watchlist?",
-            MapSet.member?(watchlist_symbols, &1["tradingsymbol"])
+        token_list =
+          token_list
+          |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
+          |> Enum.map(
+            &(&1
+              |> Map.put_new(
+                "in_watchlist?",
+                MapSet.member?(watchlist_symbols, &1["tradingsymbol"])
+              )
+              |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
           )
-        )
+
+        if token_list == [] do
+          case YahooFinance.search(query) do
+            {:ok, [_ | _] = yahoo_quotes} ->
+              yahoo_quotes
+              |> Enum.map(
+                &handle_event(
+                  "search",
+                  %{"search" => &1.symbol |> String.split(".") |> List.first()},
+                  socket
+                )
+              )
+              |> Enum.map(fn {_, %{assigns: %{token_list: token_list}}} ->
+                token_list
+              end)
+              |> Enum.flat_map(& &1)
+
+            _ ->
+              []
+          end
+        else
+          token_list
+        end
       else
-        _ -> []
+        _ ->
+          []
       end
 
     {:noreply, assign(socket, :token_list, token_list)}
