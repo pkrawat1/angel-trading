@@ -142,44 +142,62 @@ defmodule AngelTradingWeb.WatchlistLive do
   def handle_event(
         "search",
         %{"search" => query},
+        socket
+      )
+      when byte_size(query) < 3 do
+    {
+      :noreply,
+      assign_async(
+        socket,
+        :token_list,
+        fn -> {:ok, %{token_list: []}} end
+      )
+    }
+  end
+
+  def handle_event(
+        "search",
+        %{"search" => query},
         %{assigns: %{watchlist: watchlist, token: token}} = socket
       ) do
     async_fn = fn ->
-      {:ok,
-       %{
-         token_list:
-           with true <- bit_size(query) > 2,
-                {:ok, [_ | _] = yahoo_quotes} <- YahooFinance.search(query) do
-             watchlist_symbols = watchlist |> Enum.map(& &1["tradingsymbol"]) |> MapSet.new()
+      case YahooFinance.search(query) do
+        {:ok, yahoo_quotes} when yahoo_quotes != [] ->
+          watchlist_symbols = watchlist |> Enum.map(& &1["tradingsymbol"]) |> MapSet.new()
 
-             yahoo_quotes
-             |> Enum.map(
-               &(&1.symbol
-                 |> String.slice(0..(String.length(query) - 1))
-                 |> String.split(".")
-                 |> List.first())
-             )
-             |> MapSet.new()
-             |> Enum.map(&API.search_token(token, "NSE", &1))
-             |> Enum.flat_map(fn
-               {:ok, %{"data" => token_list}} -> token_list
-               _ -> []
-             end)
-             |> Enum.uniq_by(& &1["tradingsymbol"])
-             |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
-             |> Enum.map(
-               &(&1
-                 |> Map.put_new(
-                   "in_watchlist?",
-                   MapSet.member?(watchlist_symbols, &1["tradingsymbol"])
-                 )
-                 |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
-             )
-           else
-             _ ->
-               []
-           end
-       }}
+          token_list =
+            yahoo_quotes
+            |> Enum.map(
+              &(&1.symbol
+                |> String.slice(0..(String.length(query) - 1))
+                |> String.split(".")
+                |> List.first())
+            )
+            |> MapSet.new()
+            |> Enum.map(&API.search_token(token, "NSE", &1))
+            |> Enum.flat_map(fn
+              {:ok, %{"data" => token_list}} -> token_list
+              _ -> []
+            end)
+            |> Enum.uniq_by(& &1["tradingsymbol"])
+            |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
+            |> Enum.map(
+              &(&1
+                |> Map.put_new(
+                  "in_watchlist?",
+                  MapSet.member?(watchlist_symbols, &1["tradingsymbol"])
+                )
+                |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
+            )
+
+          {:ok,
+           %{
+             token_list: token_list
+           }}
+
+        _ ->
+          {:error, %{token_list: []}}
+      end
     end
 
     {:noreply, assign_async(socket, :token_list, async_fn)}
