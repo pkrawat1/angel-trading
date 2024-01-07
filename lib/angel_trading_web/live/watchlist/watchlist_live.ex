@@ -217,6 +217,7 @@ defmodule AngelTradingWeb.WatchlistLive do
       ) do
     new_watch =
       token_list
+      |> Map.get(:result, [])
       |> Enum.filter(&(&1["symboltoken"] == token))
       |> assign_quotes(user_token)
       |> List.first()
@@ -250,7 +251,7 @@ defmodule AngelTradingWeb.WatchlistLive do
             )
           end
           |> assign(watchlist: watchlist)
-          |> assign(token_list: [])
+          |> assign_async(:token_list, fn -> {:ok, %{token_list: []}} end)
           |> subscribe_to_quote_feed()
 
         _ ->
