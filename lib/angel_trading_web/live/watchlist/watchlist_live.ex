@@ -148,7 +148,7 @@ defmodule AngelTradingWeb.WatchlistLive do
       {:ok,
        %{
          token_list:
-           with true <- bit_size(query) > 0,
+           with true <- bit_size(query) > 2,
                 {:ok, [_ | _] = yahoo_quotes} <- YahooFinance.search(query) do
              watchlist_symbols = watchlist |> Enum.map(& &1["tradingsymbol"]) |> MapSet.new()
 
