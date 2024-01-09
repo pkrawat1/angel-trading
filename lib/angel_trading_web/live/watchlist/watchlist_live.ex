@@ -174,14 +174,14 @@ defmodule AngelTradingWeb.WatchlistLive do
                 |> List.first())
             )
             |> MapSet.new()
-            |> Enum.map(&API.search_token(token, "NSE", &1))
+            |> Task.async_stream(&API.search_token(token, "NSE", &1))
             |> Enum.flat_map(fn
-              {:ok, %{"data" => token_list}} -> token_list
+              {:ok, {:ok, %{"data" => token_list}}} -> token_list
               _ -> []
             end)
             |> Enum.uniq_by(& &1["tradingsymbol"])
             |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
-            |> Enum.map(
+            |> Task.async_stream(
               &(&1
                 |> Map.put_new(
                   "in_watchlist?",
@@ -189,6 +189,7 @@ defmodule AngelTradingWeb.WatchlistLive do
                 )
                 |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
             )
+            |> Enum.map(&elem(&1, 1))
 
           {:ok,
            %{

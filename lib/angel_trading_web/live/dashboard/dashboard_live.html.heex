@@ -2,8 +2,12 @@
   Dashboard
 </.header>
 <section class="grid grid-cols-1 mt-5 md:grid-cols-2 gap-4 justify-between">
-  <div :for={client <- @clients} class="w-full">
-    <.live_component id={client.client_code} module={PortfolioComponent} {client} />
-  </div>
+  <.async_result :let={clients} assign={@clients}>
+    <:loading>Loading portfolios...</:loading>
+    <:failed :let={_reason}>there was an error loading the portfolios</:failed>
+    <div :for={client <- clients} class="w-full">
+      <.live_component id={client.client_code} module={PortfolioComponent} {client} />
+    </div>
+  </.async_result>
 </section>
 <.bottom_nav />
