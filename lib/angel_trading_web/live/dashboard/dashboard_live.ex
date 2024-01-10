@@ -124,47 +124,51 @@ defmodule AngelTradingWeb.DashboardLive do
         %{topic: "portfolio-for-" <> client_code, payload: quote_data},
         %{assigns: %{clients: clients}} = socket
       ) do
-    new_ltp = quote_data.last_traded_price / 100
-    client = Enum.find(clients.result, &(&1.client_code == client_code))
+    if clients.ok? do
+      new_ltp = quote_data.last_traded_price / 100
+      client = Enum.find(clients.result, &(&1.client_code == client_code))
 
-    updated_holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
+      updated_holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
 
-    updated_client =
-      if updated_holding && updated_holding["ltp"] != new_ltp do
-        updated_holding =
-          [%{updated_holding | "ltp" => new_ltp}]
-          |> Utils.formatted_holdings()
-          |> List.first()
+      updated_client =
+        if updated_holding && updated_holding["ltp"] != new_ltp do
+          updated_holding =
+            [%{updated_holding | "ltp" => new_ltp}]
+            |> Utils.formatted_holdings()
+            |> List.first()
 
-        %{
+          %{
+            client
+            | holdings:
+                client.holdings
+                |> Enum.map(fn holding ->
+                  if holding["symboltoken"] == quote_data.token do
+                    updated_holding
+                  else
+                    holding
+                  end
+                end)
+          }
+        else
           client
-          | holdings:
-              client.holdings
-              |> Enum.map(fn holding ->
-                if holding["symboltoken"] == quote_data.token do
-                  updated_holding
+        end
+
+      {:noreply,
+       assign_async(socket, :clients, fn ->
+         {:ok,
+          %{
+            clients:
+              Enum.map(clients.result, fn client ->
+                if client.client_code == updated_client.client_code do
+                  updated_client
                 else
-                  holding
+                  client
                 end
               end)
-        }
-      else
-        client
-      end
-
-    {:noreply,
-     assign_async(socket, :clients, fn ->
-       {:ok,
-        %{
-          clients:
-            Enum.map(clients.result, fn client ->
-              if client.client_code == updated_client.client_code do
-                updated_client
-              else
-                client
-              end
-            end)
-        }}
-     end)}
+          }}
+       end)}
+    else
+      {:noreply, socket}
+    end
   end
 end
