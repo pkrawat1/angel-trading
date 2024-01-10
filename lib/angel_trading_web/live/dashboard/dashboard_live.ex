@@ -16,33 +16,42 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   defp get_portfolio_data(socket) do
+    client_codes =
+      Account.get_client_codes(socket.assigns.user_hash)
+      |> case do
+        {:ok, %{body: data}} when is_map(data) -> Map.values(data)
+        _ -> []
+      end
+      |> Enum.map(fn client_code ->
+        :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+        client_code
+      end)
+
     async_fn = fn ->
       {:ok,
        %{
          clients:
-           Account.get_client_codes(socket.assigns.user_hash)
-           |> case do
-             {:ok, %{body: data}} when is_map(data) -> Map.values(data)
-             _ -> []
-           end
-           |> Task.async_stream(fn client_code ->
-             with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
-                  {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
-                  {:ok, %{"data" => profile}} <- API.profile(token),
-                  {:ok, %{"data" => holdings}} <- API.portfolio(token),
-                  {:ok, %{"data" => funds}} <- API.funds(token),
-                  :ok <- AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}") do
-               Map.merge(client, %{
-                 id: client.client_code,
-                 holdings: holdings,
-                 profile: profile,
-                 funds: funds
-               })
-             else
-               _ ->
-                 nil
-             end
-           end)
+           client_codes
+           |> Task.async_stream(
+             fn client_code ->
+               with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
+                    {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
+                    {:ok, %{"data" => profile}} <- API.profile(token),
+                    {:ok, %{"data" => holdings}} <- API.portfolio(token),
+                    {:ok, %{"data" => funds}} <- API.funds(token) do
+                 Map.merge(client, %{
+                   id: client.client_code,
+                   holdings: holdings,
+                   profile: profile,
+                   funds: funds
+                 })
+               else
+                 _ ->
+                   nil
+               end
+             end,
+             max_concurrency: 10
+           )
            |> Enum.map(&elem(&1, 1))
            |> Enum.filter(&(!is_nil(&1)))
        }}
