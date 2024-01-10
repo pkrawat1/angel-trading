@@ -6,8 +6,6 @@ defmodule AngelTradingWeb.DashboardLive do
   require Logger
 
   def mount(_params, %{"user_hash" => user_hash}, socket) do
-    :timer.send_interval(2000, self(), :subscribe_to_feed)
-
     {:ok,
      socket
      |> assign(:page_title, "Dashboard")
@@ -16,6 +14,8 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   defp get_portfolio_data(socket) do
+    live_view_process = self()
+
     client_codes =
       Account.get_client_codes(socket.assigns.user_hash)
       |> case do
@@ -39,6 +39,9 @@ defmodule AngelTradingWeb.DashboardLive do
                     {:ok, %{"data" => profile}} <- API.profile(token),
                     {:ok, %{"data" => holdings}} <- API.portfolio(token),
                     {:ok, %{"data" => funds}} <- API.funds(token) do
+                 Process.send_after(live_view_process, {:subscribe_to_feed, client_code}, 500)
+                 :timer.send_interval(30000, live_view_process, {:subscribe_to_feed, client_code})
+
                  Map.merge(client, %{
                    id: client.client_code,
                    holdings: holdings,
@@ -60,18 +63,23 @@ defmodule AngelTradingWeb.DashboardLive do
     assign_async(socket, :clients, async_fn)
   end
 
-  def handle_info(:subscribe_to_feed, %{assigns: %{clients: clients}} = socket) do
+  def handle_info({:subscribe_to_feed, client_code}, %{assigns: %{clients: clients}} = socket) do
     if clients.ok? do
-      Enum.each(clients.result || [], fn %{
-                                           client_code: client_code,
-                                           token: token,
-                                           feed_token: feed_token,
-                                           holdings: holdings
-                                         } ->
+      clients
+      |> Map.get(:result)
+      |> Enum.filter(&(&1.client_code == client_code))
+      |> Enum.each(fn %{
+                        client_code: client_code,
+                        token: token,
+                        feed_token: feed_token,
+                        holdings: holdings
+                      } ->
         socket_process = :"#{client_code}"
 
         with nil <- Process.whereis(socket_process),
              {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+          Logger.info("[Dashboard] web socket (#{socket_process}) started")
+
           WebSockex.send_frame(
             socket_process,
             {:text,

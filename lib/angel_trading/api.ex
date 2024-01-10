@@ -101,6 +101,7 @@ defmodule AngelTrading.API do
         "tradingsymbol" => trading_symbol,
         "symboltoken" => symbol_token,
         "quantity" => quantity,
+        "disclosedquantity" => quantity,
         "transactiontype" => transaction_type,
         "ordertype" => order_type,
         "variety" => variety,
