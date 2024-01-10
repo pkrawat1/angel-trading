@@ -1,6 +1,7 @@
 defmodule AngelTradingWeb.WatchlistLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils, YahooFinance}
+  alias Phoenix.LiveView.AsyncResult
   require Logger
 
   def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
@@ -200,7 +201,10 @@ defmodule AngelTradingWeb.WatchlistLive do
       end
     end
 
-    {:noreply, assign_async(socket, :token_list, async_fn)}
+    {:noreply,
+     socket
+     |> assign(:token_list, fn -> AsyncResult.loading() end)
+     |> assign_async(:token_list, async_fn)}
   end
 
   def handle_event(
