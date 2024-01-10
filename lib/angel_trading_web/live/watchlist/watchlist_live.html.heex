@@ -8,6 +8,7 @@
         placeholder="Search for stock"
         autocomplete="off"
         phx-debounce="300"
+        autofocus
       />
     </.simple_form>
     <ul :if={!@token_list.ok?} class="flex mt-2 flex-col" />
