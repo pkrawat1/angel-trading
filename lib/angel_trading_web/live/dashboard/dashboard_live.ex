@@ -60,7 +60,9 @@ defmodule AngelTradingWeb.DashboardLive do
        }}
     end
 
-    assign_async(socket, :clients, async_fn)
+    socket
+    |> assign_async(:clients, async_fn)
+    |> assign(:client_codes, client_codes)
   end
 
   def handle_info({:subscribe_to_feed, client_code}, %{assigns: %{clients: clients}} = socket) do
