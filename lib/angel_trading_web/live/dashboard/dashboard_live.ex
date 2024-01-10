@@ -61,61 +61,63 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   def handle_info(:subscribe_to_feed, %{assigns: %{clients: clients}} = socket) do
-    Enum.each(clients.result || [], fn %{
-                                         client_code: client_code,
-                                         token: token,
-                                         feed_token: feed_token,
-                                         holdings: holdings
-                                       } ->
-      socket_process = :"#{client_code}"
+    if clients.ok? do
+      Enum.each(clients.result || [], fn %{
+                                           client_code: client_code,
+                                           token: token,
+                                           feed_token: feed_token,
+                                           holdings: holdings
+                                         } ->
+        socket_process = :"#{client_code}"
 
-      with nil <- Process.whereis(socket_process),
-           {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
-        WebSockex.send_frame(
-          socket_process,
-          {:text,
-           Jason.encode!(%{
-             correlationID: client_code,
-             action: 1,
-             params: %{
-               mode: 2,
-               tokenList: [
-                 %{
-                   exchangeType: 1,
-                   tokens: Enum.map(holdings, & &1["symboltoken"])
-                 }
-               ]
-             }
-           })}
-        )
-      else
-        pid when is_pid(pid) ->
-          Logger.info(
-            "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
+        with nil <- Process.whereis(socket_process),
+             {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+          WebSockex.send_frame(
+            socket_process,
+            {:text,
+             Jason.encode!(%{
+               correlationID: client_code,
+               action: 1,
+               params: %{
+                 mode: 2,
+                 tokenList: [
+                   %{
+                     exchangeType: 1,
+                     tokens: Enum.map(holdings, & &1["symboltoken"])
+                   }
+                 ]
+               }
+             })}
           )
+        else
+          pid when is_pid(pid) ->
+            Logger.info(
+              "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
+            )
 
-        e ->
-          with {:ok, %{"data" => %{"fetched" => quotes}}} <-
-                 API.quote(token, "NSE", Enum.map(holdings, & &1["symboltoken"])) do
-            Enum.each(quotes, fn quote_data ->
-              send(
-                self(),
-                %{
-                  topic: "portfolio-for-" <> client_code,
-                  payload:
-                    Map.merge(quote_data, %{
-                      last_traded_price: quote_data["ltp"] * 100,
-                      token: quote_data["symbolToken"]
-                    })
-                }
-              )
-            end)
-          end
+          e ->
+            with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+                   API.quote(token, "NSE", Enum.map(holdings, & &1["symboltoken"])) do
+              Enum.each(quotes, fn quote_data ->
+                send(
+                  self(),
+                  %{
+                    topic: "portfolio-for-" <> client_code,
+                    payload:
+                      Map.merge(quote_data, %{
+                        last_traded_price: quote_data["ltp"] * 100,
+                        token: quote_data["symbolToken"]
+                      })
+                  }
+                )
+              end)
+            end
 
-          Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
-          IO.inspect(e)
-      end
-    end)
+            Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
+            IO.inspect(e)
+        end
+      end)
+    end
 
     {:noreply, socket}
   end
