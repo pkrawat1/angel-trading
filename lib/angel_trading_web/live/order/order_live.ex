@@ -94,11 +94,11 @@ defmodule AngelTradingWeb.OrderLive do
     else
       pid when is_pid(pid) ->
         Logger.info(
-          "[Watchlist] web socket (#{socket_process} #{inspect(pid)}) already established"
+          "[Place Order] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
       e ->
-        Logger.error("[Watchlist] Error connecting to web socket (#{socket_process})")
+        Logger.error("[Place Order] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end
 
