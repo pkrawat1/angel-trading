@@ -4,6 +4,8 @@ defmodule AngelTradingWeb.WatchlistLive do
   alias Phoenix.LiveView.AsyncResult
   require Logger
 
+  embed_templates "*"
+
   def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
     socket =
       with {:ok, %{body: %{"clients" => clients} = user}} <-
@@ -13,8 +15,9 @@ defmodule AngelTradingWeb.WatchlistLive do
            {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
            {:ok, %{token: token, feed_token: feed_token}} <- Utils.decrypt(:client_tokens, data) do
         if connected?(socket) do
-          :timer.send_interval(2000, self(), :subscribe_to_feed)
           :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+          Process.send_after(self(), :subscribe_to_feed, 500)
+          :timer.send_interval(30000, self(), :subscribe_to_feed)
         end
 
         watchlist = assign_quotes(user["watchlist"] || [], token)

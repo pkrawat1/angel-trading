@@ -1,8 +1,8 @@
 <.modal
   :if={@live_action == :quote}
   show
-  id="quote-modal"
-  on_cancel={JS.navigate(~p"/client/#{@client_code}/portfolio")}
+  id="buy-modal"
+  on_cancel={JS.patch(~p"/client/#{@client_code}/watchlist")}
 >
   <div :if={@quote} class="text-sm uppercase -mx-10">
     <.header>
@@ -81,14 +81,8 @@
           </tbody>
         </table>
       </div>
-      <div
-        class="h-[30vh] -mr-2.5 mt-5 shadow-inner"
-        id="quote-chart"
-        data-candle={@candle_data}
-        phx-hook="CandleChart"
-      />
     </section>
-    <section id="order-place">
+    <section id="order-place bottom-0">
       <div class="w-full inline-flex rounded-md text-center" role="group">
         <% order_params = %{
           symbol_token: @quote["symbolToken"],

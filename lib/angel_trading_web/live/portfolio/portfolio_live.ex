@@ -14,7 +14,8 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      :timer.send_interval(5000, self(), :subscribe_to_feed)
+      Process.send_after(self(), :subscribe_to_feed, 500)
+      :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
 
     user_clients =

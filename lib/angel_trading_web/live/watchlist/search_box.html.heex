@@ -1,0 +1,31 @@
+<.simple_form :let={f} class="-mt-5" for={%{}} phx-change="search" phx-submit="search">
+  <.input
+    type="search"
+    field={f[:search]}
+    placeholder="Search for stock"
+    autocomplete="off"
+    phx-debounce="500"
+    autofocus
+  />
+</.simple_form>
+<ul class="flex mt-2 flex-col">
+  <.async_result :let={token_list} assign={@token_list}>
+    <:loading>
+      <li class="flex animate-pulse justify-between items-center py-2 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-400 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg">
+        <div class="flex">
+          <.icon name="hero-arrow-path animate-spin h-10 w-10 mr-2" />
+          <span>
+            Searching... <small class="block">Please wait</small>
+          </span>
+        </div>
+        <.icon name="hero-star-solid" />
+      </li>
+    </:loading>
+    <:failed>
+      <li class="flex animate-pulse justify-between items-center py-2 px-4 text-sm font-medium bg-white border border-red-200 text-red-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg">
+        No Results <.icon name="hero-no-symbol-solid" />
+      </li>
+    </:failed>
+    <.search_result token_list={token_list} {assigns} />
+  </.async_result>
+</ul>

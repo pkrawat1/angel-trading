@@ -1,19 +1,6 @@
 <section class="m-auto lg:w-1/2 mt-5 md:w/2">
   <.overview {assigns} />
-  <ul id="holdings" phx-update="stream">
-    <li
-      :for={{dom_id, holding} <- @streams.holdings}
-      class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
-      id={dom_id}
-      phx-click={
-        JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/portfolio/quote")
-      }
-      phx-value-symbol={holding["symboltoken"]}
-      phx-value-exchange={holding["exchange"]}
-    >
-      <.holding_item holding={holding} />
-    </li>
-  </ul>
+  <.holdings {assigns} />
   <.quote_modal {assigns} />
 </section>
-<.bottom_nav client_code={@client_code} />
+<.bottom_nav :if={@live_action != :quote} client_code={@client_code} />
