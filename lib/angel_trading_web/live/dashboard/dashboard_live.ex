@@ -2,8 +2,9 @@ defmodule AngelTradingWeb.DashboardLive do
   use AngelTradingWeb, :live_view
 
   alias AngelTrading.{Account, API, Utils}
-  alias AngelTradingWeb.Dashboard.Components.PortfolioComponent
   require Logger
+
+  embed_templates "*"
 
   def mount(_params, %{"user_hash" => user_hash}, socket) do
     {:ok,
@@ -14,8 +15,6 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   defp get_portfolio_data(socket) do
-    live_view_process = self()
-
     client_codes =
       Account.get_client_codes(socket.assigns.user_hash)
       |> case do
@@ -23,7 +22,12 @@ defmodule AngelTradingWeb.DashboardLive do
         _ -> []
       end
       |> Enum.map(fn client_code ->
-        :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+        if connected?(socket) do
+          Process.send_after(self(), {:subscribe_to_feed, client_code}, 500)
+          :timer.send_interval(5000, self(), {:subscribe_to_feed, client_code})
+          :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+        end
+
         client_code
       end)
 
@@ -39,9 +43,6 @@ defmodule AngelTradingWeb.DashboardLive do
                     {:ok, %{"data" => profile}} <- API.profile(token),
                     {:ok, %{"data" => holdings}} <- API.portfolio(token),
                     {:ok, %{"data" => funds}} <- API.funds(token) do
-                 Process.send_after(live_view_process, {:subscribe_to_feed, client_code}, 500)
-                 :timer.send_interval(30000, live_view_process, {:subscribe_to_feed, client_code})
-
                  Map.merge(client, %{
                    id: client.client_code,
                    holdings: holdings,
@@ -182,5 +183,12 @@ defmodule AngelTradingWeb.DashboardLive do
     else
       {:noreply, socket}
     end
+  end
+
+  def calculated_overview(client) do
+    client
+    |> Map.get(:holdings)
+    |> Utils.formatted_holdings()
+    |> Utils.calculated_overview()
   end
 end

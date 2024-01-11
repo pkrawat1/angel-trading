@@ -3,6 +3,8 @@ defmodule AngelTradingWeb.PortfolioLive do
   alias AngelTrading.{Account, API, Utils}
   require Logger
 
+  embed_templates "*"
+
   def mount(
         %{"client_code" => client_code},
         %{"user_hash" => user_hash},
@@ -12,7 +14,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      :timer.send_interval(2000, self(), :subscribe_to_feed)
+      :timer.send_interval(5000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -169,9 +171,10 @@ defmodule AngelTradingWeb.PortfolioLive do
             end
           end)
 
-        socket
+        holdings
+        |> Utils.calculated_overview()
+        |> Enum.reduce(socket, &assign(&2, "#{elem(&1, 0)}": elem(&1, 1)))
         |> stream_insert(:holdings, updated_holding, at: -1)
-        |> Utils.calculated_overview(holdings)
       end || socket
 
     {:noreply, socket}
@@ -224,10 +227,12 @@ defmodule AngelTradingWeb.PortfolioLive do
          {:ok, %{"data" => funds}} <- API.funds(token) do
       holdings = Utils.formatted_holdings(holdings)
 
-      socket
-      |> Utils.calculated_overview(holdings)
+      holdings
+      |> Utils.calculated_overview()
+      |> Enum.reduce(socket, &assign(&2, "#{elem(&1, 0)}": elem(&1, 1)))
       |> assign(name: profile["name"])
       |> assign(funds: funds)
+      |> stream_configure(:holdings, dom_id: &"holding-#{&1["symboltoken"]}")
       |> stream(
         :holdings,
         Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"]))

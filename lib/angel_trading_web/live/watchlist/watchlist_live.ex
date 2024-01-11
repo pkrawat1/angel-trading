@@ -323,7 +323,8 @@ defmodule AngelTradingWeb.WatchlistLive do
           Map.merge(acc, %{w["symboltoken"] => w})
         end)
 
-      Enum.map(quotes, fn %{"symbolToken" => symbol_token, "ltp" => ltp, "close" => close} ->
+      quotes
+      |> Enum.map(fn %{"symbolToken" => symbol_token, "ltp" => ltp, "close" => close} ->
         watch = watchlist_map[symbol_token]
         ltp_percent = (ltp - close) / close * 100
 

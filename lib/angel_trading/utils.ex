@@ -64,12 +64,12 @@ defmodule AngelTrading.Utils do
     end)
   end
 
-  def calculated_overview(socket, holdings) do
+  def calculated_overview(holdings) do
     total_invested = holdings |> Enum.map(& &1["invested"]) |> Enum.sum()
     total_overall_gain_or_loss = holdings |> Enum.map(& &1["overall_gain_or_loss"]) |> Enum.sum()
     total_todays_gain_or_loss = holdings |> Enum.map(& &1["todays_profit_or_loss"]) |> Enum.sum()
 
-    Phoenix.Component.assign(socket,
+    %{
       holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),
       total_invested: total_invested,
       total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
@@ -79,7 +79,7 @@ defmodule AngelTrading.Utils do
       in_overall_profit?: total_overall_gain_or_loss > 0,
       total_overall_gain_or_loss_percent: total_overall_gain_or_loss / total_invested * 100,
       total_todays_gain_or_loss_percent: total_todays_gain_or_loss / total_invested * 100
-    )
+    }
   end
 
   def formatted_candle_data(candle_data) do

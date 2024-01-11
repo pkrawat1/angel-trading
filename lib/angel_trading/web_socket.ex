@@ -12,7 +12,7 @@ defmodule AngelTrading.WebSocket do
 
     name = :"#{client_code}"
 
-    case WebSockex.start_link(@url, __MODULE__, %{client_code: client_code},
+    case WebSockex.start(@url, __MODULE__, %{client_code: client_code},
            extra_headers: extra_headers,
            name: name
          ) do

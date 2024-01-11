@@ -3,36 +3,10 @@
 </.header>
 <section class="grid grid-cols-1 mt-5 md:grid-cols-2 gap-4 justify-between">
   <.async_result :let={clients} assign={@clients}>
-    <:loading>
-      <div
-        :for={_ <- @client_codes}
-        class="block w-full py-6 px-3 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700 "
-      >
-        <div class="animate-pulse space-y-7">
-          <div class="flex justify-center">
-            <div class="h-7 bg-gray-300 rounded-full dark:bg-gray-600 w-48"></div>
-          </div>
-          <div class="grid grid-cols-1 space-y-2">
-            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-36"></div>
-            <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-48"></div>
-          </div>
-          <div class="grid grid-cols-2 space-y-1">
-            <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-28"></div>
-            <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-28 justify-self-end">
-            </div>
-            <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-24"></div>
-            <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-40 justify-self-end">
-            </div>
-          </div>
-          <div class="flex">
-            <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-48"></div>
-          </div>
-        </div>
-      </div>
-    </:loading>
+    <:loading><.loading client_codes={@client_codes} /></:loading>
     <:failed :let={_reason}>there was an error loading the portfolios</:failed>
     <div :for={client <- clients} class="w-full">
-      <.live_component id={client.client_code} module={PortfolioComponent} {client} />
+      <.portfolio id={client.client_code} {client} {calculated_overview(client)} />
     </div>
   </.async_result>
 </section>
