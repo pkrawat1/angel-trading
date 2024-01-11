@@ -8,7 +8,8 @@ defmodule AngelTradingWeb.OrdersLive do
 
     if connected?(socket) do
       :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
-      :timer.send_interval(2000, self(), :subscribe_to_feed)
+      Process.send_after(self(), :subscribe_to_feed, 500)
+      :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -92,28 +93,11 @@ defmodule AngelTradingWeb.OrdersLive do
         Logger.info("[Order] web socket (#{socket_process} #{inspect(pid)}) already established")
 
       e ->
-        with {:ok, %{"data" => %{"fetched" => quotes}}} <-
-               API.quote(token, "NSE", Enum.map(socket.assigns.order_book, & &1["symboltoken"])) do
-          Enum.each(quotes, fn quote_data ->
-            send(
-              self(),
-              %{
-                payload:
-                  Map.merge(quote_data, %{
-                    last_traded_price: quote_data["ltp"] * 100,
-                    token: quote_data["symbolToken"],
-                    close_price: quote_data["close"] * 100
-                  })
-              }
-            )
-          end)
-        end
-
         Logger.error("[Order] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
     end
 
-    {:noreply, socket}
+    {:noreply, quote_fallback(socket)}
   end
 
   def handle_info(
@@ -221,5 +205,33 @@ defmodule AngelTradingWeb.OrdersLive do
         |> put_flash(:error, message)
         |> push_navigate(to: "/")
     end
+  end
+
+  defp quote_fallback(
+         %{
+           assigns: %{
+             token: token,
+             order_book: order_book
+           }
+         } = socket
+       ) do
+    with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+           API.quote(token, "NSE", Enum.map(order_book, & &1["symboltoken"])) do
+      Enum.each(quotes, fn quote_data ->
+        send(
+          self(),
+          %{
+            payload:
+              Map.merge(quote_data, %{
+                last_traded_price: quote_data["ltp"] * 100,
+                token: quote_data["symbolToken"],
+                close_price: quote_data["close"] * 100
+              })
+          }
+        )
+      end)
+    end
+
+    socket
   end
 end
