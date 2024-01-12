@@ -32,12 +32,41 @@ data =
     :regularMarketOpen,
     :regularMarketDayHigh,
     :regularMarketDayLow,
-    :regularMarketPrice
+    :regularMarketPrice,
+    :regularMarketChange
   ])
   |> DF.rename(
     regularMarketOpen: :open,
     regularMarketDayHigh: :high,
     regularMarketDayLow: :low,
-    regularMarketPrice: :close
+    regularMarketPrice: :close,
+    regularMarketChange: :price_change
   )
+```
+
+```elixir
+# Assuming you have already loaded the data into the 'data' DataFrame
+
+# Calculate daily price changes
+price_changes = DF.select(data, [:price_change])
+
+# Calculate gains and losses
+gains = DF.filter(price_changes, [price_change > 0])
+losses = DF.filter(price_changes, [price_change < 0])
+
+# Calculate average gains and losses over a specified period (e.g., 14 days)
+# average_gains = DF.rolling(gains, :mean, 14)
+# average_losses = DF.rolling(losses, :mean, 14)
+
+# Calculate relative strength (RS)
+# rs = DF.div(average_gains, average_losses |> DF.negate())
+
+# Calculate the Relative Strength Index (RSI)
+# rsi = DF.subtract(100, DF.div(100, DF.add(1, rs)))
+
+# Add the RSI column to the original DataFrame
+# data_with_rsi = DF.concat(data, rsi)
+
+# Display the DataFrame with RSI
+# DF.show(data_with_rsi)
 ```
