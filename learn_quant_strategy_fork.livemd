@@ -1,0 +1,43 @@
+# Learn Quant Strategy - fork
+
+```elixir
+Mix.install([
+  {:req, "~> 0.4.5"},
+  {:explorer, "~> 0.7.1"},
+  {:kino_explorer, "~> 0.1.12"},
+  {:nx, "~> 0.6.4"}
+])
+```
+
+## Nifty 200 CSV
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+resp = Req.get!("https://nsearchives.nseindia.com/content/indices/ind_nifty200list.csv")
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+resp = Req.get!("https://query2.finance.yahoo.com/v7/finance/options/IRB.NS")
+result = resp.body["optionChain"]["result"] |> List.first() |> Map.get("quote")
+require Explorer.DataFrame, as: DF
+
+data =
+  result
+  |> Jason.encode!()
+  |> DF.load_ndjson!()
+  |> DF.select([
+    :regularMarketOpen,
+    :regularMarketDayHigh,
+    :regularMarketDayLow,
+    :regularMarketPrice
+  ])
+  |> DF.rename(
+    regularMarketOpen: :open,
+    regularMarketDayHigh: :high,
+    regularMarketDayLow: :low,
+    regularMarketPrice: :close
+  )
+```
