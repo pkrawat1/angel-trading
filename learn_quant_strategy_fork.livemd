@@ -20,39 +20,36 @@ resp = Req.get!("https://nsearchives.nseindia.com/content/indices/ind_nifty200li
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-resp = Req.get!("https://query2.finance.yahoo.com/v7/finance/options/IRB.NS")
-result = resp.body["optionChain"]["result"] |> List.first() |> Map.get("quote")
+ticker = "GOOG"
+range = "1y"
+interval = "1d"
+metrics = "close"
+
+url =
+  "https://query1.finance.yahoo.com/v8/finance/chart/#{ticker}?metrics=#{metrics}&interval=#{interval}&range=#{range}"
+
+resp = Req.get!(url)
+
+result =
+  resp.body["chart"]["result"] |> List.first() |> get_in(["indicators", "quote"]) |> List.first()
+
 require Explorer.DataFrame, as: DF
 
 data =
   result
-  |> Jason.encode!()
-  |> DF.load_ndjson!()
-  |> DF.select([
-    :regularMarketOpen,
-    :regularMarketDayHigh,
-    :regularMarketDayLow,
-    :regularMarketPrice,
-    :regularMarketChange
-  ])
-  |> DF.rename(
-    regularMarketOpen: :open,
-    regularMarketDayHigh: :high,
-    regularMarketDayLow: :low,
-    regularMarketPrice: :close,
-    regularMarketChange: :price_change
-  )
+  |> DF.new()
 ```
 
 ```elixir
 # Assuming you have already loaded the data into the 'data' DataFrame
 
 # Calculate daily price changes
-price_changes = DF.select(data, [:price_change])
+price_changes = Explorer.Series.shift(data, 1)
+# price_changes = DF.select(data, [:price_change])
 
 # Calculate gains and losses
-gains = DF.filter(price_changes, [price_change > 0])
-losses = DF.filter(price_changes, [price_change < 0])
+# gains = DF.filter(price_changes, [price_change > 0])
+# losses = DF.filter(price_changes, [price_change < 0])
 
 # Calculate average gains and losses over a specified period (e.g., 14 days)
 # average_gains = DF.rolling(gains, :mean, 14)
