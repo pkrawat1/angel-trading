@@ -20,7 +20,7 @@ resp = Req.get!("https://nsearchives.nseindia.com/content/indices/ind_nifty200li
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-ticker = "GOOG"
+ticker = "IRB.NS"
 range = "1y"
 interval = "1d"
 metrics = "close"
@@ -40,6 +40,7 @@ quote_data =
   |> get_in(["indicators", "quote"])
   |> List.first()
   |> DF.new()
+  |> DF.mutate_with(&[price_change: S.subtract(&1["close"], S.shift(&1["close"], 1))])
 
 timestamp_data =
   resp.body["chart"]["result"]
@@ -54,10 +55,10 @@ data = DF.concat_columns([timestamp_data, quote_data])
 # Assuming you have already loaded the data into the 'data' DataFrame
 data = DF.to_series(data)
 # Calculate daily price changes
-price_changes = S.transform(data, close: &DF.diff(&1, 1))
+price_changes = data["price_change"]
 
 # Calculate gains and losses
-# gains = DF.filter(price_changes, [price_change > 0])
+gains = S.filter(price_changes, &S.greater(&1, 0))
 # losses = DF.filter(price_changes, [price_change < 0])
 
 # Calculate average gains and losses over a specified period (e.g., 14 days)
