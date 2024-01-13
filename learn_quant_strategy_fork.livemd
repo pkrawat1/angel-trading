@@ -1,4 +1,4 @@
-# Learn Quant Strategy - fork
+# Learn Quant Strategy
 
 ```elixir
 Mix.install([
@@ -28,24 +28,33 @@ metrics = "close"
 url =
   "https://query1.finance.yahoo.com/v8/finance/chart/#{ticker}?metrics=#{metrics}&interval=#{interval}&range=#{range}"
 
+IO.puts(url)
 resp = Req.get!(url)
 
-result =
-  resp.body["chart"]["result"] |> List.first() |> get_in(["indicators", "quote"]) |> List.first()
-
 require Explorer.DataFrame, as: DF
+require Explorer.Series, as: S
 
-data =
-  result
+quote_data =
+  resp.body["chart"]["result"]
+  |> List.first()
+  |> get_in(["indicators", "quote"])
+  |> List.first()
   |> DF.new()
+
+timestamp_data =
+  resp.body["chart"]["result"]
+  |> List.first()
+  |> Map.take(["timestamp"])
+  |> DF.new()
+
+data = DF.concat_columns([timestamp_data, quote_data])
 ```
 
 ```elixir
 # Assuming you have already loaded the data into the 'data' DataFrame
-
+data = DF.to_series(data)
 # Calculate daily price changes
-price_changes = Explorer.Series.shift(data, 1)
-# price_changes = DF.select(data, [:price_change])
+price_changes = S.transform(data, close: &DF.diff(&1, 1))
 
 # Calculate gains and losses
 # gains = DF.filter(price_changes, [price_change > 0])
