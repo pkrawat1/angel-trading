@@ -5,7 +5,8 @@ Mix.install([
   {:req, "~> 0.4.5"},
   {:explorer, "~> 0.7.1"},
   {:kino_explorer, "~> 0.1.12"},
-  {:nx, "~> 0.6.4"}
+  {:nx, "~> 0.6.4"},
+  {:kino_vega_lite, "~> 0.1.10"}
 ])
 ```
 
@@ -40,7 +41,16 @@ quote_data =
   |> get_in(["indicators", "quote"])
   |> List.first()
   |> DF.new()
-  |> DF.mutate_with(&[price_change: S.subtract(&1["close"], S.shift(&1["close"], 1))])
+  |> DF.mutate_with(
+    &[
+      price_change:
+        S.subtract(
+          &1["close"],
+          S.shift(&1["close"], 1)
+          |> S.fill_missing(:mean)
+        )
+    ]
+  )
 
 timestamp_data =
   resp.body["chart"]["result"]
@@ -51,27 +61,30 @@ timestamp_data =
 data = DF.concat_columns([timestamp_data, quote_data])
 ```
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 # Assuming you have already loaded the data into the 'data' DataFrame
 
 # Calculate daily price changes
 price_change = DF.select(data, "price_change")
+
 # Calculate gains and losses
 gains = DF.filter_with(price_change, &S.greater(&1["price_change"], 0))
 losses = DF.filter_with(price_change, &S.less(&1["price_change"], 0))
 
 # Calculate average gains and losses over a specified period (e.g., 14 days)
-average_gains = S.window_mean(gains["price_change"], 14)
-average_losses = S.window_mean(losses["price_change"], 14)
+# average_gains = S.window_mean(gains["price_change"], 14)
+# average_losses = S.window_mean(losses["price_change"], 14)
 
 # Calculate relative strength (RS)
-rs = S.divide(average_gains, average_losses)
+# rs = S.divide(average_gains, average_losses)
 
 # Calculate the Relative Strength Index (RSI)
-# rsi = DF.subtract(100, DF.div(100, DF.add(1, rs)))
+# rsi = S.subtract(100, S.divide(100, S.add(1, rs)))
 
 # Add the RSI column to the original DataFrame
-# data_with_rsi = DF.concat(data, rsi)
+# data_with_rsi = DF.concat_columns(data, rsi)
 
 # Display the DataFrame with RSI
 # DF.show(data_with_rsi)
