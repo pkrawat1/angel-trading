@@ -71,17 +71,22 @@ price_change = DF.select(data, "price_change")
 
 # Calculate gains and losses
 gains = DF.filter_with(price_change, &S.greater(&1["price_change"], 0))
-losses = DF.filter_with(price_change, &S.less(&1["price_change"], 0))
+
+losses =
+  DF.filter_with(price_change, &S.less(&1["price_change"], 0))
+  |> DF.mutate_with(&[price_change: S.abs(&1["price_change"])])
 
 # Calculate average gains and losses over a specified period (e.g., 14 days)
-# average_gains = S.window_mean(gains["price_change"], 14)
-# average_losses = S.window_mean(losses["price_change"], 14)
+average_gains = S.window_mean(gains["price_change"], 14)
+average_losses = S.window_mean(losses["price_change"], 14)
+
+min_size = min(S.size(average_gains), S.size(average_losses))
 
 # Calculate relative strength (RS)
-# rs = S.divide(average_gains, average_losses)
+rs = S.divide(S.tail(average_gains, min_size), S.tail(average_losses, min_size))
 
 # Calculate the Relative Strength Index (RSI)
-# rsi = S.subtract(100, S.divide(100, S.add(1, rs)))
+rsi = S.subtract(100, S.divide(100, S.add(1, rs)))
 
 # Add the RSI column to the original DataFrame
 # data_with_rsi = DF.concat_columns(data, rsi)
