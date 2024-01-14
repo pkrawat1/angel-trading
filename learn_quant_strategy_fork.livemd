@@ -53,20 +53,19 @@ data = DF.concat_columns([timestamp_data, quote_data])
 
 ```elixir
 # Assuming you have already loaded the data into the 'data' DataFrame
-data = DF.to_series(data)
-# Calculate daily price changes
-price_changes = data["price_change"]
 
+# Calculate daily price changes
+price_change = DF.select(data, "price_change")
 # Calculate gains and losses
-gains = S.filter(price_changes, &S.greater(&1, 0))
-# losses = DF.filter(price_changes, [price_change < 0])
+gains = DF.filter_with(price_change, &S.greater(&1["price_change"], 0))
+losses = DF.filter_with(price_change, &S.less(&1["price_change"], 0))
 
 # Calculate average gains and losses over a specified period (e.g., 14 days)
-# average_gains = DF.rolling(gains, :mean, 14)
-# average_losses = DF.rolling(losses, :mean, 14)
+average_gains = S.window_mean(gains["price_change"], 14)
+average_losses = S.window_mean(losses["price_change"], 14)
 
 # Calculate relative strength (RS)
-# rs = DF.div(average_gains, average_losses |> DF.negate())
+rs = S.divide(average_gains, average_losses)
 
 # Calculate the Relative Strength Index (RSI)
 # rsi = DF.subtract(100, DF.div(100, DF.add(1, rs)))
