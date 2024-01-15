@@ -86,7 +86,7 @@ min_size = min(S.size(average_gains), S.size(average_losses))
 rs = S.divide(S.tail(average_gains, min_size), S.tail(average_losses, min_size))
 
 # Calculate the Relative Strength Index (RSI)
-rsi = S.subtract(100, S.divide(100, S.add(1, rs)))
+rsi = S.tail(S.subtract(100, S.divide(100, S.add(1, rs))), 1)
 
 # Add the RSI column to the original DataFrame
 # data_with_rsi = DF.concat_columns(data, rsi)
