@@ -76,8 +76,7 @@ defmodule AngelTradingWeb.PortfolioLive do
       ) do
     socket_process = :"#{client_code}"
 
-    with nil <- Process.whereis(socket_process),
-         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+    subscribe_to_feed = fn ->
       WebSockex.send_frame(
         socket_process,
         {:text,
@@ -95,11 +94,18 @@ defmodule AngelTradingWeb.PortfolioLive do
            }
          })}
       )
+    end
+
+    with nil <- Process.whereis(socket_process),
+         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+      subscribe_to_feed.()
     else
       pid when is_pid(pid) ->
         Logger.info(
           "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
+
+        subscribe_to_feed.()
 
       e ->
         with {:ok, %{"data" => %{"fetched" => quotes}}} <-

@@ -82,10 +82,7 @@ defmodule AngelTradingWeb.DashboardLive do
                     } ->
       socket_process = :"#{client_code}"
 
-      with nil <- Process.whereis(socket_process),
-           {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
-        Logger.info("[Dashboard] web socket (#{socket_process}) started")
-
+      subscribe_to_feed = fn ->
         WebSockex.send_frame(
           socket_process,
           {:text,
@@ -103,11 +100,20 @@ defmodule AngelTradingWeb.DashboardLive do
              }
            })}
         )
+      end
+
+      with nil <- Process.whereis(socket_process),
+           {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+        Logger.info("[Dashboard] web socket (#{socket_process}) started")
+
+        subscribe_to_feed.()
       else
         pid when is_pid(pid) ->
           Logger.info(
             "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
           )
+
+          subscribe_to_feed.()
 
         e ->
           with {:ok, %{"data" => %{"fetched" => quotes}}} <-
@@ -140,9 +146,9 @@ defmodule AngelTradingWeb.DashboardLive do
 
   def handle_info(
         %{topic: "portfolio-for-" <> client_code, payload: quote_data},
-        %{assigns: %{clients: %{ok?: true} = clients}} = socket
+        %{assigns: %{clients: %{ok?: true, result: clients}}} = socket
       ) do
-    client = Enum.find(clients.result, &(&1.client_code == client_code))
+    client = Enum.find(clients, &(&1.client_code == client_code))
 
     if client do
       new_ltp = quote_data.last_traded_price / 100
@@ -177,7 +183,7 @@ defmodule AngelTradingWeb.DashboardLive do
          {:ok,
           %{
             clients:
-              Enum.map(clients.result, fn client ->
+              Enum.map(clients, fn client ->
                 if client.client_code == updated_client.client_code do
                   updated_client
                 else

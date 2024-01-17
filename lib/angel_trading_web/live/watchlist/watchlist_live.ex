@@ -80,6 +80,8 @@ defmodule AngelTradingWeb.WatchlistLive do
           "[Watchlist] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
+        subscribe_to_quote_feed(socket)
+
       e ->
         Logger.error("[Watchlist] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)

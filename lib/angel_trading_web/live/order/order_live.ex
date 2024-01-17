@@ -97,6 +97,8 @@ defmodule AngelTradingWeb.OrderLive do
           "[Place Order] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
+        subscribe_to_quote_feed(socket)
+
       e ->
         Logger.error("[Place Order] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)

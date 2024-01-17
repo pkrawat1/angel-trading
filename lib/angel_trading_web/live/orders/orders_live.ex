@@ -69,8 +69,7 @@ defmodule AngelTradingWeb.OrdersLive do
       ) do
     socket_process = :"#{client_code}"
 
-    with nil <- Process.whereis(socket_process),
-         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+    subscribe_to_feed = fn ->
       WebSockex.send_frame(
         socket_process,
         {:text,
@@ -88,9 +87,15 @@ defmodule AngelTradingWeb.OrdersLive do
            }
          })}
       )
+    end
+
+    with nil <- Process.whereis(socket_process),
+         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+      subscribe_to_feed.()
     else
       pid when is_pid(pid) ->
         Logger.info("[Order] web socket (#{socket_process} #{inspect(pid)}) already established")
+        subscribe_to_feed.()
 
       e ->
         Logger.error("[Order] Error connecting to web socket (#{socket_process})")
