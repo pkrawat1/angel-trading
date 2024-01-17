@@ -54,10 +54,11 @@ defmodule AngelTradingWeb.DashboardLive do
                    nil
                end
              end,
-             max_concurrency: 10
+             max_concurrency: 4,
+             on_timeout: :kill_task
            )
            |> Enum.map(&elem(&1, 1))
-           |> Enum.filter(&(!is_nil(&1)))
+           |> Enum.filter(&(!is_nil(&1) && is_map(&1)))
        }}
     end
 
