@@ -58,7 +58,7 @@ defmodule AngelTradingWeb.DashboardLive do
              on_timeout: :kill_task
            )
            |> Enum.map(&elem(&1, 1))
-           |> Enum.filter(&(!is_nil(&1) && is_map(&1)))
+           |> Enum.filter(&is_map(&1))
        }}
     end
 
@@ -67,81 +67,85 @@ defmodule AngelTradingWeb.DashboardLive do
     |> assign(:client_codes, client_codes)
   end
 
-  def handle_info({:subscribe_to_feed, client_code}, %{assigns: %{clients: clients}} = socket) do
-    if clients.ok? do
-      clients
-      |> Map.get(:result)
-      |> Enum.filter(&(&1.client_code == client_code))
-      |> Enum.each(fn %{
-                        client_code: client_code,
-                        token: token,
-                        feed_token: feed_token,
-                        holdings: holdings
-                      } ->
-        socket_process = :"#{client_code}"
+  def handle_info(
+        {:subscribe_to_feed, client_code},
+        %{assigns: %{clients: %{ok?: true} = clients}} = socket
+      ) do
+    clients
+    |> Map.get(:result)
+    |> Enum.filter(&(&1.client_code == client_code))
+    |> Enum.each(fn %{
+                      client_code: client_code,
+                      token: token,
+                      feed_token: feed_token,
+                      holdings: holdings
+                    } ->
+      socket_process = :"#{client_code}"
 
-        with nil <- Process.whereis(socket_process),
-             {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
-          Logger.info("[Dashboard] web socket (#{socket_process}) started")
+      with nil <- Process.whereis(socket_process),
+           {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+        Logger.info("[Dashboard] web socket (#{socket_process}) started")
 
-          WebSockex.send_frame(
-            socket_process,
-            {:text,
-             Jason.encode!(%{
-               correlationID: client_code,
-               action: 1,
-               params: %{
-                 mode: 2,
-                 tokenList: [
-                   %{
-                     exchangeType: 1,
-                     tokens: Enum.map(holdings, & &1["symboltoken"])
-                   }
-                 ]
-               }
-             })}
+        WebSockex.send_frame(
+          socket_process,
+          {:text,
+           Jason.encode!(%{
+             correlationID: client_code,
+             action: 1,
+             params: %{
+               mode: 2,
+               tokenList: [
+                 %{
+                   exchangeType: 1,
+                   tokens: Enum.map(holdings, & &1["symboltoken"])
+                 }
+               ]
+             }
+           })}
+        )
+      else
+        pid when is_pid(pid) ->
+          Logger.info(
+            "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
           )
-        else
-          pid when is_pid(pid) ->
-            Logger.info(
-              "[Dashboard] web socket (#{socket_process} #{inspect(pid)}) already established"
-            )
 
-          e ->
-            with {:ok, %{"data" => %{"fetched" => quotes}}} <-
-                   API.quote(token, "NSE", Enum.map(holdings, & &1["symboltoken"])) do
-              Enum.each(quotes, fn quote_data ->
-                send(
-                  self(),
-                  %{
-                    topic: "portfolio-for-" <> client_code,
-                    payload:
-                      Map.merge(quote_data, %{
-                        last_traded_price: quote_data["ltp"] * 100,
-                        token: quote_data["symbolToken"]
-                      })
-                  }
-                )
-              end)
-            end
+        e ->
+          with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+                 API.quote(token, "NSE", Enum.map(holdings, & &1["symboltoken"])) do
+            Enum.each(quotes, fn quote_data ->
+              send(
+                self(),
+                %{
+                  topic: "portfolio-for-" <> client_code,
+                  payload:
+                    Map.merge(quote_data, %{
+                      last_traded_price: quote_data["ltp"] * 100,
+                      token: quote_data["symbolToken"]
+                    })
+                }
+              )
+            end)
+          end
 
-            Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
-            IO.inspect(e)
-            send(self(), {:subscribe_to_feed, client_code})
-        end
-      end)
-    end
+          Logger.error("[Dashboard] Error connecting to web socket (#{socket_process})")
+          IO.inspect(e)
+          send(self(), {:subscribe_to_feed, client_code})
+      end
+    end)
 
     {:noreply, socket}
   end
 
+  def handle_info({:subscribe_to_feed, _}, socket), do: {:noreply, socket}
+
   def handle_info(
         %{topic: "portfolio-for-" <> client_code, payload: quote_data},
-        %{assigns: %{clients: clients}} = socket
+        %{assigns: %{clients: %{ok?: true} = clients}} = socket
       ) do
-    if clients.ok? do
+    client = Enum.find(clients.result, &(&1.client_code == client_code))
+
+    if client do
       new_ltp = quote_data.last_traded_price / 100
-      client = Enum.find(clients.result, &(&1.client_code == client_code))
 
       updated_holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
 
@@ -186,6 +190,12 @@ defmodule AngelTradingWeb.DashboardLive do
       {:noreply, socket}
     end
   end
+
+  def handle_info(
+        %{topic: "portfolio-for-" <> _},
+        socket
+      ),
+      do: {:noreply, socket}
 
   def calculated_overview(client) do
     client
