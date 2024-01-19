@@ -15,32 +15,47 @@ export default {
   */
   mounted() {
     this.renderChart();
-  },
-  updated() {
-    this.renderChart();
+    this.handleEvent("update-chart", ({
+      dataset: data
+    }) => {
+      prevData = this.candleSeries.data().slice().pop();
+      data.filter(({
+          time
+        }) => {
+          if (prevData) {
+            return time >= prevData.time
+          } else {
+            console.log("new data")
+            return true
+          }
+        })
+        .forEach(item => {
+          console.log(item)
+          this.candleSeries.update(item)
+        })
+    })
   },
   renderChart() {
     let LightweightCharts = window.LightweightCharts;
-    let data = JSON.parse(this.el.dataset.candle);
-    if(this.chart) {
-      this.chart.remove();
-      // prevData = this.candleSeries.data().slice().pop();
-      // data.filter(({time}) => time > prevData.time)
-          // .forEach(item => this.candleSeries.update(item))
-      // return;
-    }
+    let data = JSON.parse(this.el.dataset.series) || [];
+    let config = JSON.parse(this.el.dataset.config);
     this.chart = LightweightCharts.createChart(this.el, {
       autoSize: true,
       crosshair: {
         mode: LightweightCharts.CrosshairMode.Normal,
       },
+      height: config.height,
+      width: config.width
     });
     this.chart.timeScale().applyOptions({
-        barSpacing: 10,
-        timeVisible: true
+      barSpacing: 10,
+      timeVisible: true
     });
     this.candleSeries = this.chart.addCandlestickSeries();
     this.candleSeries.setData(data);
+  },
+  destroyed() {
+    this.chart.remove();
   }
 
 }

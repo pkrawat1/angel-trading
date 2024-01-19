@@ -4,7 +4,8 @@ defmodule AngelTradingWeb.Components do
       import AngelTradingWeb.CoreComponents
 
       import AngelTradingWeb.Components.{
-        BottomNav
+        BottomNav,
+        Charts
       }
     end
   end

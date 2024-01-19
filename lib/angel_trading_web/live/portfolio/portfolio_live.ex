@@ -1,6 +1,7 @@
 defmodule AngelTradingWeb.PortfolioLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils}
+  alias AngelTradingWeb.LiveComponents.CandleChart
   require Logger
 
   embed_templates "*"
@@ -190,7 +191,7 @@ defmodule AngelTradingWeb.PortfolioLive do
   def handle_event(
         "select-holding",
         %{"exchange" => exchange, "symbol" => symbol_token},
-        %{assigns: %{token: token}} = socket
+        %{assigns: %{token: token, quote: prev_quote}} = socket
       ) do
     socket =
       with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
@@ -212,12 +213,20 @@ defmodule AngelTradingWeb.PortfolioLive do
         ltp_percent = (ltp - close) / close * 100
 
         quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+        candle_data = Utils.formatted_candle_data(candle_data)
 
-        candle_data = candle_data |> Utils.formatted_candle_data() |> Jason.encode!()
+        if prev_quote do
+          send_update(CandleChart,
+            id: "quote-chart",
+            event: "update-chart",
+            dataset: candle_data
+          )
 
-        socket
+          socket
+        else
+          assign(socket, candle_data: candle_data)
+        end
         |> assign(quote: quote)
-        |> assign(candle_data: candle_data)
       else
         _ ->
           socket

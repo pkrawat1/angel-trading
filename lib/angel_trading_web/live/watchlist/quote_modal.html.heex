@@ -82,6 +82,14 @@
         </table>
       </div>
     </section>
+    <div class="h-[30vh] -mr-2.5 mt-5 shadow-inner">
+      <.live_component
+        id="quote-chart-wrapper"
+        module={CandleChart}
+        dataset={@candle_data}
+        chart_config={%{id: "quote-chart-" <> @quote["symbolToken"], height: 350, width: 600}}
+      />
+    </div>
     <section id="order-place bottom-0">
       <div class="w-full inline-flex rounded-md text-center" role="group">
         <% order_params = %{

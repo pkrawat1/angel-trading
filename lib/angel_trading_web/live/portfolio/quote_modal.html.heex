@@ -81,12 +81,14 @@
           </tbody>
         </table>
       </div>
-      <div
-        class="h-[30vh] -mr-2.5 mt-5 shadow-inner"
-        id="quote-chart"
-        data-candle={@candle_data}
-        phx-hook="CandleChart"
-      />
+      <div class="h-[30vh] -mr-2.5 mt-5 shadow-inner">
+        <.live_component
+          id="quote-chart"
+          module={CandleChart}
+          dataset={@candle_data}
+          chart_config={%{height: 350, width: 600}}
+        />
+      </div>
     </section>
     <section id="order-place">
       <div class="w-full inline-flex rounded-md text-center" role="group">

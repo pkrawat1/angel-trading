@@ -2,6 +2,7 @@ defmodule AngelTradingWeb.WatchlistLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils, YahooFinance}
   alias Phoenix.LiveView.AsyncResult
+  alias AngelTradingWeb.LiveComponents.CandleChart
   require Logger
 
   embed_templates "*"
@@ -274,17 +275,42 @@ defmodule AngelTradingWeb.WatchlistLive do
   def handle_event(
         "select-holding",
         %{"exchange" => exchange, "symbol" => symbol_token},
-        %{assigns: %{token: token}} = socket
+        %{assigns: %{token: token, quote: prev_quote}} = socket
       ) do
     socket =
       with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
-             API.quote(token, exchange, [symbol_token]) do
+             API.quote(token, exchange, [symbol_token]),
+           {:ok, %{"data" => candle_data}} <-
+             API.candle_data(
+               token,
+               exchange,
+               symbol_token,
+               "FIFTEEN_MINUTE",
+               Timex.now("Asia/Kolkata")
+               |> Timex.shift(weeks: -2)
+               |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
+               Timex.now("Asia/Kolkata")
+               |> Timex.shift(hours: 1)
+               |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
+             ) do
         %{"ltp" => ltp, "close" => close} = quote
         ltp_percent = (ltp - close) / close * 100
 
         quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
 
-        socket
+        candle_data = Utils.formatted_candle_data(candle_data)
+
+        if prev_quote do
+          send_update(CandleChart,
+            id: "quote-chart-wrapper",
+            event: "update-chart",
+            dataset: candle_data
+          )
+
+          socket
+        else
+          assign(socket, candle_data: candle_data)
+        end
         |> assign(quote: quote)
       else
         _ ->
