@@ -287,7 +287,8 @@ defmodule AngelTradingWeb.WatchlistLive do
                symbol_token,
                "FIFTEEN_MINUTE",
                Timex.now("Asia/Kolkata")
-               |> Timex.shift(weeks: -2)
+               |> Timex.shift(weeks: if(prev_quote, do: 0, else: -2))
+               |> Timex.shift(hours: if(prev_quote, do: -1, else: 0))
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
                Timex.now("Asia/Kolkata")
                |> Timex.shift(hours: 1)
