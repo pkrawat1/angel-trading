@@ -8,10 +8,12 @@ defmodule AngelTradingWeb.Components.Charts do
   attr :width, :integer, default: nil
   attr :height, :integer, default: nil
   attr :dataset, :list, default: []
+  attr :class, :string, default: ""
 
   def candle_chart(assigns) do
     ~H"""
     <div
+      class={@class}
       id={@id}
       phx-hook="CandleChart"
       data-config={

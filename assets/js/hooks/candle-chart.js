@@ -44,8 +44,6 @@ export default {
       crosshair: {
         mode: LightweightCharts.CrosshairMode.Normal,
       },
-      height: config.height,
-      width: config.width
     });
     this.chart.timeScale().applyOptions({
       barSpacing: 10,

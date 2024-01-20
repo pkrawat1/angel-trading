@@ -2,7 +2,7 @@
   :if={@live_action == :quote}
   show
   id="buy-modal"
-  on_cancel={JS.patch(~p"/client/#{@client_code}/watchlist")}
+  on_cancel={JS.navigate(~p"/client/#{@client_code}/watchlist")}
 >
   <div :if={@quote} class="text-sm uppercase -mx-10">
     <.header>
@@ -87,7 +87,12 @@
         id="quote-chart-wrapper"
         module={CandleChart}
         dataset={@candle_data}
-        chart_config={%{id: "quote-chart-" <> @quote["symbolToken"], height: 350, width: 600}}
+        chart_config={
+          %{
+            id: "quote-chart-" <> @quote["symbolToken"],
+            class: "h-[30vh] -mr-2.5 mt-5 shadow-inner"
+          }
+        }
       />
     </div>
     <section id="order-place bottom-0">

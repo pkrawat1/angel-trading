@@ -83,10 +83,15 @@
       </div>
       <div class="h-[30vh] -mr-2.5 mt-5 shadow-inner">
         <.live_component
-          id="quote-chart"
+          id="quote-chart-wrapper"
           module={CandleChart}
           dataset={@candle_data}
-          chart_config={%{height: 350, width: 600}}
+          chart_config={
+            %{
+              id: "quote-chart-" <> @quote["symbolToken"],
+              class: "h-[30vh] -mr-2.5 mt-5 shadow-inner"
+            }
+          }
         />
       </div>
     </section>

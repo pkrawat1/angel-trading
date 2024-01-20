@@ -217,7 +217,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
         if prev_quote do
           send_update(CandleChart,
-            id: "quote-chart",
+            id: "quote-chart-wrapper",
             event: "update-chart",
             dataset: candle_data
           )
