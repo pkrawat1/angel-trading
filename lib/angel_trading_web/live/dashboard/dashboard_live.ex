@@ -150,7 +150,7 @@ defmodule AngelTradingWeb.DashboardLive do
   def handle_info({:subscribe_to_feed, _}, socket), do: {:noreply, socket}
 
   def handle_info(
-        %{topic: "portfolio-for-" <> client_code, payload: quote_data},
+        %{topic: "quote-stream-" <> client_code, payload: quote_data},
         %{assigns: %{clients: %{ok?: true, result: clients}}} = socket
       ) do
     client = Enum.find(clients, &(&1.client_code == client_code))
