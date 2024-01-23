@@ -2,14 +2,6 @@ defmodule AngelTrading.API do
   use Tesla
   alias TradeGalleon.Brokers.AngelOne
 
-  def socket(client_code, token, feed_token) do
-    AngelTrading.WebSocket.start_link(%{
-      client_code: client_code,
-      token: token,
-      feed_token: feed_token
-    })
-  end
-
   def login(params) do
     TradeGalleon.call(AngelOne, :login, params: params)
   end

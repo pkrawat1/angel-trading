@@ -17,7 +17,7 @@ defmodule AngelTradingWeb.OrderLive do
     client_code = String.upcase(client_code)
 
     if connected?(socket) do
-      :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+      :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
       Process.send_after(self(), :subscribe_to_feed, 500)
       :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
@@ -89,7 +89,12 @@ defmodule AngelTradingWeb.OrderLive do
     socket_process = :"#{client_code}"
 
     with nil <- Process.whereis(socket_process),
-         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+         {:ok, ^socket_process} <-
+           AngelTrading.WebSocket.start(%{
+             client_code: client_code,
+             token: token,
+             feed_token: feed_token
+           }) do
       subscribe_to_quote_feed(socket)
     else
       pid when is_pid(pid) ->
