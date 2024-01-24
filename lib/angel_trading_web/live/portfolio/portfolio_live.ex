@@ -2,6 +2,7 @@ defmodule AngelTradingWeb.PortfolioLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils}
   alias AngelTradingWeb.LiveComponents.CandleChart
+  alias Phoenix.PubSub
   require Logger
 
   embed_templates "*"
@@ -14,7 +15,7 @@ defmodule AngelTradingWeb.PortfolioLive do
     client_code = String.upcase(client_code)
 
     if connected?(socket) do
-      :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+      :ok = PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
       Process.send_after(self(), :subscribe_to_feed, 500)
       :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
@@ -98,7 +99,12 @@ defmodule AngelTradingWeb.PortfolioLive do
     end
 
     with nil <- Process.whereis(socket_process),
-         {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+         {:ok, ^socket_process} <-
+           AngelTrading.WebSocket.start(%{
+             client_code: client_code,
+             token: token,
+             feed_token: feed_token
+           }) do
       subscribe_to_feed.()
     else
       pid when is_pid(pid) ->
@@ -231,7 +237,6 @@ defmodule AngelTradingWeb.PortfolioLive do
       else
         _ ->
           socket
-          |> assign(quote: nil)
           |> put_flash(:error, "[Quote] : Failed to fetch quote")
       end
 

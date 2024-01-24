@@ -24,7 +24,7 @@ defmodule AngelTradingWeb.DashboardLive do
         _ -> []
       end
       |> Enum.map(fn client_code ->
-        :ok = AngelTradingWeb.Endpoint.subscribe("portfolio-for-#{client_code}")
+        :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
         client_code
       end)
 
@@ -103,7 +103,12 @@ defmodule AngelTradingWeb.DashboardLive do
       end
 
       with nil <- Process.whereis(socket_process),
-           {:ok, ^socket_process} <- AngelTrading.API.socket(client_code, token, feed_token) do
+           {:ok, ^socket_process} <-
+             AngelTrading.WebSocket.start(%{
+               client_code: client_code,
+               token: token,
+               feed_token: feed_token
+             }) do
         Logger.info("[Dashboard] web socket (#{socket_process}) started")
 
         subscribe_to_feed.()
@@ -145,7 +150,7 @@ defmodule AngelTradingWeb.DashboardLive do
   def handle_info({:subscribe_to_feed, _}, socket), do: {:noreply, socket}
 
   def handle_info(
-        %{topic: "portfolio-for-" <> client_code, payload: quote_data},
+        %{topic: "quote-stream-" <> client_code, payload: quote_data},
         %{assigns: %{clients: %{ok?: true, result: clients}}} = socket
       ) do
     client = Enum.find(clients, &(&1.client_code == client_code))

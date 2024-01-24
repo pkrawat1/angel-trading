@@ -51,7 +51,7 @@ defmodule AngelTrading.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:number, "~> 1.0"},
       {:timex, "~> 3.0"},
-      {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git"},
+      {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git", branch: "master"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:rustler, "~> 0.30.0", runtime: false}
     ]
