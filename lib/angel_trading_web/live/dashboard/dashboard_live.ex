@@ -203,7 +203,7 @@ defmodule AngelTradingWeb.DashboardLive do
   end
 
   def handle_info(
-        %{topic: "portfolio-for-" <> _},
+        %{topic: "quote-stream-" <> _},
         socket
       ),
       do: {:noreply, socket}
