@@ -71,6 +71,11 @@ config :trade_galleon, TradeGalleon.Brokers.AngelOne,
   mac_address: System.get_env("MAC_ADDRESS", "fe80::216e:6507:4b90:3719"),
   secret_key: System.get_env("SECRET_KEY")
 
+config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocket,
+  adapter: TradeGalleon.Brokers.AngelOne.WebSocket,
+  api_key: System.get_env("API_KEY"),
+  pub_sub_module: AngelTrading.PubSub
+
 config :tesla, adapter: Tesla.Adapter.Hackney
 
 config :number,

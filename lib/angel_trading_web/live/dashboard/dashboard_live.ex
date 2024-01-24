@@ -104,11 +104,7 @@ defmodule AngelTradingWeb.DashboardLive do
 
       with nil <- Process.whereis(socket_process),
            {:ok, ^socket_process} <-
-             AngelTrading.WebSocket.start(%{
-               client_code: client_code,
-               token: token,
-               feed_token: feed_token
-             }) do
+             API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
         Logger.info("[Dashboard] web socket (#{socket_process}) started")
 
         subscribe_to_feed.()

@@ -74,11 +74,7 @@ defmodule AngelTradingWeb.WatchlistLive do
 
     with nil <- Process.whereis(socket_process),
          {:ok, ^socket_process} <-
-           AngelTrading.WebSocket.start(%{
-             client_code: client_code,
-             token: token,
-             feed_token: feed_token
-           }) do
+           API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
       subscribe_to_quote_feed(socket)
     else
       pid when is_pid(pid) ->
