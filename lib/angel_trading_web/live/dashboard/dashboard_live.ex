@@ -127,7 +127,7 @@ defmodule AngelTradingWeb.DashboardLive do
               send(
                 self(),
                 %{
-                  topic: "portfolio-for-" <> client_code,
+                  topic: "quote-stream-" <> client_code,
                   payload:
                     Map.merge(quote_data, %{
                       last_traded_price: quote_data["ltp"] * 100,
