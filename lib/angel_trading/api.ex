@@ -3,7 +3,7 @@ defmodule AngelTrading.API do
   alias TradeGalleon.Brokers.AngelOne
 
   def socket(client_code, token, feed_token, pub_sub_topic) do
-    TradeGalleon.call(AngelOne.WebSocket, :start,
+    TradeGalleon.call(AngelOne.WebSocket, :new,
       params: %{
         client_code: client_code,
         token: token,

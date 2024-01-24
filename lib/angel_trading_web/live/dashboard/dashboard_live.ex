@@ -41,7 +41,7 @@ defmodule AngelTradingWeb.DashboardLive do
                     {:ok, %{"data" => holdings}} <- API.portfolio(token),
                     {:ok, %{"data" => funds}} <- API.funds(token) do
                  Process.send_after(live_view_pid, {:subscribe_to_feed, client_code}, 500)
-                 :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
+                 # :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
 
                  Map.merge(client, %{
                    id: client.client_code,
@@ -103,7 +103,7 @@ defmodule AngelTradingWeb.DashboardLive do
       end
 
       with nil <- Process.whereis(socket_process),
-           {:ok, ^socket_process} <-
+           {:ok, pid} when is_pid(pid) <-
              API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
         Logger.info("[Dashboard] web socket (#{socket_process}) started")
 

@@ -17,7 +17,7 @@ defmodule AngelTradingWeb.PortfolioLive do
     if connected?(socket) do
       :ok = PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
       Process.send_after(self(), :subscribe_to_feed, 500)
-      :timer.send_interval(30000, self(), :subscribe_to_feed)
+      # :timer.send_interval(3000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -99,7 +99,7 @@ defmodule AngelTradingWeb.PortfolioLive do
     end
 
     with nil <- Process.whereis(socket_process),
-         {:ok, ^socket_process} <-
+         {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
       subscribe_to_feed.()
     else

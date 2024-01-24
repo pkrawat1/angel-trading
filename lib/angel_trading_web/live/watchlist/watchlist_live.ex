@@ -18,7 +18,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         if connected?(socket) do
           :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
           Process.send_after(self(), :subscribe_to_feed, 500)
-          :timer.send_interval(30000, self(), :subscribe_to_feed)
+          # :timer.send_interval(30000, self(), :subscribe_to_feed)
         end
 
         watchlist = assign_quotes(user["watchlist"] || [], token)
@@ -73,7 +73,7 @@ defmodule AngelTradingWeb.WatchlistLive do
     socket_process = :"#{client_code}"
 
     with nil <- Process.whereis(socket_process),
-         {:ok, ^socket_process} <-
+         {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
       subscribe_to_quote_feed(socket)
     else

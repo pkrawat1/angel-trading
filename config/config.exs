@@ -74,7 +74,8 @@ config :trade_galleon, TradeGalleon.Brokers.AngelOne,
 config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocket,
   adapter: TradeGalleon.Brokers.AngelOne.WebSocket,
   api_key: System.get_env("API_KEY"),
-  pub_sub_module: AngelTrading.PubSub
+  pub_sub_module: AngelTrading.PubSub,
+  supervisor: AngelTrading.WebSocketSupervisor
 
 config :tesla, adapter: Tesla.Adapter.Hackney
 
