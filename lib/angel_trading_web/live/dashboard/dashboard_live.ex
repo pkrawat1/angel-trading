@@ -39,7 +39,8 @@ defmodule AngelTradingWeb.DashboardLive do
                     {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
                     {:ok, %{"data" => profile}} <- API.profile(token),
                     {:ok, %{"data" => holdings}} <- API.portfolio(token),
-                    {:ok, %{"data" => funds}} <- API.funds(token) do
+                    {:ok, %{"data" => funds}} <- API.funds(token),
+                    {_, %{"errorcode" => errorcode}} <- API.verify_dis(token) do
                  Process.send_after(live_view_pid, {:subscribe_to_feed, client_code}, 500)
                  # :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
 
@@ -47,7 +48,8 @@ defmodule AngelTradingWeb.DashboardLive do
                    id: client.client_code,
                    holdings: holdings,
                    profile: profile,
-                   funds: funds
+                   funds: funds,
+                   dis_status: errorcode == "AG1000"
                  })
                else
                  _ ->

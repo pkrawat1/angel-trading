@@ -165,4 +165,8 @@ defmodule AngelTrading.API do
       }
     )
   end
+
+  def verify_dis(token) do
+    TradeGalleon.call(AngelOne, :verify_dis, token: token)
+  end
 end
