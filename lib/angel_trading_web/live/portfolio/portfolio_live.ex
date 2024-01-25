@@ -242,14 +242,12 @@ defmodule AngelTradingWeb.PortfolioLive do
   end
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
-    with {:ok, %{"data" => holdings}} <- API.portfolio(token),
-         {:ok, %{"data" => funds}} <- API.funds(token) do
+    with {:ok, %{"data" => holdings}} <- API.portfolio(token) do
       holdings = Utils.formatted_holdings(holdings)
 
       holdings
       |> Utils.calculated_overview()
       |> Enum.reduce(socket, &assign(&2, "#{elem(&1, 0)}": elem(&1, 1)))
-      |> assign(funds: funds)
       |> stream_configure(:holdings, dom_id: &"holding-#{&1["symboltoken"]}")
       |> stream(
         :holdings,
