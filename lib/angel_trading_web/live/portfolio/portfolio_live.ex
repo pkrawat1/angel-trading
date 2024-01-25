@@ -172,7 +172,7 @@ defmodule AngelTradingWeb.PortfolioLive do
         %{payload: quote_data},
         %{assigns: %{portfolio: %{result: %{holdings: holdings}}}} = socket
       ) do
-    new_ltp = quote_data.last_traded_price / 100 + Enum.random(-10..10)
+    new_ltp = quote_data.last_traded_price / 100
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
     socket =
