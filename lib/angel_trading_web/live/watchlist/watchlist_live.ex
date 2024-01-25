@@ -317,7 +317,6 @@ defmodule AngelTradingWeb.WatchlistLive do
       else
         _ ->
           socket
-          |> assign(quote: nil)
           |> put_flash(:error, "[Quote] : Failed to fetch quote")
       end
 
