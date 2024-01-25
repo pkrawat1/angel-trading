@@ -3,6 +3,7 @@ defmodule AngelTradingWeb.PortfolioLive do
   alias AngelTrading.{Account, API, Utils}
   alias AngelTradingWeb.LiveComponents.CandleChart
   alias Phoenix.PubSub
+  alias Phoenix.LiveView.AsyncResult
   require Logger
 
   embed_templates "*"
@@ -45,9 +46,9 @@ defmodule AngelTradingWeb.PortfolioLive do
         |> assign(:refresh_token, refresh_token)
         |> assign(:quote, nil)
         |> assign(:candle_data, nil)
-        |> get_portfolio_data()
         |> get_profile_data()
         |> get_funds_data()
+        |> get_portfolio_data()
       else
         _ ->
           socket
@@ -74,7 +75,8 @@ defmodule AngelTradingWeb.PortfolioLive do
           assigns: %{
             client_code: client_code,
             token: token,
-            feed_token: feed_token
+            feed_token: feed_token,
+            portfolio: %{result: %{holdings: holdings}}
           }
         } = socket
       ) do
@@ -92,7 +94,7 @@ defmodule AngelTradingWeb.PortfolioLive do
              tokenList: [
                %{
                  exchangeType: 1,
-                 tokens: Enum.map(socket.assigns.holdings, & &1["symboltoken"])
+                 tokens: Enum.map(holdings, & &1["symboltoken"])
                }
              ]
            }
@@ -114,7 +116,11 @@ defmodule AngelTradingWeb.PortfolioLive do
 
       e ->
         with {:ok, %{"data" => %{"fetched" => quotes}}} <-
-               API.quote(token, "NSE", Enum.map(socket.assigns.holdings, & &1["symboltoken"])) do
+               API.quote(
+                 token,
+                 "NSE",
+                 Enum.map(holdings, & &1["symboltoken"])
+               ) do
           Enum.each(quotes, fn quote_data ->
             send(
               self(),
@@ -135,6 +141,8 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     {:noreply, socket}
   end
+
+  def handle_info(:subscribe_to_feed, socket), do: {:noreply, socket}
 
   def handle_info(
         %{payload: quote},
@@ -162,9 +170,9 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   def handle_info(
         %{payload: quote_data},
-        %{assigns: %{holdings: holdings}} = socket
+        %{assigns: %{portfolio: %{result: %{holdings: holdings}}}} = socket
       ) do
-    new_ltp = quote_data.last_traded_price / 100
+    new_ltp = quote_data.last_traded_price / 100 + Enum.random(-10..10)
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
     socket =
@@ -183,10 +191,14 @@ defmodule AngelTradingWeb.PortfolioLive do
             end
           end)
 
-        holdings
-        |> Utils.calculated_overview()
-        |> Enum.reduce(socket, &assign(&2, "#{elem(&1, 0)}": elem(&1, 1)))
+        portfolio =
+          holdings
+          |> Utils.formatted_holdings()
+          |> Utils.calculated_overview()
+
+        socket
         |> stream_insert(:holdings, updated_holding, at: -1)
+        |> assign(:portfolio, AsyncResult.ok(socket.assigns.portfolio, portfolio))
       end || socket
 
     {:noreply, socket}
@@ -241,24 +253,28 @@ defmodule AngelTradingWeb.PortfolioLive do
     {:noreply, socket}
   end
 
-  defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
-    with {:ok, %{"data" => holdings}} <- API.portfolio(token) do
-      holdings = Utils.formatted_holdings(holdings)
-
+  def handle_async(:get_portfolio_data, {:ok, [_ | _] = holdings}, socket) do
+    portfolio =
       holdings
+      |> Utils.formatted_holdings()
       |> Utils.calculated_overview()
-      |> Enum.reduce(socket, &assign(&2, "#{elem(&1, 0)}": elem(&1, 1)))
-      |> stream_configure(:holdings, dom_id: &"holding-#{&1["symboltoken"]}")
-      |> stream(
-        :holdings,
-        Enum.sort(holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"]))
-      )
-    else
-      {:error, %{"message" => message}} ->
-        socket
-        |> put_flash(:error, message)
-        |> push_navigate(to: "/")
-    end
+
+    {:noreply,
+     socket
+     |> stream(
+       :holdings,
+       Enum.sort(portfolio.holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"]))
+     )
+     |> assign(:portfolio, AsyncResult.ok(socket.assigns.portfolio, portfolio))}
+  end
+
+  def handle_async(:get_portfolio_data, {:ok, {:exit, message}}, socket) do
+    {
+      :noreply,
+      socket
+      |> put_flash(:error, message)
+      |> push_navigate(to: "/")
+    }
   end
 
   defp get_profile_data(%{assigns: %{token: token}} = socket) do
@@ -266,12 +282,23 @@ defmodule AngelTradingWeb.PortfolioLive do
       case API.profile(token) do
         {:ok, %{"data" => profile}} -> {:ok, %{profile: profile}}
         {:error, %{"message" => message}} -> {:error, {:exit, message}}
-        _ -> {:error, {:exist, "!Error"}}
+        _ -> {:error, {:exit, "!Error"}}
       end
     end)
   end
 
-  defp get_holdings_data(%{assigns: %{token: token}} = socket) do
+  defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
+    socket
+    |> stream_configure(:holdings, dom_id: &"holding-#{&1["symboltoken"]}")
+    |> stream(:holdings, [])
+    |> assign(:portfolio, AsyncResult.loading())
+    |> start_async(:get_portfolio_data, fn ->
+      case API.portfolio(token) do
+        {:ok, %{"data" => holdings}} -> holdings
+        {:error, %{"message" => message}} -> {:exit, message}
+        _ -> {:exit, "Unable to load the the portfolio"}
+      end
+    end)
   end
 
   defp get_funds_data(%{assigns: %{token: token}} = socket) do
@@ -279,7 +306,7 @@ defmodule AngelTradingWeb.PortfolioLive do
       case API.funds(token) do
         {:ok, %{"data" => funds}} -> {:ok, %{funds: funds}}
         {:error, %{"message" => message}} -> {:error, {:exit, message}}
-        _ -> {:error, {:exist, "!Error"}}
+        _ -> {:error, {:exit, "!Error"}}
       end
     end)
   end
