@@ -1,6 +1,10 @@
 <div class="block py-6 px-3 mb-4 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700">
   <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
-    <%= String.downcase(@name) %>
+    <.async_result :let={profile} assign={@profile}>
+      <:loading>...</:loading>
+      <:failed :let={reason}><%= reason %></:failed>
+      <%= String.downcase(profile["name"]) %>
+    </.async_result>
   </h5>
   <div class="text-xl">
     <%= number_to_currency(@total_current, precision: 0) %> <br />
@@ -51,7 +55,11 @@
     <small class="text-left">
       Available Cash
       <span class="text-green-600">
-        <%= number_to_currency(@funds["net"], precision: 2) %> <br />
+        <.async_result :let={funds} assign={@funds}>
+          <:loading>...</:loading>
+          <:failed :let={reason}><%= reason %></:failed>
+          <%= number_to_currency(funds["net"], precision: 2) %> <br />
+        </.async_result>
       </span>
     </small>
   </div>

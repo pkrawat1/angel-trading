@@ -1,0 +1,81 @@
+<ul :if={@params["status"] == "history"} id="history-orders" phx-update="stream">
+  <li
+    :for={{dom_id, order} <- @streams.order_book}
+    :if={order["status"] != "open"}
+    class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
+    id={dom_id}
+  >
+    <dl class="items-center">
+      <div>
+        <dd class="flex font-semibold text-slate-900 justify-between">
+          <div class="flex">
+            <%= order["tradingsymbol"] |> String.split("-") |> List.first() %>
+          </div>
+          <div>
+            <span class={[
+              if(
+                (order["transactiontype"] == "BUY" and order["price"] > order["ltp"]) ||
+                  (order["transactiontype"] == "SELL" and order["price"] < order["ltp"]),
+                do: "text-red-600",
+                else: "text-green-600"
+              )
+            ]}>
+              <%= number_to_currency(order["price"]) %>
+            </span>
+          </div>
+        </dd>
+      </div>
+      <div>
+        <dd class="my-2 flex text-xs text-slate-900 justify-between">
+          <span>
+            <small class={[
+              if(order["transactiontype"] == "SELL",
+                do: "bg-red-100 text-red-600",
+                else: "bg-green-200 text-green-600"
+              ),
+              "text-xs me-2 px-1 py-0.5 rounded"
+            ]}>
+              <%= order["transactiontype"] %>
+            </small>
+            <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+              <%= order["exchange"] %>
+            </small>
+            <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+              <%= order["producttype"] %>
+            </small>
+          </span>
+          <div>
+            LTP
+            <span :if={order["is_gain_today?"]} class="text-green-600">
+              <%= number_to_currency(order["ltp"]) %>
+            </span>
+            <span :if={!order["is_gain_today?"]} class="text-red-600">
+              <%= number_to_currency(order["ltp"]) %>
+            </span>
+            <span>
+              (<%= (order["ltp_percent"] || 0.0)
+              |> Float.floor(2) %>%)
+            </span>
+          </div>
+        </dd>
+      </div>
+      <div>
+        <dd class="my-2 flex text-xs text-slate-900 justify-between">
+          <span>
+            <%= order["filledshares"] %>/<%= order["quantity"] %> Shares
+          </span>
+          <span class={[
+            if(order["status"] in ["rejected", "cancelled"],
+              do: "bg-red-100 text-red-600",
+              else: "bg-green-200 text-green-600"
+            ),
+            "px-1 py-0.5 rounded uppercase"
+          ]}>
+            <.icon name="hero-clock h-4 w-4" />
+            <%= order["status"] %>
+          </span>
+        </dd>
+      </div>
+    </dl>
+  </li>
+</ul>

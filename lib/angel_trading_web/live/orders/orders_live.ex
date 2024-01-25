@@ -3,6 +3,8 @@ defmodule AngelTradingWeb.OrdersLive do
   alias AngelTrading.{Account, API, Utils}
   require Logger
 
+  embed_templates "*"
+
   def mount(%{"client_code" => client_code}, %{"user_hash" => user_hash}, socket) do
     client_code = String.upcase(client_code)
 

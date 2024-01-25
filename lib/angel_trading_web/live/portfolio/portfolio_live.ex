@@ -46,6 +46,8 @@ defmodule AngelTradingWeb.PortfolioLive do
         |> assign(:quote, nil)
         |> assign(:candle_data, nil)
         |> get_portfolio_data()
+        |> get_profile_data()
+        |> get_funds_data()
       else
         _ ->
           socket
@@ -240,15 +242,13 @@ defmodule AngelTradingWeb.PortfolioLive do
   end
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
-    with {:ok, %{"data" => profile}} <- API.profile(token),
-         {:ok, %{"data" => holdings}} <- API.portfolio(token),
+    with {:ok, %{"data" => holdings}} <- API.portfolio(token),
          {:ok, %{"data" => funds}} <- API.funds(token) do
       holdings = Utils.formatted_holdings(holdings)
 
       holdings
       |> Utils.calculated_overview()
       |> Enum.reduce(socket, &assign(&2, "#{elem(&1, 0)}": elem(&1, 1)))
-      |> assign(name: profile["name"])
       |> assign(funds: funds)
       |> stream_configure(:holdings, dom_id: &"holding-#{&1["symboltoken"]}")
       |> stream(
@@ -261,5 +261,28 @@ defmodule AngelTradingWeb.PortfolioLive do
         |> put_flash(:error, message)
         |> push_navigate(to: "/")
     end
+  end
+
+  defp get_profile_data(%{assigns: %{token: token}} = socket) do
+    assign_async(socket, :profile, fn ->
+      case API.profile(token) do
+        {:ok, %{"data" => profile}} -> {:ok, %{profile: profile}}
+        {:error, %{"message" => message}} -> {:error, {:exit, message}}
+        _ -> {:error, {:exist, "!Error"}}
+      end
+    end)
+  end
+
+  defp get_holdings_data(%{assigns: %{token: token}} = socket) do
+  end
+
+  defp get_funds_data(%{assigns: %{token: token}} = socket) do
+    assign_async(socket, :funds, fn ->
+      case API.funds(token) do
+        {:ok, %{"data" => funds}} -> {:ok, %{funds: funds}}
+        {:error, %{"message" => message}} -> {:error, {:exit, message}}
+        _ -> {:error, {:exist, "!Error"}}
+      end
+    end)
   end
 end
