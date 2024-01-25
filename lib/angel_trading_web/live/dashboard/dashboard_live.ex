@@ -42,7 +42,7 @@ defmodule AngelTradingWeb.DashboardLive do
                     {:ok, %{"data" => funds}} <- API.funds(token),
                     {_, %{"errorcode" => errorcode}} <- API.verify_dis(token) do
                  Process.send_after(live_view_pid, {:subscribe_to_feed, client_code}, 500)
-                 # :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
+                 :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
 
                  Map.merge(client, %{
                    id: client.client_code,
