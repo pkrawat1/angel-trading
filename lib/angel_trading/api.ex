@@ -169,4 +169,24 @@ defmodule AngelTrading.API do
   def verify_dis(token) do
     TradeGalleon.call(AngelOne, :verify_dis, token: token)
   end
+
+  def estimate_charges(token, orders) do
+    TradeGalleon.call(AngelOne, :estimate_charges,
+      token: token,
+      params: %{
+        "orders" =>
+          Enum.map(orders, fn order ->
+            %{
+              "product_type" => order.product_type,
+              "transaction_type" => order.transaction_type,
+              "quantity" => order.quantity,
+              "price" => order.price,
+              "exchange" => order.exchange,
+              "symbol_name" => order.trading_symbol,
+              "token" => order.symbol_token
+            }
+          end)
+      }
+    )
+  end
 end

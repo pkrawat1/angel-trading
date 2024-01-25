@@ -63,7 +63,8 @@ defmodule AngelTradingWeb.OrderLive do
           ltp_percent: 0.0,
           is_gain_today?: true,
           margin_required: 0.0,
-          max: 0
+          max: 0,
+          charges: nil
         })
         |> get_profile_data()
       else
@@ -143,54 +144,63 @@ defmodule AngelTradingWeb.OrderLive do
     {:noreply, socket}
   end
 
-  def handle_event("increase-limit", _, %{assigns: %{order: order}} = socket) do
+  def handle_event("increase-limit", _, %{assigns: %{order: order, token: token}} = socket) do
     price = "#{order.price}" |> Decimal.add("0.05") |> Decimal.to_float()
 
     {:noreply,
      assign(socket,
-       order: %{
-         order
-         | price: price,
-           margin_required: price * order.quantity
-       }
+       order:
+         %{
+           order
+           | price: price,
+             margin_required: price * order.quantity
+         }
+         |> estimate_charges(token)
      )}
   end
 
-  def handle_event("decrease-limit", _, %{assigns: %{order: order}} = socket) do
+  def handle_event("decrease-limit", _, %{assigns: %{order: order, token: token}} = socket) do
     price =
       "#{order.price}" |> Decimal.sub("0.05") |> Decimal.to_float()
 
     {:noreply,
      assign(socket,
-       order: %{
-         order
-         | price: price,
-           margin_required: price * order.quantity
-       }
+       order:
+         %{
+           order
+           | price: price,
+             margin_required: price * order.quantity
+         }
+         |> estimate_charges(token)
      )}
   end
 
   def handle_event(
         "validate-order",
         %{"order" => %{"price" => price, "quantity" => quantity}},
-        %{assigns: %{order: order}} = socket
+        %{assigns: %{order: order, token: token}} = socket
       ) do
     {quantity, _} = Integer.parse("0" <> quantity)
     {price, _} = Float.parse(if price == "", do: "#{order.ltp}", else: price)
 
     {:noreply,
      assign(socket,
-       order: %{
-         order
-         | price: price,
-           quantity: quantity,
-           margin_required: price * quantity
-       }
+       order:
+         %{
+           order
+           | price: price,
+             quantity: quantity,
+             margin_required: price * quantity
+         }
+         |> estimate_charges(token)
      )}
   end
 
   def handle_event("toggle-order-type", %{"type" => type}, socket) do
-    {:noreply, assign(socket, order: %{socket.assigns.order | type: type})}
+    {:noreply,
+     assign(socket,
+       order: %{socket.assigns.order | type: type} |> estimate_charges(socket.assigns.token)
+     )}
   end
 
   def handle_event(
@@ -345,5 +355,29 @@ defmodule AngelTradingWeb.OrderLive do
     end
 
     socket
+  end
+
+  defp estimate_charges(order, token) do
+    with {:ok, %{"data" => %{"charges" => charges}}} <-
+           API.estimate_charges(token, [
+             %{
+               exchange: order.exchange,
+               trading_symbol: order.trading_symbol,
+               symbol_token: order.symbol_token,
+               quantity: order.quantity,
+               transaction_type: order.transaction_type,
+               order_type: order.type,
+               product_type: "DELIVERY",
+               price: order.price
+             }
+           ]) do
+      %{order | charges: charges}
+    else
+      e ->
+        Logger.error("[Order] Error estimating charges for the order")
+        IO.inspect(e)
+
+        order
+    end
   end
 end
