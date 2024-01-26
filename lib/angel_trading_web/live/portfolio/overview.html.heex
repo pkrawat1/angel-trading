@@ -2,7 +2,7 @@
   <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
     <.async_result :let={profile} assign={@profile}>
       <:loading>
-        <div class="animate-pulse h-7 bg-gray-300 rounded-full dark:bg-gray-600 w-64 m-auto">
+        <div class="animate-pulse h-8 bg-gray-300 rounded-full dark:bg-gray-600 w-64 m-auto">
         </div>
       </:loading>
       <:failed :let={reason}><%= reason %></:failed>
@@ -11,16 +11,16 @@
   </h5>
   <.async_result :let={portfolio} assign={@portfolio}>
     <:loading>
-      <div class="animate-pulse space-y-7">
-        <div class="grid grid-cols-1 gap-2">
-          <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-36"></div>
-          <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-64"></div>
+      <div class="animate-pulse space-y-6">
+        <div class="grid grid-cols-1 gap-1">
+          <div class="h-7 bg-gray-300 rounded-full dark:bg-gray-600 w-36"></div>
+          <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-64"></div>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-28"></div>
-          <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-28 justify-self-end"></div>
-          <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-24"></div>
-          <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-40 justify-self-end"></div>
+        <div class="grid grid-cols-2 gap-1">
+          <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-28"></div>
+          <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-28 justify-self-end"></div>
+          <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-24"></div>
+          <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-40 justify-self-end"></div>
         </div>
       </div>
     </:loading>
@@ -71,12 +71,12 @@
       </small>
     </div>
   </.async_result>
-  <div class="text-xl text-right mt-5 flex justify-between">
+  <div class="text-xl text-right mt-6 flex justify-between">
     <small class="text-left">
       <span class="text-green-600">
         <.async_result :let={funds} assign={@funds}>
           <:loading>
-            <div class="animate-pulse h-6 bg-gray-300 rounded-full dark:bg-gray-600 w-48"></div>
+            <div class="animate-pulse h-7 bg-gray-300 rounded-full dark:bg-gray-600 w-48"></div>
           </:loading>
           <:failed :let={reason}><%= reason %></:failed>
           Available Cash <%= number_to_currency(funds["net"], precision: 2) %> <br />
