@@ -2,7 +2,6 @@ defmodule AngelTradingWeb.WatchlistLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils, YahooFinance}
   alias Phoenix.LiveView.AsyncResult
-  alias AngelTradingWeb.LiveComponents.{CandleChart, QuoteModal}
   require Logger
 
   embed_templates "*"
@@ -18,7 +17,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         if connected?(socket) do
           :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
           Process.send_after(self(), :subscribe_to_feed, 500)
-          :timer.send_interval(30000, self(), :subscribe_to_feed)
+          :timer.send_interval(3000, self(), :subscribe_to_feed)
         end
 
         watchlist = assign_quotes(user["watchlist"] || [], token)
@@ -98,6 +97,12 @@ defmodule AngelTradingWeb.WatchlistLive do
       ) do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
+        %{last_traded_price: ltp, close_price: close} = new_quote
+        ltp = ltp + Enum.random(-5..5)
+        ltp_percent = (ltp - close) / close * 100
+
+        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+
         {_, socket} =
           handle_event(
             "select-holding",
@@ -105,7 +110,7 @@ defmodule AngelTradingWeb.WatchlistLive do
               "exchange" => quote["exchange"],
               "symbol" => new_quote.token
             },
-            socket
+            assign(socket, quote: quote)
           )
 
         socket
@@ -288,8 +293,8 @@ defmodule AngelTradingWeb.WatchlistLive do
                symbol_token,
                "FIFTEEN_MINUTE",
                Timex.now("Asia/Kolkata")
-               |> Timex.shift(weeks: if(prev_quote, do: 0, else: -1))
-               |> Timex.shift(hours: if(prev_quote, do: -1, else: 0))
+               |> Timex.shift(weeks: if(prev_quote, do: -1, else: -1))
+               |> Timex.shift(hours: if(prev_quote, do: -1, else: -1))
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
                Timex.now("Asia/Kolkata")
                |> Timex.shift(hours: 1)
@@ -315,7 +320,9 @@ defmodule AngelTradingWeb.WatchlistLive do
         end
         |> assign(quote: quote)
       else
-        _ ->
+        e ->
+          IO.inspect(e)
+
           socket
           |> put_flash(:error, "[Quote] : Failed to fetch quote")
       end

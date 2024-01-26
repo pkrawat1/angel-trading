@@ -55,6 +55,9 @@ defmodule AngelTradingWeb do
         layout: {AngelTradingWeb.Layouts, :app}
 
       unquote(html_helpers())
+
+      # Live component aliases
+      use AngelTradingWeb.LiveComponents
     end
   end
 
@@ -63,6 +66,9 @@ defmodule AngelTradingWeb do
       use Phoenix.LiveComponent
 
       unquote(html_helpers())
+
+      # Live component aliases
+      use AngelTradingWeb.LiveComponents
     end
   end
 
