@@ -2,7 +2,7 @@ defmodule AngelTradingWeb.WatchlistLive do
   use AngelTradingWeb, :live_view
   alias AngelTrading.{Account, API, Utils, YahooFinance}
   alias Phoenix.LiveView.AsyncResult
-  alias AngelTradingWeb.LiveComponents.CandleChart
+  alias AngelTradingWeb.LiveComponents.{CandleChart, QuoteModal}
   require Logger
 
   embed_templates "*"
