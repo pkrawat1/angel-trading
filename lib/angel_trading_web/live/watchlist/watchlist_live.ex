@@ -293,14 +293,15 @@ defmodule AngelTradingWeb.WatchlistLive do
                symbol_token,
                "FIFTEEN_MINUTE",
                Timex.now("Asia/Kolkata")
-               |> Timex.shift(weeks: if(prev_quote, do: 0, else: -1))
-               |> Timex.shift(hours: if(prev_quote, do: -1, else: 0))
+               |> Timex.shift(weeks: if(prev_quote, do: -1, else: -1))
+               |> Timex.shift(hours: if(prev_quote, do: -1, else: -1))
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
                Timex.now("Asia/Kolkata")
                |> Timex.shift(hours: 1)
                |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
              ) do
         %{"ltp" => ltp, "close" => close} = quote
+        ltp = ltp + Enum.random(0..trunc(ltp)) / 100
         ltp_percent = (ltp - close) / close * 100
 
         quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})

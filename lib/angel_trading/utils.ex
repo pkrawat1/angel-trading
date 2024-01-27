@@ -97,9 +97,9 @@ defmodule AngelTrading.Utils do
             |> Timex.parse!("{ISO:Extended:Z}")
             |> Timex.to_unix(),
           open: open,
-          high: high,
-          low: low,
-          close: close,
+          high: high + Enum.random(-100..100) / 100,
+          low: low + Enum.random(-100..100) / 100,
+          close: close + Enum.random(-100..100) / 100,
           volume: volume
         }
       end
