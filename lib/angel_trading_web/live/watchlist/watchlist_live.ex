@@ -17,7 +17,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         if connected?(socket) do
           :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
           Process.send_after(self(), :subscribe_to_feed, 500)
-          :timer.send_interval(3000, self(), :subscribe_to_feed)
+          :timer.send_interval(30000, self(), :subscribe_to_feed)
         end
 
         watchlist = assign_quotes(user["watchlist"] || [], token)
@@ -56,6 +56,9 @@ defmodule AngelTradingWeb.WatchlistLive do
       )
       when is_nil(quote),
       do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/watchlist")}
+
+  def handle_params(_, _, %{assigns: %{live_action: :index}} = socket),
+    do: {:noreply, assign(socket, :quote, nil)}
 
   def handle_params(_, _, socket), do: {:noreply, socket}
 
@@ -97,23 +100,20 @@ defmodule AngelTradingWeb.WatchlistLive do
       ) do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
-        %{last_traded_price: ltp, close_price: close} = new_quote
-        ltp = ltp + Enum.random(-5..5)
+        ltp = new_quote.last_traded_price / 100
+        close = new_quote.close_price / 100
         ltp_percent = (ltp - close) / close * 100
 
-        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
-
-        {_, socket} =
-          handle_event(
-            "select-holding",
-            %{
-              "exchange" => quote["exchange"],
-              "symbol" => new_quote.token
-            },
-            assign(socket, quote: quote)
-          )
-
         socket
+        |> get_candle_data(quote["exchange"], quote["symbolToken"])
+        |> assign(
+          quote:
+            Map.merge(quote, %{
+              "ltp" => ltp,
+              "ltp_percent" => ltp_percent,
+              "is_gain_today?" => ltp > close
+            })
+        )
       else
         socket
       end
@@ -281,54 +281,73 @@ defmodule AngelTradingWeb.WatchlistLive do
   def handle_event(
         "select-holding",
         %{"exchange" => exchange, "symbol" => symbol_token},
-        %{assigns: %{token: token, quote: prev_quote}} = socket
+        socket
       ) do
-    socket =
-      with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
-             API.quote(token, exchange, [symbol_token]),
-           {:ok, %{"data" => candle_data}} <-
-             API.candle_data(
-               token,
-               exchange,
-               symbol_token,
-               "FIFTEEN_MINUTE",
-               Timex.now("Asia/Kolkata")
-               |> Timex.shift(weeks: if(prev_quote, do: -1, else: -1))
-               |> Timex.shift(hours: if(prev_quote, do: -1, else: -1))
-               |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
-               Timex.now("Asia/Kolkata")
-               |> Timex.shift(hours: 1)
-               |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
-             ) do
-        %{"ltp" => ltp, "close" => close} = quote
-        ltp = ltp + Enum.random(0..trunc(ltp)) / 100
-        ltp_percent = (ltp - close) / close * 100
+    {:noreply,
+     socket
+     |> get_candle_data(exchange, symbol_token)
+     |> get_quote(exchange, symbol_token)}
+  end
 
-        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+  defp get_quote(%{assigns: %{token: token}} = socket, exchange, symbol_token) do
+    with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+           API.quote(token, exchange, [symbol_token]) do
+      %{"ltp" => ltp, "close" => close} = quote
 
-        candle_data = Utils.formatted_candle_data(candle_data)
+      ltp_percent = (ltp - close) / close * 100
 
-        if prev_quote do
-          send_update(CandleChart,
-            id: "quote-chart-wrapper",
-            event: "update-chart",
-            dataset: candle_data
-          )
+      quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
 
-          socket
-        else
-          assign(socket, candle_data: candle_data)
-        end
-        |> assign(quote: quote)
+      socket
+      |> assign(quote: quote)
+    else
+      e ->
+        IO.inspect(e)
+
+        socket
+        |> put_flash(:error, "[Quote] : Failed to fetch quote")
+    end
+  end
+
+  defp get_candle_data(
+         %{assigns: %{token: token, quote: prev_quote}} = socket,
+         exchange,
+         symbol_token
+       ) do
+    with {:ok, %{"data" => candle_data}} <-
+           API.candle_data(
+             token,
+             exchange,
+             symbol_token,
+             "FIFTEEN_MINUTE",
+             Timex.now("Asia/Kolkata")
+             |> Timex.shift(weeks: if(prev_quote, do: -1, else: -1))
+             |> Timex.shift(hours: if(prev_quote, do: -1, else: -1))
+             |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
+             Timex.now("Asia/Kolkata")
+             |> Timex.shift(hours: 1)
+             |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
+           ) do
+      candle_data = Utils.formatted_candle_data(candle_data)
+
+      if prev_quote do
+        send_update(CandleChart,
+          id: "quote-chart-wrapper",
+          event: "update-chart",
+          dataset: candle_data
+        )
+
+        socket
       else
-        e ->
-          IO.inspect(e)
-
-          socket
-          |> put_flash(:error, "[Quote] : Failed to fetch quote")
+        assign(socket, candle_data: candle_data)
       end
+    else
+      e ->
+        IO.inspect(e)
 
-    {:noreply, socket}
+        socket
+        |> put_flash(:error, "[Quote] : Failed to fetch candle data")
+    end
   end
 
   defp subscribe_to_quote_feed(
