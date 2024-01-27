@@ -33,6 +33,14 @@
   <.open_orders {assigns} />
   <.position_orders {assigns} />
   <.orders_history {assigns} />
-  <.quote_modal {assigns} />
 </section>
+<.live_component
+  :if={@live_action == :quote && @quote}
+  id="quote-modal"
+  module={QuoteModal}
+  on_cancel={JS.patch(~p"/client/#{@client_code}/orders")}
+  quote={@quote}
+  client_code={@client_code}
+  selected_order={@selected_order}
+/>
 <.bottom_nav client_code={@client_code} />

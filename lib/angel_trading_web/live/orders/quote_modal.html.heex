@@ -1,9 +1,0 @@
-<.live_component
-  :if={@live_action == :quote && @quote}
-  id="quote-modal"
-  module={QuoteModal}
-  on_cancel={JS.navigate(~p"/client/#{@client_code}/watchlist")}
-  quote={@quote}
-  client_code={@client_code}
-  selected_order={@selected_order}
-/>
