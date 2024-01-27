@@ -1,7 +1,7 @@
 <ul :if={@params["status"] in [nil, "open"]} id="open-orders" phx-update="stream">
   <li
     :for={{dom_id, order} <- @streams.order_book}
-    :if={order["status"] not in ["open", "pending"]}
+    :if={order["status"] in ["open", "pending"]}
     class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
     id={dom_id}
     phx-click={JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/orders/quote")}
