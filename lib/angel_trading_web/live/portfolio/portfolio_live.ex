@@ -67,8 +67,8 @@ defmodule AngelTradingWeb.PortfolioLive do
       when is_nil(quote),
       do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/portfolio")}
 
-  def handle_params(_, _, %{assigns: %{live_action: :index}} = socket),
-    do: {:noreply, assign(socket, :quote, nil)}
+  def handle_params(_, _, %{assigns: %{live_action: :show}} = socket),
+    do: {:noreply, socket |> assign(:quote, nil) |> assign(:candle_data, nil)}
 
   def handle_params(_, _, socket), do: {:noreply, socket}
 

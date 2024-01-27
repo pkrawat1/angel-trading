@@ -11,7 +11,7 @@ defmodule AngelTradingWeb.OrdersLive do
     if connected?(socket) do
       :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
       Process.send_after(self(), :subscribe_to_feed, 500)
-      :timer.send_interval(30000, self(), :subscribe_to_feed)
+      :timer.send_interval(3000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -56,6 +56,9 @@ defmodule AngelTradingWeb.OrdersLive do
       )
       when is_nil(quote),
       do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/orders")}
+
+  def handle_params(_, _, %{assigns: %{live_action: :show}} = socket),
+    do: {:noreply, socket |> assign(:quote, nil)}
 
   def handle_params(params, _, socket), do: {:noreply, assign(socket, params: params)}
 
@@ -106,6 +109,32 @@ defmodule AngelTradingWeb.OrdersLive do
     end
 
     {:noreply, quote_fallback(socket)}
+  end
+
+  def handle_info(
+        %{payload: new_quote},
+        %{assigns: %{live_action: :quote, quote: quote}} = socket
+      ) do
+    socket =
+      if(new_quote.token == quote["symbolToken"]) do
+        ltp = new_quote.last_traded_price / 100
+        close = new_quote.close_price / 100
+        ltp_percent = (ltp - close) / close * 100
+
+        assign(
+          socket,
+          quote:
+            Map.merge(quote, %{
+              "ltp" => ltp,
+              "ltp_percent" => ltp_percent,
+              "is_gain_today?" => ltp > close
+            })
+        )
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   def handle_info(

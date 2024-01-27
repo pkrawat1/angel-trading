@@ -58,7 +58,7 @@ defmodule AngelTradingWeb.WatchlistLive do
       do: {:noreply, push_patch(socket, to: ~p"/client/#{client_code}/watchlist")}
 
   def handle_params(_, _, %{assigns: %{live_action: :index}} = socket),
-    do: {:noreply, assign(socket, :quote, nil)}
+    do: {:noreply, socket |> assign(:quote, nil) |> assign(:candle_data, nil)}
 
   def handle_params(_, _, socket), do: {:noreply, socket}
 
