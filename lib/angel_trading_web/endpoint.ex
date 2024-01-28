@@ -22,6 +22,7 @@ defmodule AngelTradingWeb.Endpoint do
     at: "/",
     from: :angel_trading,
     gzip: Mix.env() == :prod,
+    brotli: true,
     only: AngelTradingWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
