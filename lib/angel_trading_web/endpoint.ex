@@ -11,7 +11,8 @@ defmodule AngelTradingWeb.Endpoint do
     same_site: "Lax"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+  socket "/live", Phoenix.LiveView.Socket,
+    websocket: [compress: true, connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -20,7 +21,7 @@ defmodule AngelTradingWeb.Endpoint do
   plug Plug.Static,
     at: "/",
     from: :angel_trading,
-    gzip: false,
+    gzip: Mix.env() == :prod,
     only: AngelTradingWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the

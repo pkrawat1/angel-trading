@@ -45,6 +45,7 @@ if config_env() == :prod do
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port,
+      compress: true,
       protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
     ],
     protocol_options: [max_header_value_length: 8192],
