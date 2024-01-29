@@ -95,9 +95,10 @@ defmodule AngelTradingWeb.WatchlistLive do
   end
 
   def handle_info(
-        %{payload: new_quote},
-        %{assigns: %{live_action: :quote, quote: quote}} = socket
-      ) do
+        %{topic: topic, payload: new_quote},
+        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote}} = socket
+      )
+      when topic == "quote-stream-" <> client_code do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
         ltp = new_quote.last_traded_price / 100
@@ -122,9 +123,10 @@ defmodule AngelTradingWeb.WatchlistLive do
   end
 
   def handle_info(
-        %{payload: quote_data},
-        %{assigns: %{watchlist: watchlist}} = socket
-      ) do
+        %{topic: topic, payload: quote_data},
+        %{assigns: %{client_code: client_code, watchlist: watchlist}} = socket
+      )
+      when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price / 100
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
@@ -151,6 +153,8 @@ defmodule AngelTradingWeb.WatchlistLive do
 
     {:noreply, socket}
   end
+
+  def handle_info(_, socket), do: {:noreply, socket}
 
   def handle_event(
         "search",

@@ -110,9 +110,17 @@ defmodule AngelTradingWeb.OrderLive do
   end
 
   def handle_info(
-        %{payload: quote_data},
-        %{assigns: %{funds: funds, order: order, selected_holding: selected_holding}} = socket
-      ) do
+        %{topic: topic, payload: quote_data},
+        %{
+          assigns: %{
+            client_code: client_code,
+            funds: funds,
+            order: order,
+            selected_holding: selected_holding
+          }
+        } = socket
+      )
+      when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price / 100
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
@@ -143,6 +151,8 @@ defmodule AngelTradingWeb.OrderLive do
 
     {:noreply, socket}
   end
+
+  def handle_info(_, socket), do: {:noreply, socket}
 
   def handle_event("increase-limit", _, %{assigns: %{order: order, token: token}} = socket) do
     price = "#{order.price}" |> Decimal.add("0.05") |> Decimal.to_float()

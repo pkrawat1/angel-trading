@@ -11,7 +11,7 @@ defmodule AngelTradingWeb.OrdersLive do
     if connected?(socket) do
       :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
       Process.send_after(self(), :subscribe_to_feed, 500)
-      :timer.send_interval(3000, self(), :subscribe_to_feed)
+      :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -112,9 +112,10 @@ defmodule AngelTradingWeb.OrdersLive do
   end
 
   def handle_info(
-        %{payload: new_quote},
-        %{assigns: %{live_action: :quote, quote: quote}} = socket
-      ) do
+        %{topic: topic, payload: new_quote},
+        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote}} = socket
+      )
+      when topic == "quote-stream-" <> client_code do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
         ltp = new_quote.last_traded_price / 100
@@ -138,9 +139,10 @@ defmodule AngelTradingWeb.OrdersLive do
   end
 
   def handle_info(
-        %{payload: quote_data},
-        %{assigns: %{order_book: order_book}} = socket
-      ) do
+        %{topic: topic, payload: quote_data},
+        %{assigns: %{client_code: client_code, order_book: order_book}} = socket
+      )
+      when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price / 100
     close = quote_data.close_price / 100
     ltp_percent = (new_ltp - close) / close * 100
@@ -174,6 +176,8 @@ defmodule AngelTradingWeb.OrdersLive do
 
     {:noreply, socket}
   end
+
+  def handle_info(_, socket), do: {:noreply, socket}
 
   def handle_event(
         "select-holding",

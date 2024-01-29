@@ -148,9 +148,10 @@ defmodule AngelTradingWeb.PortfolioLive do
   def handle_info(:subscribe_to_feed, socket), do: {:noreply, socket}
 
   def handle_info(
-        %{payload: new_quote},
-        %{assigns: %{live_action: :quote, quote: quote}} = socket
-      ) do
+        %{topic: topic, payload: new_quote},
+        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote}} = socket
+      )
+      when topic == "quote-stream-" <> client_code do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
         ltp = new_quote.last_traded_price / 100
@@ -175,9 +176,11 @@ defmodule AngelTradingWeb.PortfolioLive do
   end
 
   def handle_info(
-        %{payload: quote_data},
-        %{assigns: %{portfolio: %{result: %{holdings: holdings}}}} = socket
-      ) do
+        %{topic: topic, payload: quote_data},
+        %{assigns: %{client_code: client_code, portfolio: %{result: %{holdings: holdings}}}} =
+          socket
+      )
+      when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price / 100
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
