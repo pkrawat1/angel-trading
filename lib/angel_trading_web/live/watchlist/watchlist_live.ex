@@ -33,7 +33,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         )
         |> stream_configure(:watchlist, dom_id: &"watchlist-quote-#{&1["symboltoken"]}")
         |> stream(:watchlist, watchlist)
-        |> assign_async(:token_list, fn -> {:ok, %{token_list: []}} end)
+        |> assign(:token_list, AsyncResult.ok(AsyncResult.loading(), []))
       else
         e ->
           IO.inspect(e)

@@ -19,13 +19,19 @@ defmodule AngelTrading.MixProject do
   def application do
     [
       mod: {AngelTrading.Application, []},
-      extra_applications: [
-        :logger,
-        :runtime_tools,
-        # :observer,
-        # :wx,
-        :websockex
-      ]
+      extra_applications:
+        [
+          :logger,
+          :runtime_tools,
+          :websockex
+        ] ++
+          if(Mix.env() == :dev,
+            do: [
+              :observer,
+              :wx
+            ],
+            else: []
+          )
     ]
   end
 
