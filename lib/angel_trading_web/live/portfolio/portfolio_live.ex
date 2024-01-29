@@ -210,6 +210,8 @@ defmodule AngelTradingWeb.PortfolioLive do
     {:noreply, socket}
   end
 
+  def handle_info(_, socket), do: {:noreply, socket}
+
   def handle_event(
         "select-holding",
         %{"exchange" => exchange, "symbol" => symbol_token},
