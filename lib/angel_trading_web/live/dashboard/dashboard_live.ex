@@ -92,7 +92,7 @@ defmodule AngelTradingWeb.DashboardLive do
              correlationID: client_code,
              action: 1,
              params: %{
-               mode: 2,
+               mode: 3,
                tokenList: [
                  %{
                    exchangeType: 1,
@@ -154,7 +154,7 @@ defmodule AngelTradingWeb.DashboardLive do
     client = Enum.find(clients, &(&1.client_code == client_code))
 
     if client do
-      new_ltp = quote_data.last_traded_price / 100
+      new_ltp = quote_data.last_traded_price
 
       updated_holding = Enum.find(client.holdings, &(&1["symboltoken"] == quote_data.token))
 

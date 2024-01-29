@@ -85,37 +85,17 @@ defmodule AngelTradingWeb.PortfolioLive do
       ) do
     socket_process = :"#{client_code}"
 
-    subscribe_to_feed = fn ->
-      WebSockex.send_frame(
-        socket_process,
-        {:text,
-         Jason.encode!(%{
-           correlationID: client_code,
-           action: 1,
-           params: %{
-             mode: 2,
-             tokenList: [
-               %{
-                 exchangeType: 1,
-                 tokens: Enum.map(holdings, & &1["symboltoken"])
-               }
-             ]
-           }
-         })}
-      )
-    end
-
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
-      subscribe_to_feed.()
+      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1["symboltoken"]), 3)
     else
       pid when is_pid(pid) ->
         Logger.info(
           "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
-        subscribe_to_feed.()
+        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1["symboltoken"]), 3)
 
       e ->
         with {:ok, %{"data" => %{"fetched" => quotes}}} <-
@@ -154,8 +134,8 @@ defmodule AngelTradingWeb.PortfolioLive do
       when topic == "quote-stream-" <> client_code do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
-        ltp = new_quote.last_traded_price / 100
-        close = new_quote.close_price / 100
+        ltp = new_quote.last_traded_price
+        close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
 
         socket
@@ -165,7 +145,25 @@ defmodule AngelTradingWeb.PortfolioLive do
             Map.merge(quote, %{
               "ltp" => ltp,
               "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close
+              "is_gain_today?" => ltp > close,
+              "close" => close,
+              "open" => new_quote.open_price_day,
+              "low" => new_quote.low_price_day,
+              "high" => new_quote.high_price_day,
+              "totBuyQuan" => new_quote.total_buy_quantity,
+              "totSellQuan" => new_quote.total_sell_quantity,
+              "depth" => %{
+                "buy" =>
+                  Enum.map(
+                    new_quote.best_five.buy,
+                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                  ),
+                "sell" =>
+                  Enum.map(
+                    new_quote.best_five.sell,
+                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                  )
+              }
             })
         )
       else
@@ -181,7 +179,7 @@ defmodule AngelTradingWeb.PortfolioLive do
           socket
       )
       when topic == "quote-stream-" <> client_code do
-    new_ltp = quote_data.last_traded_price / 100
+    new_ltp = quote_data.last_traded_price
     updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
 
     socket =
@@ -213,7 +211,9 @@ defmodule AngelTradingWeb.PortfolioLive do
     {:noreply, socket}
   end
 
-  def handle_info(_, socket), do: {:noreply, socket}
+  def handle_info(_, socket) do
+    {:noreply, socket}
+  end
 
   def handle_event(
         "select-holding",
@@ -226,7 +226,11 @@ defmodule AngelTradingWeb.PortfolioLive do
      |> get_quote(exchange, symbol_token)}
   end
 
-  defp get_quote(%{assigns: %{token: token}} = socket, exchange, symbol_token) do
+  defp get_quote(
+         %{assigns: %{token: token}} = socket,
+         exchange,
+         symbol_token
+       ) do
     with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
            API.quote(token, exchange, [symbol_token]) do
       %{"ltp" => ltp, "close" => close} = quote
@@ -343,5 +347,25 @@ defmodule AngelTradingWeb.PortfolioLive do
         _ -> {:error, {:exit, "!Error"}}
       end
     end)
+  end
+
+  defp subscribe_to_quote_feed(client_code, tokens, mode) do
+    WebSockex.send_frame(
+      :"#{client_code}",
+      {:text,
+       Jason.encode!(%{
+         correlationID: client_code,
+         action: 1,
+         params: %{
+           mode: mode,
+           tokenList: [
+             %{
+               exchangeType: 1,
+               tokens: tokens
+             }
+           ]
+         }
+       })}
+    )
   end
 end

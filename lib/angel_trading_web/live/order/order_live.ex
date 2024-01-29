@@ -121,8 +121,8 @@ defmodule AngelTradingWeb.OrderLive do
         } = socket
       )
       when topic == "quote-stream-" <> client_code do
-    new_ltp = quote_data.last_traded_price / 100
-    close = quote_data.close_price / 100
+    new_ltp = quote_data.last_traded_price
+    close = quote_data.close_price
     ltp_percent = (new_ltp - close) / close * 100
 
     socket =
@@ -325,7 +325,7 @@ defmodule AngelTradingWeb.OrderLive do
          correlationID: client_code,
          action: 1,
          params: %{
-           mode: 2,
+           mode: 3,
            tokenList: [
              %{
                exchangeType: 1,

@@ -82,7 +82,7 @@ defmodule AngelTradingWeb.OrdersLive do
            correlationID: client_code,
            action: 1,
            params: %{
-             mode: 2,
+             mode: 3,
              tokenList: [
                %{
                  exchangeType: 1,
@@ -118,8 +118,8 @@ defmodule AngelTradingWeb.OrdersLive do
       when topic == "quote-stream-" <> client_code do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
-        ltp = new_quote.last_traded_price / 100
-        close = new_quote.close_price / 100
+        ltp = new_quote.last_traded_price
+        close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
 
         assign(
@@ -143,8 +143,8 @@ defmodule AngelTradingWeb.OrdersLive do
         %{assigns: %{client_code: client_code, order_book: order_book}} = socket
       )
       when topic == "quote-stream-" <> client_code do
-    new_ltp = quote_data.last_traded_price / 100
-    close = quote_data.close_price / 100
+    new_ltp = quote_data.last_traded_price
+    close = quote_data.close_price
     ltp_percent = (new_ltp - close) / close * 100
     updated_orders = Enum.filter(order_book, &(&1["symboltoken"] == quote_data.token))
 

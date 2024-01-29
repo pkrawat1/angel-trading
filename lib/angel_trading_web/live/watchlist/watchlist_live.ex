@@ -101,8 +101,8 @@ defmodule AngelTradingWeb.WatchlistLive do
       when topic == "quote-stream-" <> client_code do
     socket =
       if(new_quote.token == quote["symbolToken"]) do
-        ltp = new_quote.last_traded_price / 100
-        close = new_quote.close_price / 100
+        ltp = new_quote.last_traded_price
+        close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
 
         socket
@@ -112,7 +112,25 @@ defmodule AngelTradingWeb.WatchlistLive do
             Map.merge(quote, %{
               "ltp" => ltp,
               "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close
+              "is_gain_today?" => ltp > close,
+              "close" => close,
+              "open" => new_quote.open_price_day,
+              "low" => new_quote.low_price_day,
+              "high" => new_quote.high_price_day,
+              "totBuyQuan" => new_quote.total_buy_quantity,
+              "totSellQuan" => new_quote.total_sell_quantity,
+              "depth" => %{
+                "buy" =>
+                  Enum.map(
+                    new_quote.best_five.buy,
+                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                  ),
+                "sell" =>
+                  Enum.map(
+                    new_quote.best_five.sell,
+                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                  )
+              }
             })
         )
       else
@@ -127,8 +145,8 @@ defmodule AngelTradingWeb.WatchlistLive do
         %{assigns: %{client_code: client_code, watchlist: watchlist}} = socket
       )
       when topic == "quote-stream-" <> client_code do
-    new_ltp = quote_data.last_traded_price / 100
-    close = quote_data.close_price / 100
+    new_ltp = quote_data.last_traded_price
+    close = quote_data.close_price
     ltp_percent = (new_ltp - close) / close * 100
 
     updated_watchlist_quote =
@@ -364,7 +382,7 @@ defmodule AngelTradingWeb.WatchlistLive do
          correlationID: client_code,
          action: 1,
          params: %{
-           mode: 2,
+           mode: 3,
            tokenList: [
              %{
                exchangeType: 1,
