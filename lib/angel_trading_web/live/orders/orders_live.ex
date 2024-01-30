@@ -181,8 +181,6 @@ defmodule AngelTradingWeb.OrdersLive do
             |> Map.put_new("is_gain_today?", close < new_ltp)
             |> Map.put_new("gains_or_loss", total_qty * (new_ltp - updated_order["averageprice"]))
 
-          IO.inspect(updated_order)
-
           socket
           |> stream_insert(
             :order_book,
