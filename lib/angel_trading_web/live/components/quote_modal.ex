@@ -132,6 +132,10 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
     """
   end
 
+  def render_modify_order_actions(%{selected_order: %{"status" => status}} = assigns)
+      when status not in ["open", "pending"],
+      do: render_place_order_actions(assigns)
+
   def render_modify_order_actions(assigns) do
     ~H"""
     <section id="modify-order-actions bottom-0">
