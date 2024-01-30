@@ -166,8 +166,14 @@ defmodule AngelTrading.API do
     )
   end
 
-  def verify_dis(token) do
-    TradeGalleon.call(AngelOne, :verify_dis, token: token)
+  def verify_dis(token, isin) do
+    TradeGalleon.call(AngelOne, :verify_dis,
+      token: token,
+      params: %{
+        "isin" => isin,
+        "quantity" => "1"
+      }
+    )
   end
 
   def estimate_charges(token, orders) do

@@ -46,22 +46,25 @@ quote_data =
   |> get_in(["indicators", "quote"])
   |> List.first()
   |> DF.new()
-  |> DF.mutate_with(
-    &[
-      price_change:
-        S.subtract(
-          &1["close"],
-          S.shift(&1["close"], 1)
-          |> S.fill_missing(:mean)
-        )
-    ]
+  |> DF.mutate(
+    price_change:
+      S.subtract(
+        close,
+        S.shift(close, 1)
+      )
   )
+  |> DF.mutate(
+    gain: if(S.greater(price_change, 0), do: price_change, else: 0),
+    loss: if(S.less(price_change, 0), do: price_change, else: 0)
+  )
+  |> DF.drop_nil(1..-1)
 
 timestamp_data =
   resp.body["chart"]["result"]
   |> List.first()
   |> Map.take(["timestamp"])
   |> DF.new()
+  |> DF.slice(1..-1)
 
 data = DF.concat_columns([timestamp_data, quote_data])
 ```
@@ -98,62 +101,4 @@ rsi = S.tail(S.subtract(100, S.divide(100, S.add(1, rs))), 1)
 
 # Display the DataFrame with RSI
 # DF.show(data_with_rsi)
-```
-
-<!-- livebook:{"attrs":"eyJjb21waWxlciI6ImV4bGEiLCJudW1faW1hZ2VzX3Blcl9wcm9tcHQiOjIsIm51bV9zdGVwcyI6MjAsInNlZWQiOm51bGwsInNlcXVlbmNlX2xlbmd0aCI6NTAsInRhc2tfaWQiOiJ0ZXh0X3RvX2ltYWdlIiwidmFyaWFudF9pZCI6InN0YWJsZV9kaWZmdXNpb25fdjFfNCJ9","chunks":[[0,1104],[1106,553]],"kind":"Elixir.KinoBumblebee.TaskCell","livebook_object":"smart_cell"} -->
-
-```elixir
-repository_id = "CompVis/stable-diffusion-v1-4"
-{:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "openai/clip-vit-large-patch14"})
-{:ok, clip} = Bumblebee.load_model({:hf, repository_id, subdir: "text_encoder"})
-
-{:ok, unet} =
-  Bumblebee.load_model({:hf, repository_id, subdir: "unet"},
-    params_filename: "diffusion_pytorch_model.bin"
-  )
-
-{:ok, vae} =
-  Bumblebee.load_model({:hf, repository_id, subdir: "vae"},
-    architecture: :decoder,
-    params_filename: "diffusion_pytorch_model.bin"
-  )
-
-{:ok, scheduler} = Bumblebee.load_scheduler({:hf, repository_id, subdir: "scheduler"})
-
-{:ok, featurizer} =
-  Bumblebee.load_featurizer({:hf, repository_id, subdir: "feature_extractor"})
-
-{:ok, safety_checker} =
-  Bumblebee.load_model({:hf, repository_id, subdir: "safety_checker"})
-
-serving =
-  Bumblebee.Diffusion.StableDiffusion.text_to_image(clip, unet, vae, tokenizer, scheduler,
-    num_steps: 20,
-    num_images_per_prompt: 2,
-    safety_checker: safety_checker,
-    safety_checker_featurizer: featurizer,
-    compile: [batch_size: 1, sequence_length: 50],
-    defn_options: [compiler: EXLA]
-  )
-
-text_input =
-  Kino.Input.textarea("Text",
-    default: "numbat, forest, high quality, detailed, digital art"
-  )
-
-form = Kino.Control.form([text: text_input], submit: "Run")
-frame = Kino.Frame.new()
-
-Kino.listen(form, fn %{data: %{text: text}} ->
-  Kino.Frame.render(frame, Kino.Text.new("Running..."))
-  output = Nx.Serving.run(serving, text)
-
-  for result <- output.results do
-    Kino.Image.new(result.image)
-  end
-  |> Kino.Layout.grid(columns: 2)
-  |> then(&Kino.Frame.render(frame, &1))
-end)
-
-Kino.Layout.grid([form, frame], boxed: true, gap: 16)
 ```
