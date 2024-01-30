@@ -17,10 +17,15 @@ Demo of streams : https://lnkd.in/dqpBTh5m
   <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941?sid=69a6e34f-f1a4-4321-a3ae-e404575170d1">
     <p>Demo of streaming data from websocket</p>
   </a>
-  <img height="300" alt="Screenshot 2023-09-27 at 7 51 14 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/345cfa75-f77b-4d26-acb6-2791bf932faa">
-  <img height="300" alt="Screenshot 2023-09-27 at 8 02 31 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/a5662719-7012-498e-bd44-dd75da0250f6">
+  <img width="250" src="https://github.com/pkrawat1/angel-trading/assets/3807725/afcd4655-f50f-462b-b66e-738fb0808963">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 43 07 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/cfa35d29-f6aa-42b3-b7e9-0f168a3af89c">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 43 49 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/9f64b213-2f10-4ab6-b81d-94cdb274c767">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 44 42 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/5955b351-0234-4138-93a6-04e847f62952">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 45 28 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/96c928d6-b55a-4628-9373-99375dad35af">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 46 39 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/355d3e44-3967-4d6d-b0f2-5117d6727c45">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 46 55 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/d1a1b485-b1c8-4ddc-8567-eb88b22c5748">
   <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941">
-    <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/ccb5ea5a390e4f20b140a10824fd6941-with-play.gif">
+    <img style="height:532px;" src="https://cdn.loom.com/sessions/thumbnails/ccb5ea5a390e4f20b140a10824fd6941-with-play.gif">
   </a>
 </div>
 
