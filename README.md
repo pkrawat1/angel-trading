@@ -17,6 +17,7 @@ Demo of streams : https://lnkd.in/dqpBTh5m
   <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941?sid=69a6e34f-f1a4-4321-a3ae-e404575170d1">
     <p>Demo of streaming data from websocket</p>
   </a>
+  <img width="250" alt="Screenshot 2024-01-30 at 9 54 30 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/423b8da0-c328-4914-9324-30af2871cc62">
   <img width="250" src="https://github.com/pkrawat1/angel-trading/assets/3807725/afcd4655-f50f-462b-b66e-738fb0808963">
   <img width="250" alt="Screenshot 2024-01-30 at 9 43 07 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/cfa35d29-f6aa-42b3-b7e9-0f168a3af89c">
   <img width="250" alt="Screenshot 2024-01-30 at 9 43 49 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/9f64b213-2f10-4ab6-b81d-94cdb274c767">
