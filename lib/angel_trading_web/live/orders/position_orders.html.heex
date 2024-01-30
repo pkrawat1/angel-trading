@@ -14,8 +14,8 @@
           <div>
             <span class={[
               if(
-                (order["transactiontype"] == "BUY" and order["price"] > order["ltp"]) ||
-                  (order["transactiontype"] == "SELL" and order["price"] < order["ltp"]),
+                (order["transactiontype"] == "BUY" and order["averageprice"] > order["ltp"]) ||
+                  (order["transactiontype"] == "SELL" and order["averageprice"] < order["ltp"]),
                 do: "text-red-600",
                 else: "text-green-600"
               )
