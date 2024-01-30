@@ -14,13 +14,13 @@ Implements
 Demo of streams : https://lnkd.in/dqpBTh5m
 
 <div>
-  <a href="https://www.loom.com/share/aa2ffe38c154459f9731eee406ba2a06">
+  <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941?sid=69a6e34f-f1a4-4321-a3ae-e404575170d1">
     <p>Demo of streaming data from websocket</p>
   </a>
   <img height="300" alt="Screenshot 2023-09-27 at 7 51 14 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/345cfa75-f77b-4d26-acb6-2791bf932faa">
   <img height="300" alt="Screenshot 2023-09-27 at 8 02 31 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/a5662719-7012-498e-bd44-dd75da0250f6">
-  <a href="https://www.loom.com/share/aa2ffe38c154459f9731eee406ba2a06">
-    <img height="300" src="https://cdn.loom.com/sessions/thumbnails/aa2ffe38c154459f9731eee406ba2a06-with-play.gif">
+  <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941">
+    <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/ccb5ea5a390e4f20b140a10824fd6941-with-play.gif">
   </a>
 </div>
 
