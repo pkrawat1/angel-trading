@@ -9,7 +9,8 @@ Mix.install(
     {:nx, "~> 0.6.4"},
     {:kino_vega_lite, "~> 0.1.10"},
     {:kino_bumblebee, "~> 0.4.0"},
-    {:exla, ">= 0.0.0"}
+    {:exla, ">= 0.0.0"},
+    {:timex, "~> 3.7"}
   ],
   config: [nx: [default_backend: EXLA.Backend]]
 )
@@ -26,9 +27,9 @@ resp = Req.get!("https://nsearchives.nseindia.com/content/indices/ind_nifty200li
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-ticker = "IRB.NS"
-range = "1y"
-interval = "1d"
+ticker = "IRFC.NS"
+range = "1mo"
+interval = "1h"
 metrics = "close"
 
 url =
@@ -46,6 +47,7 @@ quote_data =
   |> get_in(["indicators", "quote"])
   |> List.first()
   |> DF.new()
+  |> DF.select(["close"])
   |> DF.mutate(
     price_change:
       S.subtract(
@@ -55,16 +57,32 @@ quote_data =
   )
   |> DF.mutate(
     gain: if(S.greater(price_change, 0), do: price_change, else: 0),
-    loss: if(S.less(price_change, 0), do: price_change, else: 0)
+    loss: if(S.less(price_change, 0), do: -price_change, else: 0)
   )
-  |> DF.drop_nil(1..-1)
+  |> DF.mutate(
+    avg_gain: S.window_mean(gain, 15, min_periods: 15),
+    avg_loss: S.window_mean(loss, 15, min_periods: 15)
+  )
+  |> DF.slice(1..-1//1)
 
 timestamp_data =
   resp.body["chart"]["result"]
   |> List.first()
   |> Map.take(["timestamp"])
+  |> Enum.reduce(%{"timestamp" => [], "datetime" => []}, fn {_, data}, acc ->
+    %{
+      acc
+      | "timestamp" => data,
+        "datetime" =>
+          Enum.map(data, fn timestamp ->
+            {:ok, datetime} = DateTime.from_unix(timestamp)
+            # "#{DateTime.shift_zone!(datetime, "Asia/Kolkata")}"
+            "#{datetime}"
+          end)
+    }
+  end)
   |> DF.new()
-  |> DF.slice(1..-1)
+  |> DF.slice(1..-1//1)
 
 data = DF.concat_columns([timestamp_data, quote_data])
 ```
@@ -72,33 +90,25 @@ data = DF.concat_columns([timestamp_data, quote_data])
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-# Assuming you have already loaded the data into the 'data' DataFrame
+data =
+  data
+  |> DF.slice(13..-1//1)
+  |> DF.mutate_with(
+    &[
+      avg_gain: S.divide(S.add(&1["gain"], S.multiply(13, S.shift(&1["avg_gain"], 1))), 14),
+      avg_loss: S.divide(S.add(&1["loss"], S.multiply(13, S.shift(&1["avg_loss"], 1))), 14)
+    ]
+  )
+  |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
+  |> DF.mutate(rsi: S.subtract(100, S.divide(100, S.add(1, rs))))
+```
 
-# Calculate daily price changes
-price_change = DF.select(data, "price_change")
+<!-- livebook:{"attrs":"eyJjaGFydF90aXRsZSI6bnVsbCwiaGVpZ2h0IjpudWxsLCJsYXllcnMiOlt7ImFjdGl2ZSI6dHJ1ZSwiY2hhcnRfdHlwZSI6ImxpbmUiLCJjb2xvcl9maWVsZCI6bnVsbCwiY29sb3JfZmllbGRfYWdncmVnYXRlIjpudWxsLCJjb2xvcl9maWVsZF9iaW4iOm51bGwsImNvbG9yX2ZpZWxkX3NjYWxlX3NjaGVtZSI6bnVsbCwiY29sb3JfZmllbGRfdHlwZSI6bnVsbCwiZGF0YV92YXJpYWJsZSI6ImRhdGEiLCJnZW9kYXRhX2NvbG9yIjoiYmx1ZSIsImxhdGl0dWRlX2ZpZWxkIjpudWxsLCJsb25naXR1ZGVfZmllbGQiOm51bGwsInhfZmllbGQiOiJkYXRldGltZSIsInhfZmllbGRfYWdncmVnYXRlIjpudWxsLCJ4X2ZpZWxkX2JpbiI6bnVsbCwieF9maWVsZF9zY2FsZV90eXBlIjpudWxsLCJ4X2ZpZWxkX3R5cGUiOiJ0ZW1wb3JhbCIsInlfZmllbGQiOiJyc2kiLCJ5X2ZpZWxkX2FnZ3JlZ2F0ZSI6bnVsbCwieV9maWVsZF9iaW4iOm51bGwsInlfZmllbGRfc2NhbGVfdHlwZSI6bnVsbCwieV9maWVsZF90eXBlIjoicXVhbnRpdGF0aXZlIn1dLCJ2bF9hbGlhcyI6IkVsaXhpci5WZWdhTGl0ZSIsIndpZHRoIjo3MDB9","chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
 
-# Calculate gains and losses
-gains = DF.filter_with(price_change, &S.greater(&1["price_change"], 0))
-
-losses =
-  DF.filter_with(price_change, &S.less(&1["price_change"], 0))
-  |> DF.mutate_with(&[price_change: S.abs(&1["price_change"])])
-
-# Calculate average gains and losses over a specified period (e.g., 14 days)
-average_gains = S.window_mean(gains["price_change"], 14)
-average_losses = S.window_mean(losses["price_change"], 14)
-
-min_size = min(S.size(average_gains), S.size(average_losses))
-
-# Calculate relative strength (RS)
-rs = S.divide(S.tail(average_gains, min_size), S.tail(average_losses, min_size))
-
-# Calculate the Relative Strength Index (RSI)
-rsi = S.tail(S.subtract(100, S.divide(100, S.add(1, rs))), 1)
-
-# Add the RSI column to the original DataFrame
-# data_with_rsi = DF.concat_columns(data, rsi)
-
-# Display the DataFrame with RSI
-# DF.show(data_with_rsi)
+```elixir
+VegaLite.new(width: 700)
+|> VegaLite.data_from_values(data, only: ["datetime", "rsi"])
+|> VegaLite.mark(:line)
+|> VegaLite.encode_field(:x, "datetime", type: :temporal)
+|> VegaLite.encode_field(:y, "rsi", type: :quantitative)
 ```
