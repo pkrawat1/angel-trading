@@ -5,7 +5,7 @@ defmodule AngelTrading.MixProject do
     [
       app: :angel_trading,
       version: "0.1.0",
-      elixir: "~> 1.15.6",
+      elixir: "~> 1.16.0",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
