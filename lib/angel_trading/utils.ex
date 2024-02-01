@@ -129,8 +129,8 @@ defmodule AngelTrading.Utils do
       loss: if(S.less(price_change, 0), do: -price_change, else: 0)
     )
     |> DF.mutate(
-      avg_gain: S.window_mean(gain, 14, min_periods: 14),
-      avg_loss: S.window_mean(loss, 14, min_periods: 14)
+      avg_gain: S.window_mean(gain, 14),
+      avg_loss: S.window_mean(loss, 14)
     )
     |> DF.mutate_with(
       &[
