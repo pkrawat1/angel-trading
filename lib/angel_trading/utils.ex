@@ -1,6 +1,9 @@
 defmodule AngelTrading.Utils do
   @max_age :infinity
 
+  require Explorer.DataFrame, as: DF
+  require Explorer.Series, as: S
+
   @doc "Encrypt any Erlang term"
   @spec encrypt(atom, any, integer) :: binary
   def encrypt(context, term, max_age \\ @max_age) do
@@ -83,43 +86,23 @@ defmodule AngelTrading.Utils do
   end
 
   def formatted_candle_data(candle_data) do
-    # temp = List.last(candle_data)
-
-    Enum.map(
-      candle_data,
-      fn [timestamp, open, high, low, close, volume] ->
-        %{
-          # read timestamp as UTC
-          time:
-            timestamp
-            |> String.split("+")
-            |> List.first()
-            |> Timex.parse!("{ISO:Extended:Z}")
-            |> Timex.to_unix(),
-          open: open,
-          high: high,
-          low: low,
-          close: close,
-          volume: volume
-        }
-      end
-    )
-
-    # ++
-    # [
-    # %{
-    # time: Timex.now() |> Timex.shift(hours: Enum.random(1..100)) |> Timex.to_unix(),
-    # timestamp:
-    # Timex.now("Asia/Kolkata")
-    # |> Timex.shift(hours: Enum.random(1..100))
-    # |> Timex.format!("%FT%T%:z", :strftime),
-    # open: Enum.at(temp, 1) + Enum.random(-2..5),
-    # high: Enum.at(temp, 2),
-    # low: Enum.at(temp, 3),
-    # close: Enum.at(temp, 4),
-    # volume: Enum.at(temp, 5)
-    # }
-    # ]
+    candle_data
+    |> Enum.map(fn [timestamp, open, high, low, close, volume] ->
+      %{
+        time:
+          timestamp
+          |> String.split("+")
+          |> List.first()
+          |> Timex.parse!("{ISO:Extended:Z}")
+          |> Timex.to_unix(),
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        volume: volume
+      }
+    end)
+    |> calculate_rsi()
   end
 
   def stock_long_name(trading_symbol) do
@@ -129,6 +112,42 @@ defmodule AngelTrading.Utils do
       {:ok, [%{long_name: long_name}]} when bit_size(long_name) > 0 -> long_name
       _ -> trading_symbol
     end
+  end
+
+  defp calculate_rsi(candle_data) do
+    candle_data
+    |> DF.new()
+    |> DF.mutate(
+      price_change:
+        S.subtract(
+          close,
+          S.shift(close, 1)
+        )
+    )
+    |> DF.mutate(
+      gain: if(S.greater(price_change, 0), do: price_change, else: 0),
+      loss: if(S.less(price_change, 0), do: -price_change, else: 0)
+    )
+    |> DF.mutate(
+      avg_gain: S.window_mean(gain, 14, min_periods: 14),
+      avg_loss: S.window_mean(loss, 14, min_periods: 14)
+    )
+    |> DF.mutate_with(
+      &[
+        prev_avg_gain: S.shift(&1["avg_gain"], 1),
+        prev_avg_loss: S.shift(&1["avg_loss"], 1)
+      ]
+    )
+    |> DF.mutate_with(
+      &[
+        avg_gain: S.divide(S.add(&1["gain"], S.multiply(13, &1["prev_avg_gain"])), 14),
+        avg_loss: S.divide(S.add(&1["loss"], S.multiply(13, &1["prev_avg_loss"])), 14)
+      ]
+    )
+    |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
+    |> DF.mutate(rsi: S.subtract(100, S.divide(100, S.add(1, rs))))
+    |> DF.discard(["gain", "loss", "avg_gain", "avg_loss", "prev_avg_gain", "prev_avg_loss", "rs"])
+    |> DF.to_rows()
   end
 
   defp secret(), do: Application.get_env(:angel_trading, :encryption_key)

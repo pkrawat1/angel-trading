@@ -9,7 +9,8 @@ export default {
         open: 54.62,
         high: 55.50,
         low: 54.52,
-        close: 54.90
+        close: 54.90,
+        rsi: 50
       },
     ]
   */
@@ -30,27 +31,64 @@ export default {
           }
         })
         .forEach(item => {
-          console.log(item)
           this.candleSeries.update(item)
+          this.lineSeries.update({time: item.time, value: item.rsi})
         })
     })
   },
   renderChart() {
     let LightweightCharts = window.LightweightCharts;
-    let data = JSON.parse(this.el.dataset.series) || [];
+    let candleData = JSON.parse(this.el.dataset.series) || [];
+    let rsiData = candleData.filter(({rsi}) => !!rsi).map(({time, rsi}) => ({time, value: rsi}));
     let config = JSON.parse(this.el.dataset.config);
     this.chart = LightweightCharts.createChart(this.el, {
       autoSize: true,
       crosshair: {
         mode: LightweightCharts.CrosshairMode.Normal,
       },
+      rightPriceScale: {
+        visible: true,
+        borderColor: 'rgba(197, 203, 206, 1)',
+      },
+      leftPriceScale: {
+        visible: true,
+        borderColor: 'rgba(197, 203, 206, 1)',
+      },
+      layout: {
+        background: {
+                type: 'solid',
+                color: '#ffffff',
+            },
+        textColor: 'rgba(33, 56, 77, 1)',
+      },
+      grid: {
+        horzLines: {
+          color: '#F0F3FA',
+        },
+        vertLines: {
+          color: '#F0F3FA',
+        },
+      },
+      timeScale: {
+        borderColor: 'rgba(197, 203, 206, 1)',
+          barSpacing: 10,
+          timeVisible: true,
+          fitContent: true
+      },
+      handleScroll: {
+        vertTouchDrag: false,
+      }
     });
-    this.chart.timeScale().applyOptions({
-      barSpacing: 10,
-      timeVisible: true
+    this.lineSeries = this.chart.addLineSeries({
+      color: 'rgba(4, 111, 232, 1)',
+      lineWidth: 2,
+      priceScaleId: 'left'
     });
-    this.candleSeries = this.chart.addCandlestickSeries();
-    this.candleSeries.setData(data);
+    this.lineSeries.setData(rsiData);
+    this.candleSeries = this.chart.addCandlestickSeries({
+      priceScaleId: 'right'
+    });
+    this.candleSeries.setData(candleData);
   },
   destroyed() {
     this.chart.remove();

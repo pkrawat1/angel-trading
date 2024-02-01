@@ -66,10 +66,11 @@ defmodule AngelTrading.MixProject do
       {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git", branch: "master"},
       # {:trade_galleon, path: "../trade_galleon"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:rustler, "~> 0.30.0", runtime: false},
+      {:rustler, "~> 0.29.0", runtime: false},
       {:brotli, ">= 0.0.0", runtime: false},
       {:ezstd, "~> 1.0", runtime: false},
-      {:phoenix_bakery, "~> 0.1.0", runtime: false}
+      {:phoenix_bakery, "~> 0.1.0", runtime: false},
+      {:explorer, "~> 0.8.0"}
     ]
   end
 
