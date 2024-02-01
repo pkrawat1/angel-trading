@@ -7,16 +7,16 @@
 # This file is based on these images:
 #
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
-#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20221004-slim - for the release image
+#   - https://hub.docker.com/_/ubuntu?tab=tags&page=1&name=jammy-20221004 - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.16.0-erlang-26.2.1-debian-buster-20230612-slim
+#   - Ex: hexpm/elixir:1.16.0-erlang-26.2.1-ubuntu-jammy-20230612
 #
 ARG ELIXIR_VERSION=1.16.0
 ARG OTP_VERSION=26.2.1
-ARG DEBIAN_VERSION=buster-20231009-slim
+ARG UBUNTU_VERSION=jammy-20231004
 
-ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
-ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-ubuntu-${UBUNTU_VERSION}"
+ARG RUNNER_IMAGE="ubuntu:${UBUNTU_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
