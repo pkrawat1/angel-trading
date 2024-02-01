@@ -102,7 +102,8 @@ defmodule AngelTrading.Utils do
         volume: volume
       }
     end)
-    |> calculate_rsi()
+
+    # |> calculate_rsi()
   end
 
   def stock_long_name(trading_symbol) do
