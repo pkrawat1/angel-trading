@@ -19,20 +19,22 @@ export default {
     this.handleEvent("update-chart", ({
       dataset: data
     }) => {
-      prevData = this.candleSeries.data().slice().pop();
-      data.filter(({
+      let prevData = this.candleSeries.data().slice().pop();
+      // let calculatedRsi = this.rsi(data.map(d => d.close));
+      data
+        // .map((d, i) => ({...d, rsi: calculatedRsi[i]}))
+        .filter(({
           time
         }) => {
           if (prevData) {
             return time >= prevData.time
           } else {
-            console.log("new data")
             return true
           }
         })
         .forEach(item => {
-          this.candleSeries.update(item)
-          this.lineSeries.update({time: item.time, value: item.rsi})
+          this.candleSeries.update(item);
+          // this.lineSeries2.update({time: item.time, value: item.rsi})
         })
     })
   },
@@ -71,9 +73,9 @@ export default {
       },
       timeScale: {
         borderColor: 'rgba(197, 203, 206, 1)',
-          barSpacing: 10,
-          timeVisible: true,
-          fitContent: true
+        barSpacing: 10,
+        timeVisible: true,
+        fitContent: true
       },
       handleScroll: {
         vertTouchDrag: false,
@@ -90,8 +92,8 @@ export default {
     });
     this.candleSeries.setData(candleData);
     this.lineSeries2 = this.chart.addLineSeries({
-      color: 'purple',
-      lineWidth: 2,
+      color: 'rgba(4, 111, 232, 1)',
+      lineWidth: 1,
       priceScaleId: 'left'
     });
     let rsiData2 = candleData.map(({time, close}) => ({time, value: close}));
