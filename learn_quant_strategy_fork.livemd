@@ -24,30 +24,43 @@ Mix.install(
 resp = Req.get!("https://nsearchives.nseindia.com/content/indices/ind_nifty200list.csv")
 ```
 
+```elixir
+input = Kino.Input.file("File")
+```
+
+```elixir
+value = Kino.Input.read(input)
+path = Kino.Input.file_path(value.file_ref)
+data = File.read!(path) |> Jason.decode!()
+```
+
 ## stock history
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-ticker = "JIOFIN.NS"
-range = "1mo"
-interval = "15m"
-metrics = "close"
+# ticker = "JIOFIN.NS"
+# range = "1mo"
+# interval = "15m"
+# metrics = "close"
 
-url =
-  "https://query1.finance.yahoo.com/v8/finance/chart/#{ticker}?metrics=#{metrics}&interval=#{interval}&range=#{range}"
+# url =
+#   "https://query1.finance.yahoo.com/v8/finance/chart/#{ticker}?metrics=#{metrics}&interval=#{interval}&range=#{range}"
 
-IO.puts(url)
-resp = Req.get!(url)
+# IO.puts(url)
+# resp = Req.get!(url)
 
 require Explorer.DataFrame, as: DF
 require Explorer.Series, as: S
 
+# quote_data =
+#   resp.body["chart"]["result"]
+#   |> List.first()
+#   |> get_in(["indicators", "quote"])
+#   |> List.first()
+#   |> DF.new()
 quote_data =
-  resp.body["chart"]["result"]
-  |> List.first()
-  |> get_in(["indicators", "quote"])
-  |> List.first()
+  data
   |> DF.new()
   |> DF.mutate(
     price_change:
@@ -72,46 +85,55 @@ quote_data =
 quote_data_first_13 =
   DF.slice(quote_data, 0..12)
 
-quote_data_after_13 =
+quote_data_at_14 =
   quote_data
   |> DF.mutate(
-    avg_gain: S.window_mean(gain, 14),
-    avg_loss: S.window_mean(loss, 14)
+    avg_gain: S.window_mean(gain, 14, min_periods: 14),
+    avg_loss: S.window_mean(loss, 14, min_periods: 14)
   )
-  |> DF.mutate_with(
-    &[
-      avg_gain: S.divide(S.add(&1["gain"], S.multiply(13, S.shift(&1["avg_gain"], 1))), 14),
-      avg_loss: S.divide(S.add(&1["loss"], S.multiply(13, S.shift(&1["avg_loss"], 1))), 14)
-    ]
-  )
-  |> DF.slice(13..-1//1)
 
-quote_data =
-  quote_data_first_13
-  |> DF.concat_rows(quote_data_after_13)
-  |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
-  |> DF.mutate(rs: if(S.is_nan(rs), do: 0, else: rs))
-  |> DF.mutate(rsi: S.subtract(100, S.divide(100, S.add(1, rs))))
+# |> DF.slice(14..14)
 
-timestamp_data =
-  resp.body["chart"]["result"]
-  |> List.first()
-  |> Map.take(["timestamp"])
-  |> Enum.reduce(%{"timestamp" => [], "datetime" => []}, fn {_, data}, acc ->
-    %{
-      acc
-      | "timestamp" => data,
-        "datetime" =>
-          Enum.map(data, fn timestamp ->
-            {:ok, datetime} = DateTime.from_unix(timestamp)
-            # "#{DateTime.shift_zone!(datetime, "Asia/Kolkata")}"
-            "#{datetime}"
-          end)
-    }
-  end)
-  |> DF.new()
+# 14 : 0.15714285714285633
 
-data = DF.concat_columns([timestamp_data, quote_data])
+# quote_data_after_14 =
+#   quote_data_at_14
+#   |> DF.concat_rows(quote_data |> DF.slice(15..-1//1))
+#   |> DF.mutate_with(
+#     &[
+#       avg_gain: S.divide(S.add(&1["gain"], S.multiply(13, S.shift(&1["avg_gain"], 1))), 14),
+#       avg_loss: S.divide(S.add(&1["loss"], S.multiply(13, S.shift(&1["avg_loss"], 1))), 14)
+#     ]
+#   )
+# |> DF.slice(1..-1//1)
+
+# quote_data =
+#   quote_data_first_13
+#   |> DF.concat_rows(quote_data_at_14)
+#   |> DF.concat_rows(quote_data_after_14)
+#   |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
+#   |> DF.mutate(rs: if(S.is_nan(rs), do: 0, else: rs))
+#   |> DF.mutate(rsi: S.subtract(100, S.divide(100, S.add(1, rs))))
+
+# timestamp_data =
+#   resp.body["chart"]["result"]
+#   |> List.first()
+#   |> Map.take(["timestamp"])
+#   |> Enum.reduce(%{"timestamp" => [], "datetime" => []}, fn {_, data}, acc ->
+#     %{
+#       acc
+#       | "timestamp" => data,
+#         "datetime" =>
+#           Enum.map(data, fn timestamp ->
+#             {:ok, datetime} = DateTime.from_unix(timestamp)
+#             # "#{DateTime.shift_zone!(datetime, "Asia/Kolkata")}"
+#             "#{datetime}"
+#           end)
+#     }
+#   end)
+#   |> DF.new()
+
+# data = DF.concat_columns([timestamp_data, quote_data])
 ```
 
 <!-- livebook:{"attrs":"eyJjaGFydF90aXRsZSI6bnVsbCwiaGVpZ2h0IjozMDAsImxheWVycyI6W3siYWN0aXZlIjp0cnVlLCJjaGFydF90eXBlIjoibGluZSIsImNvbG9yX2ZpZWxkIjpudWxsLCJjb2xvcl9maWVsZF9hZ2dyZWdhdGUiOm51bGwsImNvbG9yX2ZpZWxkX2JpbiI6bnVsbCwiY29sb3JfZmllbGRfc2NhbGVfc2NoZW1lIjpudWxsLCJjb2xvcl9maWVsZF90eXBlIjpudWxsLCJkYXRhX3ZhcmlhYmxlIjoiZGF0YSIsImdlb2RhdGFfY29sb3IiOiJibHVlIiwibGF0aXR1ZGVfZmllbGQiOm51bGwsImxvbmdpdHVkZV9maWVsZCI6bnVsbCwieF9maWVsZCI6ImRhdGV0aW1lIiwieF9maWVsZF9hZ2dyZWdhdGUiOm51bGwsInhfZmllbGRfYmluIjpudWxsLCJ4X2ZpZWxkX3NjYWxlX3R5cGUiOm51bGwsInhfZmllbGRfdHlwZSI6InRlbXBvcmFsIiwieV9maWVsZCI6InJzaSIsInlfZmllbGRfYWdncmVnYXRlIjpudWxsLCJ5X2ZpZWxkX2JpbiI6bnVsbCwieV9maWVsZF9zY2FsZV90eXBlIjpudWxsLCJ5X2ZpZWxkX3R5cGUiOiJub21pbmFsIn1dLCJ2bF9hbGlhcyI6IkVsaXhpci5WZWdhTGl0ZSIsIndpZHRoIjo3NTB9","chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
