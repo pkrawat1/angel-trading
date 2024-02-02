@@ -90,7 +90,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
               chart_config={
                 %{
                   id: "quote-chart-" <> @quote["symbolToken"],
-                  class: "h-[30vh] -mr-2.5 mt-5 -mb-1"
+                  class: "h-[30vh] -mx-4 mt-5 -mb-1"
                 }
               }
             />
