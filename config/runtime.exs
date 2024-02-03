@@ -37,6 +37,7 @@ if config_env() == :prod do
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :angel_trading, AngelTradingWeb.Endpoint,
+    adapter: Bandit.PhoenixAdapter,
     url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
@@ -45,8 +46,7 @@ if config_env() == :prod do
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port,
-      compress: true,
-      protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
+      compress: true
     ],
     protocol_options: [max_header_value_length: 8192],
     secret_key_base: secret_key_base

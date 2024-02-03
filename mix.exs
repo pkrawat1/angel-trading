@@ -61,6 +61,7 @@ defmodule AngelTrading.MixProject do
       {:tesla, "~> 1.4"},
       {:websockex, "~> 0.4.3"},
       {:plug_cowboy, "~> 2.5"},
+      {:bandit, "~> 1.0"},
       {:number, "~> 1.0"},
       {:timex, "~> 3.0"},
       {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git", branch: "master"},

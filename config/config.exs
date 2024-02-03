@@ -9,8 +9,8 @@ import Config
 
 # Configures the endpoint
 config :angel_trading, AngelTradingWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
   url: [host: "localhost"],
-  http: [protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]],
   render_errors: [
     formats: [html: AngelTradingWeb.ErrorHTML, json: AngelTradingWeb.ErrorJSON],
     layout: false

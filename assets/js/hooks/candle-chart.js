@@ -94,6 +94,7 @@ export default {
     this.candleSeries.setData(candleData);
     this.lineSeries2 = this.chart.addLineSeries({
       color: 'rgba(4, 111, 232, 1)',
+      // color: 'purple',
       lineWidth: 2,
       priceScaleId: 'left'
     });
