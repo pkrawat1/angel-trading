@@ -59,8 +59,6 @@ defmodule AngelTrading.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:tesla, "~> 1.4"},
-      {:websockex, "~> 0.4.3"},
-      {:plug_cowboy, "~> 2.5"},
       {:bandit, "~> 1.0"},
       {:number, "~> 1.0"},
       {:timex, "~> 3.0"},
