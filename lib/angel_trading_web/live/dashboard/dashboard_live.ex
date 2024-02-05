@@ -40,7 +40,7 @@ defmodule AngelTradingWeb.DashboardLive do
                     {:ok, %{"data" => profile}} <- API.profile(token),
                     {:ok, %{"data" => holdings}} <- API.portfolio(token),
                     {:ok, %{"data" => funds}} <- API.funds(token),
-                    {_, dis_res} <-
+                    {_, %{"errorcode" => errorcode}} <-
                       API.verify_dis(token, holdings |> List.first() |> Map.get("isin", "")) do
                  Process.send_after(live_view_pid, {:subscribe_to_feed, client_code}, 500)
                  :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
@@ -50,7 +50,7 @@ defmodule AngelTradingWeb.DashboardLive do
                    holdings: holdings,
                    profile: profile,
                    funds: funds,
-                   dis_status: Map.get(dis_res, "errorcode") == "AG1000"
+                   dis_status: errorcode == "AG1000"
                  })
                else
                  _ ->
