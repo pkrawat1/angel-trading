@@ -4,7 +4,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
   def render(assigns) do
     ~H"""
     <div>
-      <.modal show id="buy-modal" on_cancel={@on_cancel}>
+      <.modal show id="order-place-modal" on_cancel={@on_cancel}>
         <div class="text-xs md:text-sm uppercase -m-10 md:-m-8">
           <.header>
             <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>

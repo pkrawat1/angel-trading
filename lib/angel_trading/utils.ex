@@ -155,14 +155,13 @@ defmodule AngelTrading.Utils do
       )
       |> DF.slice(1..-1//1)
 
-    quote_data =
-      quote_data_first_13
-      |> DF.concat_rows(quote_data_at_14)
-      |> DF.concat_rows(quote_data_after_14)
-      |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
-      |> DF.mutate(rs: if(S.is_nan(rs), do: 0, else: rs))
-      |> DF.mutate(rsi: S.subtract(100, S.divide(100, S.add(1, rs))))
-      |> DF.to_rows()
+    quote_data_first_13
+    |> DF.concat_rows(quote_data_at_14)
+    |> DF.concat_rows(quote_data_after_14)
+    |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
+    |> DF.mutate(rs: if(S.is_nan(rs), do: 0, else: rs))
+    |> DF.mutate(rsi: S.subtract(100, S.divide(100, S.add(1, rs))))
+    |> DF.to_rows()
   end
 
   defp secret(), do: Application.get_env(:angel_trading, :encryption_key)
