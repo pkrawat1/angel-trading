@@ -1,6 +1,6 @@
 defmodule AngelTrading.API do
-  use Tesla
   alias TradeGalleon.Brokers.AngelOne
+  alias AngelTrading.Cache
 
   def socket(client_code, token, feed_token, pub_sub_topic) do
     TradeGalleon.call(AngelOne.WebSocket, :new,
@@ -29,11 +29,22 @@ defmodule AngelTrading.API do
   end
 
   def profile(token) do
-    TradeGalleon.call(AngelOne, :profile, token: token)
+    Cache.get(
+      "profile_api_" <> token,
+      {fn ->
+         TradeGalleon.call(AngelOne, :profile, token: token)
+       end, []},
+      :timer.hours(5)
+    )
   end
 
   def portfolio(token) do
-    TradeGalleon.call(AngelOne, :portfolio, token: token)
+    Cache.get(
+      "portfolio_api_" <> token,
+      {fn ->
+         TradeGalleon.call(AngelOne, :portfolio, token: token)
+       end, []}
+    )
   end
 
   def quote(token, exchange, symbol_tokens) do
@@ -62,7 +73,12 @@ defmodule AngelTrading.API do
   end
 
   def funds(token) do
-    TradeGalleon.call(AngelOne, :funds, token: token)
+    Cache.get(
+      "funds_api_" <> token,
+      {fn ->
+         TradeGalleon.call(AngelOne, :funds, token: token)
+       end, []}
+    )
   end
 
   def order_book(token) do

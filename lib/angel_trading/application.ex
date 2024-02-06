@@ -15,6 +15,7 @@ defmodule AngelTrading.Application do
       # Start Finch
       {Finch, name: AngelTrading.Finch},
       # Start the Endpoint (http/https)
+      {Cachex, name: AngelTrading.Cache},
       AngelTradingWeb.Endpoint,
       {DynamicSupervisor, name: AngelTrading.WebSocketSupervisor, strategy: :one_for_one}
       # Start a worker by calling: AngelTrading.Worker.start_link(arg)
