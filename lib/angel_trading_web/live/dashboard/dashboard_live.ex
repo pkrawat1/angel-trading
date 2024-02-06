@@ -37,10 +37,11 @@ defmodule AngelTradingWeb.DashboardLive do
              fn client_code ->
                with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
                     {:ok, %{token: token} = client} <- Utils.decrypt(:client_tokens, data),
-                    {:ok, %{"data" => profile}} <- API.profile(token),
-                    {:ok, %{"data" => holdings}} <- API.portfolio(token),
-                    {:ok, %{"data" => funds}} <- API.funds(token),
-                    {_, %{"errorcode" => errorcode}} <-
+                    {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
+                    {:portfolio, {:ok, %{"data" => holdings}}} <-
+                      {:portfolio, API.portfolio(token)},
+                    {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)},
+                    {_, dis_status} <-
                       API.verify_dis(token, holdings |> List.first() |> Map.get("isin", "")) do
                  Process.send_after(live_view_pid, {:subscribe_to_feed, client_code}, 500)
                  :timer.send_interval(30000, live_view_pid, {:subscribe_to_feed, client_code})
@@ -50,18 +51,28 @@ defmodule AngelTradingWeb.DashboardLive do
                    holdings: holdings,
                    profile: profile,
                    funds: funds,
-                   dis_status: errorcode == "AG1000"
+                   dis_status: Map.get(dis_status || %{}, "errorcode", nil) == "AG1000"
                  })
                else
-                 _ ->
-                   nil
+                 e ->
+                   e
                end
              end,
              max_concurrency: 4,
              on_timeout: :kill_task
            )
            |> Enum.map(&elem(&1, 1))
-           |> Enum.filter(&is_map(&1))
+           |> Enum.filter(fn client ->
+             case is_map(client) do
+               false ->
+                 Logger.error("[Dashboard] Unable to fetch data")
+                 IO.inspect(client)
+                 false
+
+               _ ->
+                 true
+             end
+           end)
        }}
     end
 
