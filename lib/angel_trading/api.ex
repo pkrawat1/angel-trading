@@ -113,6 +113,8 @@ defmodule AngelTrading.API do
           price: price
         }
       ) do
+    Cache.del("funds_api_" <> token)
+
     TradeGalleon.call(AngelOne, :place_order,
       token: token,
       params: %{
@@ -145,6 +147,8 @@ defmodule AngelTrading.API do
           price: price
         }
       ) do
+    Cache.del("funds_api_" <> token)
+
     TradeGalleon.call(AngelOne, :modify_order,
       token: token,
       params: %{
@@ -164,6 +168,8 @@ defmodule AngelTrading.API do
   end
 
   def cancel_order(token, order_id) do
+    Cache.del("funds_api_" <> token)
+
     TradeGalleon.call(AngelOne, :cancel_order,
       token: token,
       params: %{

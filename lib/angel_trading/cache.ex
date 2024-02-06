@@ -13,7 +13,7 @@ defmodule AngelTrading.Cache do
   * from the callback function `fun` returning the data
   """
   def get(cache_key, {fun, args}, expiry \\ :timer.minutes(5)) do
-    cache_key = :sha256 |> :crypto.hash(cache_key) |> Base.encode64()
+    cache_key = cache_key(cache_key)
 
     with {:ok, nil} <- Cachex.get(@cache_name, cache_key),
          {:ok, _} = result <- apply(fun, args) do
@@ -31,4 +31,11 @@ defmodule AngelTrading.Cache do
         e
     end
   end
+
+  def del(cache_key) do
+    cache_key = cache_key(cache_key)
+    Cachex.del(@cache_name, cache_key)
+  end
+
+  defp cache_key(cache_key), do: :sha256 |> :crypto.hash(cache_key) |> Base.encode64()
 end
