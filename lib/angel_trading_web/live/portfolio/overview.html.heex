@@ -73,15 +73,16 @@
   </.async_result>
   <div class="text-xl leading-[1.65rem] text-right mt-6 flex justify-between">
     <small class="text-left">
-      <span class="text-green-600">
         <.async_result :let={funds} assign={@funds}>
           <:loading>
             <div class="animate-pulse h-7 bg-gray-300 rounded-full dark:bg-gray-600 w-48"></div>
           </:loading>
           <:failed :let={reason}><%= reason %></:failed>
-          Available Cash <%= number_to_currency(funds["net"], precision: 2) %> <br />
+            Available Cash
+          <span class="text-green-600">
+             <%= number_to_currency(funds["net"], precision: 2) %> <br />
+          </span>
         </.async_result>
-      </span>
     </small>
   </div>
 </div>

@@ -17,16 +17,16 @@ defmodule AngelTrading.Cache do
 
     with {:ok, nil} <- Cachex.get(@cache_name, cache_key),
          {:ok, _} = result <- apply(fun, args) do
-      Logger.info("[Cache][MISS][#{cache_key}]")
+      Logger.info("[CACHE][MISS][#{cache_key}]")
       Cachex.put(@cache_name, cache_key, result, ttl: expiry)
       result
     else
       {:ok, result} ->
-        Logger.info("[Cache][HIT][#{cache_key}]")
+        Logger.info("[CACHE][HIT][#{cache_key}]")
         result
 
       e ->
-        Logger.error("[Cache][ERROR][#{cache_key}]")
+        Logger.error("[CACHE][ERROR][#{cache_key}]")
         IO.inspect(e)
         e
     end
