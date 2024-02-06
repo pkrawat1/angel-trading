@@ -183,12 +183,20 @@ defmodule AngelTrading.API do
   end
 
   def verify_dis(token, isin) do
-    TradeGalleon.call(AngelOne, :verify_dis,
-      token: token,
-      params: %{
-        "isin" => isin,
-        "quantity" => "1"
-      }
+    Cache.get(
+      "verify_dis_api_" <> token <> "_" <> isin,
+      {fn ->
+         case TradeGalleon.call(AngelOne, :verify_dis,
+                token: token,
+                params: %{
+                  "isin" => isin,
+                  "quantity" => "1"
+                }
+              ) do
+           {:error, %{"errorcode" => errorcode}} when errorcode == "AG1000" -> {:ok, true}
+           _ -> {:ok, false}
+         end
+       end, []}
     )
   end
 

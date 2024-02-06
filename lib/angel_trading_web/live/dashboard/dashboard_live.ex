@@ -51,14 +51,13 @@ defmodule AngelTradingWeb.DashboardLive do
                    holdings: holdings,
                    profile: profile,
                    funds: funds,
-                   dis_status: Map.get(dis_status || %{}, "errorcode", nil) == "AG1000"
+                   dis_status: dis_status
                  })
                else
                  e ->
                    e
                end
              end,
-             max_concurrency: 4,
              on_timeout: :kill_task
            )
            |> Enum.map(&elem(&1, 1))
