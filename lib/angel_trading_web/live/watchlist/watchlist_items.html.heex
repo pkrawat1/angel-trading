@@ -7,7 +7,7 @@
     phx-value-symbol={watchlist["symboltoken"]}
     phx-value-exchange={watchlist["exchange"]}
   >
-    <dl class="items-center text-sm">
+    <dl class="relative items-center text-sm">
       <div>
         <dd class="flex font-semibold text-slate-900 justify-between">
           <span class="truncate">
@@ -37,6 +37,13 @@
           </span>
         </dd>
       </div>
+      <span
+        class="absolute cursor-pointer -top-5 -right-5"
+        phx-click="toggle-token-watchlist"
+        phx-value-token={watchlist["symboltoken"]}
+      >
+        <.icon name="hero-x-circle-solid text-red-400" />
+      </span>
     </dl>
   </li>
 </ul>

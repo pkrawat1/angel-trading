@@ -255,7 +255,8 @@ defmodule AngelTradingWeb.WatchlistLive do
       ) do
     new_watch =
       token_list
-      |> Map.get(:result, [])
+      |> Map.get(:result, watchlist)
+      |> Kernel.++(watchlist)
       |> Enum.filter(&(&1["symboltoken"] == token))
       |> assign_quotes(user_token)
       |> List.first()
