@@ -6,10 +6,7 @@ Mix.install(
     {:req, "~> 0.4.5"},
     {:explorer, "~> 0.7.1"},
     {:kino_explorer, "~> 0.1.12"},
-    {:nx, "~> 0.6.4"},
     {:kino_vega_lite, "~> 0.1.10"},
-    {:kino_bumblebee, "~> 0.4.0"},
-    {:exla, ">= 0.0.0"},
     {:timex, "~> 3.7"}
   ],
   config: [nx: [default_backend: EXLA.Backend]]
@@ -82,6 +79,9 @@ quote_data =
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
+indexes = S.from_list(0..(S.size(quote_data["gain"]) - 1) |> Enum.to_list())
+quote_data = DF.put(quote_data, :index, indexes)
+
 quote_data_first_13 =
   DF.slice(quote_data, 0..12)
 
@@ -93,11 +93,13 @@ quote_data_at_14 =
   )
   |> DF.slice(13..13)
 
-# 14 : 0.15714285714285633
+# # 14 : 0.15714285714285633
 
 quote_data_after_14 =
   quote_data_at_14
   |> DF.concat_rows(quote_data |> DF.slice(14..-1//1))
+  |> DF.group_by(:index)
+  |> DF.summarise(prev_avg_gain: S.at(gain, 1))
   |> DF.mutate_with(
     &[
       avg_gain: S.divide(S.add(&1["gain"], S.multiply(13, S.shift(&1["avg_gain"], 1))), 14),
@@ -106,10 +108,10 @@ quote_data_after_14 =
   )
   |> DF.slice(1..-1//1)
 
-quote_data =
-  quote_data_first_13
-  |> DF.concat_rows(quote_data_at_14)
-  |> DF.concat_rows(quote_data_after_14)
+# quote_data =
+#   quote_data_first_13
+#   |> DF.concat_rows(quote_data_at_14)
+#   |> DF.concat_rows(quote_data_after_14)
 
 #   |> DF.mutate(rs: S.divide(avg_gain, avg_loss))
 #   |> DF.mutate(rs: if(S.is_nan(rs), do: 0, else: rs))

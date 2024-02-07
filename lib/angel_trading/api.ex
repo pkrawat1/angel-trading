@@ -127,7 +127,7 @@ defmodule AngelTrading.API do
         "variety" => variety,
         "duration" => "DAY",
         "producttype" => product_type,
-        "price" => price
+        "price" => if(order_type == "MARKET", do: 0, else: price)
       }
     )
   end
@@ -162,7 +162,7 @@ defmodule AngelTrading.API do
         "duration" => "DAY",
         "producttype" => product_type,
         "orderid" => order_id,
-        "price" => price
+        "price" => if(order_type == "MARKET", do: 0, else: price)
       }
     )
   end
