@@ -41,7 +41,7 @@ export default {
   renderChart() {
     let LightweightCharts = window.LightweightCharts;
     let candleData = JSON.parse(this.el.dataset.series) || [];
-    console.error(candleData.slice(0, 20));
+    // console.error(candleData.slice(0, 20));
     let rsiData = candleData.map(({time, rsi}) => ({time, value: rsi}));
     let config = JSON.parse(this.el.dataset.config);
     this.chart = LightweightCharts.createChart(this.el, {
@@ -177,7 +177,7 @@ export default {
       rs[i] = meanGains[i] / meanLosses[i];
       r[i] = 100 - 100 / (1 + rs[i]);
     }
-    console.error(gains.slice(0, 20), losses.slice(0, 20), meanGains.slice(0, 20), meanLosses.slice(0, 20), rs.slice(0, 10), r.slice(0, 10))
+    // console.error(gains.slice(0, 20), losses.slice(0, 20), meanGains.slice(0, 20), meanLosses.slice(0, 20), rs.slice(0, 10), r.slice(0, 10))
 
     return r;
   },

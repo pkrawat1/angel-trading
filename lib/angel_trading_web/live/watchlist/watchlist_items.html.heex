@@ -1,4 +1,4 @@
-<ul class="grid grid-cols-2 gap-x-2 gap-y-2 my-2" id="watchlist" phx-update="stream">
+<ul class="grid grid-cols-2 gap-x-2 gap-y-2 my-4" id="watchlist" phx-update="stream">
   <li
     :for={{dom_id, watchlist} <- @streams.watchlist}
     class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md p-3 bg-white ring-1 ring-slate-200 shadow"
@@ -14,11 +14,11 @@
             <%= watchlist["tradingsymbol"] |> String.split("-") |> List.first() %>
           </span>
           <div>
-            <span :if={watchlist["is_gain_today?"]} class="flex items-center text-green-600">
+            <span :if={watchlist["is_gain_today?"]} class="flex items-center text-green-700">
               <%= number_to_currency(watchlist["ltp"]) %>
               <.icon name="hero-arrow-up h-3 w-3" />
             </span>
-            <span :if={!watchlist["is_gain_today?"]} class="flex items-center text-red-600">
+            <span :if={!watchlist["is_gain_today?"]} class="flex items-center text-red-500">
               <%= number_to_currency(watchlist["ltp"]) %>
               <.icon name="hero-arrow-down h-3 w-3" />
             </span>
@@ -42,7 +42,7 @@
         phx-click="toggle-token-watchlist"
         phx-value-token={watchlist["symboltoken"]}
       >
-        <.icon name="hero-x-circle-solid text-red-400" />
+        <.icon name="hero-x-circle-solid h-6 w-6 text-red-500" />
       </span>
     </dl>
   </li>

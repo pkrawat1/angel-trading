@@ -13,11 +13,11 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
             </small>
             <br />
             <div class="text-xs md:text-sm">
-              <span :if={@quote["is_gain_today?"]} class="text-green-600">
+              <span :if={@quote["is_gain_today?"]} class="text-green-700">
                 <%= number_to_currency(@quote["ltp"]) %>
                 <.icon name="hero-arrow-up" />
               </span>
-              <span :if={!@quote["is_gain_today?"]} class="text-red-600">
+              <span :if={!@quote["is_gain_today?"]} class="text-red-500">
                 <%= number_to_currency(@quote["ltp"]) %>
                 <.icon name="hero-arrow-down" />
               </span>
@@ -55,7 +55,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                 <tbody>
                   <tr :for={buy <- @quote["depth"]["buy"]}>
                     <td><%= buy["quantity"] %></td>
-                    <td class="text-right text-green-600"><%= buy["price"] %></td>
+                    <td class="text-right text-green-700"><%= buy["price"] %></td>
                   </tr>
                   <tr class="border-y">
                     <td><%= @quote["totBuyQuan"] %></td>
@@ -70,7 +70,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                 </thead>
                 <tbody>
                   <tr :for={sell <- @quote["depth"]["sell"]}>
-                    <td class="text-left text-red-600"><%= sell["price"] %></td>
+                    <td class="text-left text-red-500"><%= sell["price"] %></td>
                     <td class="text-right"><%= sell["quantity"] %></td>
                   </tr>
                   <tr class="border-y">
@@ -115,7 +115,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
         } %>
         <.link
           navigate={~p"/client/#{@client_code}/order/new?#{order_params}"}
-          class="w-1/2 px-4 py-2 text-white bg-green-600 rounded-s-lg focus-visible:outline-none"
+          class="w-1/2 px-4 py-2 text-white bg-green-700 rounded-s-lg focus-visible:outline-none"
         >
           BUY
         </.link>

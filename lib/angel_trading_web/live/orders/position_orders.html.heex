@@ -23,8 +23,8 @@
               if(
                 (order["transactiontype"] == "BUY" and order["averageprice"] > order["ltp"]) ||
                   (order["transactiontype"] == "SELL" and order["averageprice"] < order["ltp"]),
-                do: "text-red-600",
-                else: "text-green-600"
+                do: "text-red-500",
+                else: "text-green-700"
               )
             ]}>
               <%= number_to_currency(order["gains_or_loss"] || 0) %>
@@ -37,8 +37,8 @@
           <span>
             <small class={[
               if(order["transactiontype"] == "SELL",
-                do: "bg-red-100 text-red-600",
-                else: "bg-green-200 text-green-600"
+                do: "bg-red-100 text-red-500",
+                else: "bg-green-200 text-green-700"
               ),
               "text-xs me-2 px-1 py-0.5 rounded"
             ]}>
@@ -53,10 +53,10 @@
           </span>
           <div>
             LTP
-            <span :if={order["is_gain_today?"]} class="text-green-600">
+            <span :if={order["is_gain_today?"]} class="text-green-700">
               <%= number_to_currency(order["ltp"]) %>
             </span>
-            <span :if={!order["is_gain_today?"]} class="text-red-600">
+            <span :if={!order["is_gain_today?"]} class="text-red-500">
               <%= number_to_currency(order["ltp"]) %>
             </span>
             <span>

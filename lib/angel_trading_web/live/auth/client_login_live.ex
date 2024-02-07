@@ -28,7 +28,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
           <.button class="w-full">Login</.button>
         </:actions>
       </.simple_form>
-      <.bottom_nav />
+      <.bottom_nav active_page={:client} />
     </div>
     """
   end

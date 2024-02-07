@@ -1,15 +1,24 @@
 <header :if={!assigns[:no_header]} class="px-4 sm:px-6 lg:px-8">
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <div class="flex items-center gap-4 text-xl font-medium bg-clip-text bg-gradient-to-r from-red-400 to-blue-500 font-bold text-transparent">
+    <div class="flex items-center gap-4 text-xl font-medium bg-clip-text bg-gradient-to-r from-red-400 to-blue-500 text-transparent">
       <a href="/">
         SmarTrade
       </a>
     </div>
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <a :if={!@current_user} href="https://www.angelone.in/open-demat-account" class="px-2 py-1">
+      <a
+        :if={!@current_user}
+        href="https://www.angelone.in/open-demat-account"
+        class="px-2 py-1 bg-clip-text bg-gradient-to-r from-red-400 to-blue-500 text-transparent"
+      >
         Open Demat Account <span aria-hidden="true">&rarr;</span>
       </a>
-      <.link :if={@current_user} class="px-2 py-1" method="delete" href={~p"/session/logout"}>
+      <.link
+        :if={@current_user}
+        class="px-2 py-1 text-red-500"
+        method="delete"
+        href={~p"/session/logout"}
+      >
         Logout
       </.link>
     </div>

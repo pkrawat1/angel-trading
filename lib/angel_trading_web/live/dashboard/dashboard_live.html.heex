@@ -1,6 +1,3 @@
-<.header>
-  Dashboard
-</.header>
 <section class="grid grid-cols-1 mt-5 md:grid-cols-2 gap-4 justify-between">
   <.async_result :let={clients} assign={@clients}>
     <:loading><.loading client_codes={@client_codes} /></:loading>
@@ -10,4 +7,4 @@
     </div>
   </.async_result>
 </section>
-<.bottom_nav />
+<.bottom_nav active_page={:home} />

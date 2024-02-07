@@ -41,10 +41,10 @@
               </small>
             </span>
             <div>
-              <span :if={holding["in_overall_profit?"]} class="text-green-600">
+              <span :if={holding["in_overall_profit?"]} class="text-green-700">
                 <%= number_to_currency(holding["overall_gain_or_loss"]) %>
               </span>
-              <span :if={!holding["in_overall_profit?"]} class="text-red-600">
+              <span :if={!holding["in_overall_profit?"]} class="text-red-500">
                 <%= holding["overall_gain_or_loss"] |> number_to_currency() %>
               </span>
               <small>
@@ -60,10 +60,10 @@
             </span>
             <div>
               LTP
-              <span :if={holding["is_gain_today?"]} class="text-green-600">
+              <span :if={holding["is_gain_today?"]} class="text-green-700">
                 <%= number_to_currency(holding["ltp"]) %>
               </span>
-              <span :if={!holding["is_gain_today?"]} class="text-red-600">
+              <span :if={!holding["is_gain_today?"]} class="text-red-500">
                 <%= number_to_currency(holding["ltp"]) %>
               </span>
               <span>
@@ -80,14 +80,14 @@
             </span>
             <div>
               <%= if holding["is_gain_today?"], do: "Today's gain", else: "Today's loss" %>
-              <span :if={holding["is_gain_today?"]} class="text-green-600">
+              <span :if={holding["is_gain_today?"]} class="text-green-700">
                 <%= number_to_currency(
                   holding[
                     "todays_profit_or_loss"
                   ]
                 ) %>
               </span>
-              <span :if={!holding["is_gain_today?"]} class="text-red-600">
+              <span :if={!holding["is_gain_today?"]} class="text-red-500">
                 <%= holding["todays_profit_or_loss"] |> number_to_currency() %>
               </span>
               <span>

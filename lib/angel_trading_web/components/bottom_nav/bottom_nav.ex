@@ -14,8 +14,8 @@ defmodule AngelTradingWeb.Components.BottomNav do
           type="button"
           class="inline-flex flex-col items-center justify-center group"
         >
-          <.icon name="hero-home-solid w-4 h-4 text-gray-500 group-hover:text-blue-600" />
-          <span class="text-gray-500 group-hover:text-blue-600">Home</span>
+          <.icon name={"hero-home-solid w-4 h-4 #{active_page_class(assigns, :home)}"} />
+          <span class={active_page_class(assigns, :home)}>Home</span>
         </.link>
         <.link
           :if={assigns[:client_code]}
@@ -23,8 +23,8 @@ defmodule AngelTradingWeb.Components.BottomNav do
           type="button"
           class="inline-flex flex-col items-center justify-center group"
         >
-          <.icon name="hero-star-solid w-4 h-4 text-gray-500 group-hover:text-blue-600" />
-          <span class="text-gray-500 group-hover:text-blue-600">Watchlist</span>
+          <.icon name={"hero-star-solid w-4 h-4 #{active_page_class(assigns, :watchlist)}"} />
+          <span class={active_page_class(assigns, :watchlist)}>Watchlist</span>
         </.link>
         <.link
           :if={assigns[:client_code]}
@@ -32,8 +32,8 @@ defmodule AngelTradingWeb.Components.BottomNav do
           type="button"
           class="inline-flex flex-col items-center justify-center group"
         >
-          <.icon name="hero-folder-solid w-4 h-4 text-gray-500 group-hover:text-blue-600" />
-          <span class="text-gray-500 group-hover:text-blue-600">Portfolio</span>
+          <.icon name={"hero-folder-solid w-4 h-4 #{active_page_class(assigns, :portfolio)}"} />
+          <span class={active_page_class(assigns, :portfolio)}>Portfolio</span>
         </.link>
         <.link
           :if={assigns[:client_code]}
@@ -41,19 +41,24 @@ defmodule AngelTradingWeb.Components.BottomNav do
           type="button"
           class="inline-flex flex-col items-center justify-center group"
         >
-          <.icon name="hero-clipboard-solid w-4 h-4 text-gray-500 group-hover:text-blue-600" />
-          <span class="text-gray-500 group-hover:text-blue-600">Orders</span>
+          <.icon name={"hero-clipboard-solid w-4 h-4 #{active_page_class(assigns, :orders)}"} />
+          <span class={active_page_class(assigns, :orders)}>Orders</span>
         </.link>
         <.link
           navigate={~p"/client/login"}
           type="button"
           class="inline-flex flex-col items-center justify-center group"
         >
-          <.icon name="hero-user-plus-solid w-4 h-4 text-gray-500 group-hover:text-blue-600" />
-          <span class="text-gray-500 group-hover:text-blue-600">Client</span>
+          <.icon name={"hero-user-plus-solid w-4 h-4 #{active_page_class(assigns, :client)}"} />
+          <span class={active_page_class(assigns, :client)}>Client</span>
         </.link>
       </div>
     </div>
     """
   end
+
+  defp active_page_class(%{active_page: active_page}, page) when page == active_page,
+    do: "text-red-500 group-hover:text-red-500"
+
+  defp active_page_class(_, _), do: "text-gray-500 group-hover:text-red-500"
 end

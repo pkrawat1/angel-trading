@@ -28,8 +28,8 @@
     <div class="text-xl">
       <%= number_to_currency(portfolio.total_current, precision: 0) %> <br />
       <small :if={portfolio.in_overall_profit?}>
-        <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> Overall gain
-        <span class="text-green-600">
+        <.icon name="hero-arrow-up w-4 h-4 text-green-500" /> Overall gain
+        <span class="text-green-500">
           <%= number_to_currency(portfolio.total_overall_gain_or_loss, precision: 2) %> (<%= Float.floor(
             portfolio.total_overall_gain_or_loss_percent,
             2
@@ -37,8 +37,8 @@
         </span>
       </small>
       <small :if={!portfolio.in_overall_profit?}>
-        <.icon name="hero-arrow-down text-red-600" /> Overall loss
-        <span class="text-red-600">
+        <.icon name="hero-arrow-down text-red-500" /> Overall loss
+        <span class="text-red-500">
           <%= portfolio.total_overall_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
             portfolio.total_overall_gain_or_loss_percent,
             2
@@ -52,8 +52,8 @@
         <%= number_to_currency(portfolio.total_invested, precision: 0) %> <br />
       </small>
       <small :if={portfolio.in_overall_profit_today?}>
-        <.icon name="hero-arrow-up w-4 h-4 text-green-600" /> "Today's gain"<br />
-        <span class="text-green-600">
+        <.icon name="hero-arrow-up w-4 h-4 text-green-500" /> "Today's gain"<br />
+        <span class="text-green-500">
           <%= number_to_currency(portfolio.total_todays_gain_or_loss, precision: 2) %> (<%= Float.floor(
             portfolio.total_todays_gain_or_loss_percent,
             2
@@ -61,8 +61,8 @@
         </span>
       </small>
       <small :if={!portfolio.in_overall_profit_today?}>
-        <.icon name="hero-arrow-down w-4 h-4 text-red-600" /> "Today's Loss"<br />
-        <span class="text-red-600">
+        <.icon name="hero-arrow-down w-4 h-4 text-red-500" /> "Today's Loss"<br />
+        <span class="text-red-500">
           <%= portfolio.total_todays_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
             portfolio.total_todays_gain_or_loss_percent,
             2
@@ -79,7 +79,7 @@
         </:loading>
         <:failed :let={reason}><%= reason %></:failed>
         Available Cash
-        <span class="text-green-600">
+        <span class="text-green-500">
           <%= number_to_currency(funds["net"], precision: 2) %> <br />
         </span>
       </.async_result>
