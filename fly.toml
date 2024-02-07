@@ -1,10 +1,7 @@
-# fly.toml app configuration file generated for smartrade on 2023-09-22T09:10:33+05:30
-#
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
 
 app = "smartrade"
-primary_region = "hkg"
+primary_region = "bom"
 kill_signal = "SIGTERM"
 swap_size_mb = 1024 
 
