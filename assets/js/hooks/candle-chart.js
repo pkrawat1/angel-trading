@@ -15,7 +15,11 @@ export default {
     ]
   */
   mounted() {
-    this.renderChart();
+    import("../../vendor/lightweight-charts.standalone.production").then(
+      () => {
+        this.renderChart();
+      }
+    )
     this.handleEvent("update-charti", ({
       dataset: data
     }) => {
@@ -42,7 +46,13 @@ export default {
     let LightweightCharts = window.LightweightCharts;
     let candleData = JSON.parse(this.el.dataset.series) || [];
     // console.error(candleData.slice(0, 20));
-    let rsiData = candleData.map(({time, rsi}) => ({time, value: rsi}));
+    let rsiData = candleData.map(({
+      time,
+      rsi
+    }) => ({
+      time,
+      value: rsi
+    }));
     let config = JSON.parse(this.el.dataset.config);
     this.chart = LightweightCharts.createChart(this.el, {
       autoSize: true,
@@ -59,9 +69,9 @@ export default {
       },
       layout: {
         background: {
-                type: 'solid',
-                color: '#ffffff',
-            },
+          type: 'solid',
+          color: '#ffffff',
+        },
         textColor: 'rgba(33, 56, 77, 1)',
       },
       grid: {
@@ -83,9 +93,9 @@ export default {
       }
     });
     // this.lineSeries = this.chart.addLineSeries({
-      // color: 'rgba(4, 111, 232, 1)',
-      // lineWidth: 2,
-      // priceScaleId: 'right'
+    // color: 'rgba(4, 111, 232, 1)',
+    // lineWidth: 2,
+    // priceScaleId: 'right'
     // });
     // this.lineSeries.setData(rsiData);
     this.candleSeries = this.chart.addCandlestickSeries({
@@ -98,9 +108,20 @@ export default {
       lineWidth: 2,
       priceScaleId: 'left'
     });
-    let rsiData2 = candleData.map(({time, close}) => ({time, value: close}));
+    let rsiData2 = candleData.map(({
+      time,
+      close
+    }) => ({
+      time,
+      value: close
+    }));
     let calculatedRsi = this.rsi(rsiData2.map(d => d.value));
-    rsiData2 = rsiData2.map(({time}, i) => ({time, value: calculatedRsi[i]}))
+    rsiData2 = rsiData2.map(({
+      time
+    }, i) => ({
+      time,
+      value: calculatedRsi[i]
+    }))
     this.lineSeries2.setData(rsiData2);
   },
   destroyed() {
