@@ -11,8 +11,7 @@
       <%= assigns[:page_title] || "SmartTrade" %>
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
-    <script defer phx-track-static type="module" type="text/javascript" src={~p"/assets/app.js"}>
-    </script>
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"} />
   </head>
   <body class="bg-white antialiased px-4 sm:px-6 lg:px-8">
     <%= @inner_content %>
