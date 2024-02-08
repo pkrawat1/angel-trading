@@ -4,6 +4,7 @@ defmodule AngelTradingWeb.Components.BottomNav do
   import AngelTradingWeb.CoreComponents
 
   attr :client_code, :string
+  attr :active_page, :atom
 
   def bottom_nav(assigns) do
     ~H"""

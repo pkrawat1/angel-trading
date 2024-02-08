@@ -1,8 +1,8 @@
-<header :if={!assigns[:no_header]} class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+<header :if={!assigns[:no_header]} class="mx-auto max-w-6xl">
+  <div class="flex items-center justify-between border-b border-zinc-100 py-2 text-sm">
     <div class="flex items-center gap-4 text-xl font-medium bg-clip-text bg-gradient-to-r from-red-400 to-blue-500 text-transparent">
       <a href="/">
-        SmarTrade
+        <%= @page_title %>
       </a>
     </div>
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
@@ -24,9 +24,7 @@
     </div>
   </div>
 </header>
-<main class="px-4 py-5 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-6xl mb-16">
-    <.flash_group flash={@flash} />
-    <%= @inner_content %>
-  </div>
+<main class="mx-auto sm:py-6 max-w-6xl mb-16">
+  <.flash_group flash={@flash} />
+  <%= @inner_content %>
 </main>

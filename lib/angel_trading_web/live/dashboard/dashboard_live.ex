@@ -9,7 +9,7 @@ defmodule AngelTradingWeb.DashboardLive do
   def mount(_params, %{"user_hash" => user_hash}, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Dashboard")
+     |> assign(:page_title, "Home")
      |> assign(:user_hash, user_hash)
      |> get_portfolio_data}
   end

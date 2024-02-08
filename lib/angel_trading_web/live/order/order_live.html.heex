@@ -1,7 +1,7 @@
 <main class="text-sm uppercase">
-  <.header class="fixed top-0 left-0 w-full bg-white py-3 px-5 shadow">
-    <div class="text-base grid grid-cols-12 items-center">
-      <.link class="mr-2 col-span-1" navigate={~p"/client/#{@client_code}/portfolio"}>
+  <.header class="fixed top-0 left-0 w-full bg-white py-3 px-4 shadow">
+    <div class="mx-auto max-w-6xl text-base grid grid-cols-12 items-center">
+      <.link class="col-span-1" navigate={~p"/client/#{@client_code}/portfolio"}>
         <.icon name="hero-arrow-left" />
       </.link>
       <div class="col-span-3 leading-none">
@@ -28,7 +28,7 @@
       </div>
     </div>
   </.header>
-  <section id="buy-quote" class="mt-20">
+  <section id="buy-quote" class="mt-28">
     <% is_sell_order? = @order.transaction_type == "SELL" %>
     <% is_edit_order? = @live_action == :edit %>
     <.simple_form
@@ -63,7 +63,7 @@
             [
               "p-2 inline-flex items-center cursor-pointer",
               if(status,
-                do: " bg-red-600 text-white rounded-lg shadow-sm",
+                do: " bg-red-500 text-white rounded-lg shadow-sm",
                 else: "text-gray-700"
               )
             ]
@@ -104,10 +104,10 @@
         <div class="px-5 fixed bottom-0 left-0 z-50 w-full h-14 bg-white">
           <div class="flex mx-auto max-w-6xl">
             <% action = if(is_edit_order?, do: "MODIFY", else: "PLACE") %>
-            <.button :if={!is_sell_order?} class="w-full !bg-green-700">
+            <.button :if={!is_sell_order?} class="w-full !bg-green-500">
               <%= action %> BUY ORDER
             </.button>
-            <.button :if={is_sell_order?} class="w-full !bg-red-700">
+            <.button :if={is_sell_order?} class="w-full !bg-red-500">
               <%= action %> SELL ORDER
             </.button>
           </div>

@@ -3,7 +3,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
   alias AngelTrading.API
 
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, page_title: "New Client")}
   end
 
   def handle_params(params, _url, socket) do
@@ -25,7 +25,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
         />
         <.input field={f[:totp_secret]} value={@params["totp_secret"]} placeholder="Totp secret" />
         <:actions>
-          <.button class="w-full">Login</.button>
+          <.button class="w-full">Add</.button>
         </:actions>
       </.simple_form>
       <.bottom_nav active_page={:client} />

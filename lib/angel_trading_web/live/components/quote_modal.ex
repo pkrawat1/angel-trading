@@ -115,7 +115,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
         } %>
         <.link
           navigate={~p"/client/#{@client_code}/order/new?#{order_params}"}
-          class="w-1/2 px-4 py-2 text-white bg-green-700 rounded-s-lg focus-visible:outline-none"
+          class="w-1/2 px-4 py-2 text-white bg-green-500 rounded-s-lg focus-visible:outline-none"
         >
           BUY
         </.link>
@@ -123,7 +123,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
           navigate={
             ~p[/client/#{@client_code}/order/new?#{%{order_params | transaction_type: "SELL"}}]
           }
-          class="w-1/2 px-4 py-2 text-white bg-red-600 rounded-e-lg focus-visible:outline-none"
+          class="w-1/2 px-4 py-2 text-white bg-red-500 rounded-e-lg focus-visible:outline-none"
         >
           SELL
         </.link>
@@ -154,13 +154,13 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
           data-confirm="Are you sure?"
           phx-click="cancel-order"
           phx-value-id={@selected_order["orderid"]}
-          class="w-1/2 px-4 py-2 text-white bg-red-600 border border-red-200 rounded-s-lg focus-visible:outline-none"
+          class="w-1/2 px-4 py-2 text-white bg-red-500 rounded-s-lg focus-visible:outline-none"
         >
           Cancel
         </.link>
         <.link
           navigate={~p"/client/#{@client_code}/order/edit?#{order_params}"}
-          class="w-1/2 px-4 py-2 text-white bg-blue-600 border border-blue-200 rounded-e-lg focus-visible:outline-none"
+          class="w-1/2 px-4 py-2 text-white bg-blue-500 rounded-e-lg focus-visible:outline-none"
         >
           Modify
         </.link>

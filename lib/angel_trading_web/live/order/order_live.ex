@@ -43,7 +43,7 @@ defmodule AngelTradingWeb.OrderLive do
         {price, _} = params |> Map.get("price", "0") |> Integer.parse()
 
         socket
-        |> assign(:page_title, "New Orders")
+        |> assign(:page_title, String.capitalize(transaction_type) <> " Order")
         |> assign(:token, token)
         |> assign(:client_code, client_code)
         |> assign(:feed_token, feed_token)
