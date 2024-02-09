@@ -274,7 +274,7 @@ defmodule AngelTradingWeb.PortfolioLive do
         send_update(CandleChart,
           id: "quote-chart-wrapper",
           event: "update-chart",
-          dataset: [List.last(candle_data)]
+          dataset: candle_data
         )
 
         socket
