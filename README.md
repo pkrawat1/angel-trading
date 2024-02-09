@@ -11,8 +11,6 @@ Implements
 - binary data parsing via pattern matching
 - syncing data feed from external web socket communication with Live view via broadcasting
 
-Demo of streams : https://lnkd.in/dqpBTh5m
-
 <div>
   <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941?sid=69a6e34f-f1a4-4321-a3ae-e404575170d1">
     <p>Demo of streaming data from websocket</p>
