@@ -26,7 +26,10 @@ export default {
       let prevData = this.candleSeries.data().slice().pop();
       let calculatedRsi = this.rsi(data.map(d => d.close));
       data
-        .map((d, i) => ({...d, rsi: calculatedRsi[i]}))
+        .map((d, i) => ({
+          ...d,
+          rsi: calculatedRsi[i]
+        }))
         .filter(({
           time
         }) => {
@@ -38,13 +41,27 @@ export default {
         })
         .forEach(item => {
           this.candleSeries.update(item);
-          this.lineSeries2.update({time: item.time, value: item.rsi})
+          this.lineSeries2.update({
+            time: item.time,
+            value: item.rsi
+          });
+          this.volumeSeries.update({
+            time: item.time,
+            value: item.volume
+          });
         })
     })
   },
   renderChart() {
     let LightweightCharts = window.LightweightCharts;
     let candleData = JSON.parse(this.el.dataset.series) || [];
+    let volumeData = candleData.map(({
+      time,
+      volume
+    }) => ({
+      time,
+      value: volume
+    }));
     // console.error(candleData.slice(0, 20));
     let rsiData = candleData.map(({
       time,
@@ -90,7 +107,7 @@ export default {
       },
       handleScroll: {
         vertTouchDrag: false,
-      }
+      },
     });
     // this.lineSeries = this.chart.addLineSeries({
     // color: 'rgba(4, 111, 232, 1)',
@@ -101,12 +118,27 @@ export default {
     this.candleSeries = this.chart.addCandlestickSeries({
       priceScaleId: 'right'
     });
+    this.candleSeries.priceScale().applyOptions({
+      scaleMargins: {
+        // positioning the price scale for the area series
+        top: 0,
+        bottom: 0.5,
+      },
+    });
     this.candleSeries.setData(candleData);
+
     this.lineSeries2 = this.chart.addLineSeries({
       color: 'rgba(4, 111, 232, 1)',
       // color: 'purple',
       lineWidth: 2,
       priceScaleId: 'left'
+    });
+    this.lineSeries2.priceScale().applyOptions({
+      scaleMargins: {
+        // positioning the price scale for the area series
+        top: 0.5,
+        bottom: 0.2,
+      },
     });
     let rsiData2 = candleData.map(({
       time,
@@ -123,6 +155,26 @@ export default {
       value: calculatedRsi[i]
     }))
     this.lineSeries2.setData(rsiData2);
+
+    this.volumeSeries = this.chart.addHistogramSeries({
+      priceFormat: {
+        type: 'volume',
+      },
+      priceScaleId: '', // set as an overlay by setting a blank priceScaleId
+      // set the positioning of the volume series
+      scaleMargins: {
+        top: 0.7, // highest point of the series will be 70% away from the top
+        bottom: 0,
+      },
+    });
+    this.volumeSeries.priceScale().applyOptions({
+      // set the positioning of the volume series
+      scaleMargins: {
+        top: 0.8, // highest point of the series will be 70% away from the top
+        bottom: 0,
+      },
+    });
+    this.volumeSeries.setData(volumeData);
   },
   destroyed() {
     this.chart.remove();
