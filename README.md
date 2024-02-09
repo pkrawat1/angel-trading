@@ -12,7 +12,7 @@ Implements
 - syncing data feed from external web socket communication with Live view via broadcasting
 
 <div>
-  <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941?sid=69a6e34f-f1a4-4321-a3ae-e404575170d1">
+  <a href="https://www.loom.com/share/60816921d58245b6b5e1e33a96ec66a6?sid=a0380d2c-5934-4cfd-8244-c70f2cd90f39">
     <p>Demo of streaming data from websocket</p>
   </a>
   <img width="250" alt="Screenshot 2024-01-30 at 9 54 30 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/423b8da0-c328-4914-9324-30af2871cc62">
