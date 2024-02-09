@@ -356,7 +356,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         send_update(CandleChart,
           id: "quote-chart-wrapper",
           event: "update-chart",
-          dataset: [List.last(candle_data)]
+          dataset: Enum.take(candle_data, -1)
         )
 
         socket

@@ -23,33 +23,19 @@ export default {
     this.handleEvent("update-chart", ({
       dataset: data
     }) => {
-      let prevData = this.candleSeries.data().slice().pop();
-      let calculatedRsi = this.rsi(data.map(d => d.close));
-      data
-        .map((d, i) => ({
-          ...d,
-          rsi: calculatedRsi[i]
-        }))
-        .filter(({
-          time
-        }) => {
-          if (prevData) {
-            return time >= prevData.time
-          } else {
-            return true
-          }
-        })
-        .forEach(item => {
-          this.candleSeries.update(item);
-          this.lineSeries2.update({
-            time: item.time,
-            value: item.rsi
-          });
-          this.volumeSeries.update({
-            time: item.time,
-            value: item.volume
-          });
-        })
+      debugger
+      let candleData = this.candleSeries.data().slice().concat([data]);
+      let calculatedRsi = this.rsi(candleData.map(d => d.close));
+      this.candleSeries.update(data);
+      console.log(data, candleData, calculatedRsi)
+      this.lineSeries2.update({
+        time: data.time,
+        value: calculatedRsi.pop()
+      });
+      this.volumeSeries.update({
+        time: data.time,
+        value: data.volume
+      });
     })
   },
   renderChart() {
