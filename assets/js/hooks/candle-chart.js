@@ -23,11 +23,16 @@ export default {
     this.handleEvent("update-chart", ({
       dataset: data
     }) => {
-      debugger
-      let candleData = this.candleSeries.data().slice().concat([data]);
+      data = data[0];
+      let candleData = this.candleSeries.data().slice().map(t => Object.assign({}, t));
+      let prevData = candleData.pop();
+      if (prevData.time == data.time) {
+        candleData = candleData.concat(data);
+      } else {
+        candleData = candleData.concat(prevData, data);
+      }
       let calculatedRsi = this.rsi(candleData.map(d => d.close));
       this.candleSeries.update(data);
-      console.log(data, candleData, calculatedRsi)
       this.lineSeries2.update({
         time: data.time,
         value: calculatedRsi.pop()
