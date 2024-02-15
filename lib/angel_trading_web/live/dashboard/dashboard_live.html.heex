@@ -1,10 +1,4 @@
 <section class="grid grid-cols-1 mt-5 md:grid-cols-2 gap-4 justify-between">
-  <.async_result :let={clients} assign={@clients}>
-    <:loading><.loading client_codes={@client_codes} /></:loading>
-    <:failed :let={_reason}>there was an error loading the portfolios</:failed>
-    <div :for={client <- clients} class="w-full">
-      <.portfolio id={client.client_code} {client} {calculated_overview(client)} />
-    </div>
-  </.async_result>
+  <.live_component :for={client_code <- @client_codes} module={__MODULE__.Portfolio} id={client_code} client_code={client_code} />
 </section>
 <.bottom_nav active_page={:home} />
