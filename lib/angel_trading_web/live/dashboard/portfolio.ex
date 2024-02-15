@@ -1,5 +1,6 @@
 defmodule AngelTradingWeb.DashboardLive.Portfolio do
   use AngelTradingWeb, :live_component
+  require Logger
 
   alias AngelTrading.{Account, API, Utils}
 
@@ -58,7 +59,9 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
           }}
        else
          e ->
-           {:error, e}
+           Logger.error("[Dashboard] Unable to fetch data")
+           IO.inspect(e)
+           {:error, :client_error}
        end
      end)}
   end
