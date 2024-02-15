@@ -1,4 +1,9 @@
 <section class="grid grid-cols-1 mt-5 md:grid-cols-2 gap-4 justify-between">
-  <.live_component :for={client_code <- @client_codes} module={__MODULE__.Portfolio} id={client_code} client_code={client_code} />
+  <.live_component
+    :for={client_code <- @client_codes}
+    module={__MODULE__.Portfolio}
+    id={client_code}
+    client_code={client_code}
+  />
 </section>
 <.bottom_nav active_page={:home} />
