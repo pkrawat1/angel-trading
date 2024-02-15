@@ -2,6 +2,8 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
   use AngelTradingWeb, :live_component
   require Logger
 
+  embed_templates "*"
+
   alias AngelTrading.{Account, API, Utils}
 
   def update(%{client_code: client_code}, socket) do
