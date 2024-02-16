@@ -1,62 +1,72 @@
-<div class="block w-full py-6 px-3 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700">
-  <.link navigate={~p"/client/#{@client_code}/portfolio"}>
-    <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
-      <%= String.downcase(@profile["name"]) %>
-    </h5>
-    <div class="text-xl">
-      <%= number_to_currency(@total_current, precision: 0) %> <br />
-      <small :if={@in_overall_profit?}>
-        <.icon name="hero-arrow-up w-4 h-4 text-green-500" /> Overall gain
-        <span class="text-green-500">
-          <%= number_to_currency(@total_overall_gain_or_loss, precision: 2) %> (<%= Float.floor(
-            @total_overall_gain_or_loss_percent,
-            2
-          ) %> %)
-        </span>
-      </small>
-      <small :if={!@in_overall_profit?}>
-        <.icon name="hero-arrow-down text-red-500" /> Overall loss
-        <span class="text-red-500">
-          <%= @total_overall_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
-            @total_overall_gain_or_loss_percent,
-            2
-          ) %>%)
-        </span>
-      </small>
+<div>
+  <.async_result :let={client} assign={@client}>
+    <:loading>
+      <.loading />
+    </:loading>
+    <:failed>
+      <.loading />
+    </:failed>
+    <div class="block w-full py-6 px-3 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700">
+      <.link navigate={~p"/client/#{client.client_code}/portfolio"}>
+        <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
+          <%= String.downcase(client.profile["name"]) %>
+        </h5>
+        <div class="text-xl">
+          <%= number_to_currency(client.total_current, precision: 0) %> <br />
+          <small :if={client.in_overall_profit?}>
+            <.icon name="hero-arrow-up w-4 h-4 text-green-500" /> Overall gain
+            <span class="text-green-500">
+              <%= number_to_currency(client.total_overall_gain_or_loss, precision: 2) %> (<%= Float.floor(
+                client.total_overall_gain_or_loss_percent,
+                2
+              ) %> %)
+            </span>
+          </small>
+          <small :if={!client.in_overall_profit?}>
+            <.icon name="hero-arrow-down text-red-500" /> Overall loss
+            <span class="text-red-500">
+              <%= client.total_overall_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
+                client.total_overall_gain_or_loss_percent,
+                2
+              ) %>%)
+            </span>
+          </small>
+        </div>
+        <div class="text-xl text-right mt-5 flex justify-between">
+          <small class="text-left">
+            Invested Value<br />
+            <%= number_to_currency(client.total_invested, precision: 0) %> <br />
+          </small>
+          <small :if={client.in_overall_profit_today?}>
+            <.icon name="hero-arrow-up w-4 h-4 text-green-500" />Today's gain<br />
+            <span class="text-green-500">
+              <%= number_to_currency(client.total_todays_gain_or_loss, precision: 2) %> (<%= Float.floor(
+                client.total_todays_gain_or_loss_percent,
+                2
+              ) %>%)
+            </span>
+          </small>
+          <small :if={!client.in_overall_profit_today?}>
+            <.icon name="hero-arrow-down w-4 h-4 text-red-500" />Today's Loss<br />
+            <span class="text-red-500">
+              <%= client.total_todays_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
+                client.total_todays_gain_or_loss_percent,
+                2
+              ) %>%)
+            </span>
+          </small>
+        </div>
+        <div class="text-xl text-right mt-5 flex justify-between">
+          <small>
+            Available Cash
+            <span class="text-green-500">
+              <%= number_to_currency(client.funds["net"], precision: 2) %> <br />
+            </span>
+          </small>
+          <small :if={client.dis_status} class="text-green-500">Verified</small>
+          <small :if={!client.dis_status} class="text-red-500">Not Verified</small>
+        </div>
+      </.link>
     </div>
-    <div class="text-xl text-right mt-5 flex justify-between">
-      <small class="text-left">
-        Invested Value<br />
-        <%= number_to_currency(@total_invested, precision: 0) %> <br />
-      </small>
-      <small :if={@in_overall_profit_today?}>
-        <.icon name="hero-arrow-up w-4 h-4 text-green-500" />Today's gain<br />
-        <span class="text-green-500">
-          <%= number_to_currency(@total_todays_gain_or_loss, precision: 2) %> (<%= Float.floor(
-            @total_todays_gain_or_loss_percent,
-            2
-          ) %>%)
-        </span>
-      </small>
-      <small :if={!@in_overall_profit_today?}>
-        <.icon name="hero-arrow-down w-4 h-4 text-red-500" />Today's Loss<br />
-        <span class="text-red-500">
-          <%= @total_todays_gain_or_loss |> number_to_currency(precision: 2) %> (<%= Float.floor(
-            @total_todays_gain_or_loss_percent,
-            2
-          ) %>%)
-        </span>
-      </small>
-    </div>
-    <div class="text-xl text-right mt-5 flex justify-between">
-      <small>
-        Available Cash
-        <span class="text-green-500">
-          <%= number_to_currency(@funds["net"], precision: 2) %> <br />
-        </span>
-      </small>
-      <small :if={@dis_status} class="text-green-500">Verified</small>
-      <small :if={!@dis_status} class="text-red-500">Not Verified</small>
-    </div>
-  </.link>
+  </.async_result>
 </div>
