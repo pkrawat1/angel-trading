@@ -34,7 +34,7 @@ defmodule AngelTrading.API do
       {fn ->
          TradeGalleon.call(AngelOne, :profile, token: token)
        end, []},
-      :timer.hours(5)
+      :timer.hours(24)
     )
   end
 
@@ -43,7 +43,8 @@ defmodule AngelTrading.API do
       "portfolio_api_" <> token,
       {fn ->
          TradeGalleon.call(AngelOne, :portfolio, token: token)
-       end, []}
+       end, []},
+      :timer.minutes(15)
     )
   end
 
@@ -113,7 +114,7 @@ defmodule AngelTrading.API do
           price: price
         }
       ) do
-    Cache.del("funds_api_" <> token)
+    reset_cache(token)
 
     TradeGalleon.call(AngelOne, :place_order,
       token: token,
@@ -147,7 +148,7 @@ defmodule AngelTrading.API do
           price: price
         }
       ) do
-    Cache.del("funds_api_" <> token)
+    reset_cache(token)
 
     TradeGalleon.call(AngelOne, :modify_order,
       token: token,
@@ -168,7 +169,7 @@ defmodule AngelTrading.API do
   end
 
   def cancel_order(token, order_id) do
-    Cache.del("funds_api_" <> token)
+    reset_cache(token)
 
     TradeGalleon.call(AngelOne, :cancel_order,
       token: token,
@@ -200,9 +201,10 @@ defmodule AngelTrading.API do
                 }
               ) do
            {:error, %{"errorcode" => errorcode}} when errorcode == "AG1000" -> {:ok, true}
-           _ -> {:ok, false}
+           _ -> {:error, false}
          end
-       end, []}
+       end, []},
+      :timer.hours(5)
     )
   end
 
@@ -224,5 +226,10 @@ defmodule AngelTrading.API do
           end)
       }
     )
+  end
+
+  defp reset_cache(token) do
+    Cache.del("funds_api_" <> token)
+    Cache.del("portfolio_api_" <> token)
   end
 end

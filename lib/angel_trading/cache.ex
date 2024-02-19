@@ -12,7 +12,7 @@ defmodule AngelTrading.Cache do
   * from cache if exists.
   * from the callback function `fun` returning the data
   """
-  def get(cache_key, {fun, args}, expiry \\ :timer.minutes(5)) do
+  def get(cache_key, {fun, args}, expiry \\ :timer.hours(2)) do
     cache_key = cache_key(cache_key)
 
     with {:ok, nil} <- Cachex.get(@cache_name, cache_key),
