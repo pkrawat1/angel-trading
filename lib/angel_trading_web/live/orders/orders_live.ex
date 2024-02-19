@@ -179,7 +179,11 @@ defmodule AngelTradingWeb.OrdersLive do
             |> Map.put_new("close", close)
             |> Map.put_new("ltp_percent", ltp_percent)
             |> Map.put_new("is_gain_today?", close < new_ltp)
-            |> Map.put_new("gains_or_loss", total_qty * (new_ltp - updated_order["averageprice"]))
+            |> Map.put_new(
+              "gains_or_loss",
+              if(updated_order["transactiontype"] == "SELL", do: -1, else: 1) * total_qty *
+                (new_ltp - updated_order["averageprice"])
+            )
 
           socket
           |> stream_insert(
