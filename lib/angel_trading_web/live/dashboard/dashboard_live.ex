@@ -36,7 +36,7 @@ defmodule AngelTradingWeb.DashboardLive do
          }},
         socket
       ) do
-    socket_process = :"#{client_code}"
+    socket_process = :"#{client_code}-quote-stream"
 
     subscribe_to_feed = fn ->
       WebSockex.send_frame(

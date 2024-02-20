@@ -83,7 +83,7 @@ defmodule AngelTradingWeb.PortfolioLive do
           }
         } = socket
       ) do
-    socket_process = :"#{client_code}"
+    socket_process = :"#{client_code}-quote-stream"
 
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
@@ -351,7 +351,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   defp subscribe_to_quote_feed(client_code, tokens, mode) do
     WebSockex.send_frame(
-      :"#{client_code}",
+      :"#{client_code}-quote-stream",
       {:text,
        Jason.encode!(%{
          correlationID: client_code,

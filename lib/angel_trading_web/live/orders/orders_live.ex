@@ -10,6 +10,7 @@ defmodule AngelTradingWeb.OrdersLive do
 
     if connected?(socket) do
       :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
+      :ok = Phoenix.PubSub.subscribe(AngelTrading.PubSub, "order-stream-#{client_code}")
       Process.send_after(self(), :subscribe_to_feed, 500)
       :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
@@ -72,7 +73,8 @@ defmodule AngelTradingWeb.OrdersLive do
           }
         } = socket
       ) do
-    socket_process = :"#{client_code}"
+    socket_process = :"#{client_code}-quote-stream"
+    order_socket_process = :"#{client_code}-order-stream"
 
     subscribe_to_feed = fn ->
       WebSockex.send_frame(
@@ -97,6 +99,7 @@ defmodule AngelTradingWeb.OrdersLive do
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
+      Logger.info("[Order] web socket (#{socket_process}) started")
       subscribe_to_feed.()
     else
       pid when is_pid(pid) ->
@@ -106,9 +109,28 @@ defmodule AngelTradingWeb.OrdersLive do
       e ->
         Logger.error("[Order] Error connecting to web socket (#{socket_process})")
         IO.inspect(e)
+        quote_fallback(socket)
     end
 
-    {:noreply, quote_fallback(socket)}
+    with nil <- Process.whereis(order_socket_process),
+         {:ok, pid} when is_pid(pid) <-
+           API.order_socket(client_code, token, feed_token, "order-stream-" <> client_code) do
+      Logger.info("[Order] Order status web socket (#{order_socket_process}) started")
+    else
+      pid when is_pid(pid) ->
+        Logger.info(
+          "[Order] Order status web socket (#{order_socket_process} #{inspect(pid)}) already established"
+        )
+
+      e ->
+        Logger.error(
+          "[Order] Error connecting to order status web socket (#{order_socket_process})"
+        )
+
+        IO.inspect(e)
+    end
+
+    {:noreply, socket}
   end
 
   def handle_info(
@@ -199,7 +221,52 @@ defmodule AngelTradingWeb.OrdersLive do
     {:noreply, socket}
   end
 
-  def handle_info(_, socket), do: {:noreply, socket}
+  def handle_info(
+        %{topic: topic, payload: order_status},
+        %{assigns: %{client_code: client_code, order_book: order_book}} = socket
+      )
+      when topic == "order-stream-" <> client_code do
+    updated_order =
+      Enum.find(order_book, &(&1["orderid"] == get_in(order_status, ["orderData", "orderid"])))
+
+    socket =
+      case {updated_order, order_status} do
+        {%{}, _} ->
+          updated_order = Map.merge(updated_order, order_status["orderData"])
+
+          order_book =
+            Enum.map(order_book, fn order ->
+              if updated_order["orderid"] == order["orderid"] do
+                updated_order
+              else
+                order
+              end
+            end)
+
+          socket
+          |> stream_insert(
+            :order_book,
+            updated_order,
+            at: -1
+          )
+          |> assign(order_book: order_book)
+
+        {_, %{"orderData" => %{"orderid" => order_id} = order_data}}
+        when bit_size(order_id) > 0 ->
+          socket
+          |> stream_insert(
+            :order_book,
+            order_data,
+            at: -1
+          )
+          |> assign(order_book: [order_data | order_book])
+
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
 
   def handle_event(
         "select-holding",
@@ -273,7 +340,8 @@ defmodule AngelTradingWeb.OrdersLive do
          %{
            assigns: %{
              token: token,
-             order_book: order_book
+             order_book: order_book,
+             client_code: client_code
            }
          } = socket
        ) do
@@ -283,6 +351,7 @@ defmodule AngelTradingWeb.OrdersLive do
         send(
           self(),
           %{
+            topic: "quote-stream-" <> client_code,
             payload:
               Map.merge(quote_data, %{
                 last_traded_price: quote_data["ltp"] * 100,

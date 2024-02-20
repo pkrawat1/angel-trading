@@ -78,6 +78,11 @@ config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocket,
   pub_sub_module: AngelTrading.PubSub,
   supervisor: AngelTrading.WebSocketSupervisor
 
+config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
+  adapter: TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
+  pub_sub_module: AngelTrading.PubSub,
+  supervisor: AngelTrading.WebSocketSupervisor
+
 config :tesla, adapter: Tesla.Adapter.Hackney
 
 config :number,

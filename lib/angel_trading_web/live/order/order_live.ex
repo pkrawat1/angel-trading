@@ -39,6 +39,7 @@ defmodule AngelTradingWeb.OrderLive do
               feed_token: feed_token,
               refresh_token: refresh_token
             }} <- Utils.decrypt(:client_tokens, client_data) do
+        API.reset_cache(token)
         {quantity, _} = params |> Map.get("quantity", "0") |> Integer.parse()
         {price, _} = params |> Map.get("price", "0") |> Integer.parse()
 
@@ -87,7 +88,7 @@ defmodule AngelTradingWeb.OrderLive do
           }
         } = socket
       ) do
-    socket_process = :"#{client_code}"
+    socket_process = :"#{client_code}-quote-stream"
 
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
@@ -319,7 +320,7 @@ defmodule AngelTradingWeb.OrderLive do
 
   defp subscribe_to_quote_feed(%{assigns: %{client_code: client_code, order: order}} = socket) do
     WebSockex.send_frame(
-      :"#{client_code}",
+      :"#{client_code}-quote-stream",
       {:text,
        Jason.encode!(%{
          correlationID: client_code,

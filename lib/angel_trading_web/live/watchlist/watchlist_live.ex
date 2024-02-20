@@ -72,7 +72,7 @@ defmodule AngelTradingWeb.WatchlistLive do
           }
         } = socket
       ) do
-    socket_process = :"#{client_code}"
+    socket_process = :"#{client_code}-quote-stream"
 
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
@@ -377,7 +377,7 @@ defmodule AngelTradingWeb.WatchlistLive do
          %{assigns: %{client_code: client_code, watchlist: watchlist}} = socket
        ) do
     WebSockex.send_frame(
-      :"#{client_code}",
+      :"#{client_code}-quote-stream",
       {:text,
        Jason.encode!(%{
          correlationID: client_code,

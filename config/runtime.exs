@@ -119,4 +119,9 @@ if config_env() == :prod do
     api_key: System.get_env("API_KEY"),
     pub_sub_module: AngelTrading.PubSub,
     supervisor: AngelTrading.WebSocketSupervisor
+
+  config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
+    adapter: TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
+    pub_sub_module: AngelTrading.PubSub,
+    supervisor: AngelTrading.WebSocketSupervisor
 end

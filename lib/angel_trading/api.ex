@@ -13,6 +13,17 @@ defmodule AngelTrading.API do
     )
   end
 
+  def order_socket(client_code, token, feed_token, pub_sub_topic) do
+    TradeGalleon.call(AngelOne.WebSocketOrderStatus, :new,
+      params: %{
+        client_code: client_code,
+        token: token,
+        feed_token: feed_token,
+        pub_sub_topic: pub_sub_topic
+      }
+    )
+  end
+
   def login(params) do
     TradeGalleon.call(AngelOne, :login, params: params)
   end
@@ -228,7 +239,7 @@ defmodule AngelTrading.API do
     )
   end
 
-  defp reset_cache(token) do
+  def reset_cache(token) do
     Cache.del("funds_api_" <> token)
     Cache.del("portfolio_api_" <> token)
   end
