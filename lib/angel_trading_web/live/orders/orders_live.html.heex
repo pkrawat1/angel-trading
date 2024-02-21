@@ -1,9 +1,12 @@
-<div class="border-b-2 border-gray-100">
+<div class="border-b-2 border-gray-100 dark:border-gray-800">
   <nav class="-mb-0.5 flex space-x-6">
     <% color_classes = fn status ->
       [
         "py-4 px-1 inline-flex items-center gap-2 border-b-2 text-sm font-medium whitespace-nowrap focus:outline-none focus:text-blue-800",
-        if(status, do: "border-blue-500 text-blue-600", else: "border-transparent text-gray-500")
+        if(status,
+          do: "border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400",
+          else: "border-transparent text-gray-500"
+        )
       ]
     end %>
     <.link

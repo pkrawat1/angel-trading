@@ -2,7 +2,7 @@
   <li
     :for={{dom_id, order} <- @streams.order_book}
     :if={order["status"] != "open"}
-    class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white ring-1 ring-slate-200 shadow"
+    class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md my-3 p-3 bg-white text-slate-900 ring-1 ring-slate-200 shadow dark:bg-gray-900 dark:text-gray-200 dark:ring-slate-800"
     id={dom_id}
     phx-click={
       JS.push("select-holding")
@@ -14,7 +14,7 @@
   >
     <dl class="items-center">
       <div>
-        <dd class="flex font-semibold text-slate-900 justify-between">
+        <dd class="flex font-semibold justify-between">
           <div class="flex">
             <%= order["tradingsymbol"] |> String.split("-") |> List.first() %>
           </div>
@@ -33,21 +33,21 @@
         </dd>
       </div>
       <div>
-        <dd class="my-2 flex text-xs text-slate-900 justify-between">
+        <dd class="my-2 flex text-xs justify-between">
           <span>
             <small class={[
               if(order["transactiontype"] == "SELL",
                 do: "bg-red-100 text-red-500",
-                else: "bg-green-200 text-green-700 dark:text-green-500"
+                else: "bg-green-200 text-green-700"
               ),
               "text-xs me-2 px-1 py-0.5 rounded"
             ]}>
               <%= order["transactiontype"] %>
             </small>
-            <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+            <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
               <%= order["exchange"] %>
             </small>
-            <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded">
+            <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
               <%= order["producttype"] %>
             </small>
           </span>
@@ -67,7 +67,7 @@
         </dd>
       </div>
       <div>
-        <dd class="my-2 flex text-xs text-slate-900 justify-between">
+        <dd class="my-2 flex text-xs justify-between">
           <span>
             <%= order["filledshares"] %>/<%= order["quantity"] %> Shares
           </span>

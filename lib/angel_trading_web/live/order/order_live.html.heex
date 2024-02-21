@@ -1,6 +1,6 @@
 <main class="text-sm uppercase">
-  <.header class="fixed top-0 left-0 w-full bg-white py-3 px-4 shadow">
-    <div class="mx-auto max-w-6xl text-base grid grid-cols-12 items-center">
+  <.header class="fixed top-0 left-0 w-full bg-white py-3 px-4 shadow dark:bg-gray-900">
+    <div class="mx-auto max-w-6xl text-base grid grid-cols-12 items-center dark:text-gray-200">
       <.link class="col-span-1" navigate={~p"/client/#{@client_code}/portfolio"}>
         <.icon name="hero-arrow-left" />
       </.link>
@@ -28,7 +28,7 @@
       </div>
     </div>
   </.header>
-  <section id="buy-quote" class="mt-28">
+  <section id="buy-quote" class="mt-28 dark:text-gray-200">
     <% is_sell_order? = @order.transaction_type == "SELL" %>
     <% is_edit_order? = @live_action == :edit %>
     <.simple_form
@@ -42,7 +42,7 @@
       <% is_market_order? = @order[:type] == "MARKET" %>
       <.input required field={f[:quantity]} value={@order[:quantity]} label="No. of Shares" />
       <small>Max shares: <%= @order[:max] %></small>
-      <label for="order_price" class="block text-sm font-semibold text-gray-900">
+      <label for="order_price" class="block text-sm font-semibold">
         <%= @order[:type] %>
       </label>
       <div class="flex space-x-2 !mt-0 items-baseline">
@@ -84,7 +84,7 @@
           </a>
         </div>
       </div>
-      <section class="capitalize fixed bottom-[65px] px-5 pt-3 left-0 z-50 w-full h-14 bg-white border-t border-gray-200">
+      <section class="capitalize fixed bottom-[56px] px-5 py-4 left-0 z-50 w-full bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-800">
         <div class="flex justify-between mx-auto max-w-6xl">
           <span class={
             if !is_sell_order? && @order.margin_required > @funds["net"], do: "text-red-500"
@@ -101,7 +101,7 @@
         </div>
       </section>
       <:actions>
-        <div class="px-5 fixed bottom-0 left-0 z-50 w-full h-14 bg-white">
+        <div class="px-5 fixed bottom-0 left-0 z-50 w-full h-14 bg-white dark:bg-gray-900">
           <div class="flex mx-auto max-w-6xl">
             <% action = if(is_edit_order?, do: "MODIFY", else: "PLACE") %>
             <.button :if={!is_sell_order?} class="w-full !bg-green-500">

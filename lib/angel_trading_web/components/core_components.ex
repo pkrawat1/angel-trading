@@ -196,7 +196,7 @@ defmodule AngelTradingWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8 bg-white dark:bg-transparent">
+      <div class="mt-10 space-y-8 bg-white dark:bg-transparent dark:text-gray-200">
         <%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
           <%= render_slot(action, f) %>
@@ -372,9 +372,11 @@ defmodule AngelTradingWeb.CoreComponents do
         class={[
           @input_class,
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 dark:bg-gray-900 phx-no-feedback:border-zinc-900 phx-no-feedback:focus:border-zinc-800 dark:text-gray-200",
+          @errors == [] &&
+            "border-zinc-300 focus:border-zinc-400 dark:border-zinc-900 dark:focus:border-zinc-800",
+          @errors != [] &&
+            "border-rose-400 focus:border-rose-400 dark:border-rose-800 dark:focus:border-rose-800"
         ]}
         {@rest}
       />
@@ -391,7 +393,7 @@ defmodule AngelTradingWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800 dark:text-gray-200">
       <%= render_slot(@inner_block) %>
     </label>
     """
