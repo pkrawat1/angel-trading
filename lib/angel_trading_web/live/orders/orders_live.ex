@@ -223,14 +223,24 @@ defmodule AngelTradingWeb.OrdersLive do
 
   def handle_info(
         %{topic: topic, payload: order_status},
-        %{assigns: %{client_code: client_code, order_book: order_book}} = socket
+        %{assigns: %{token: token, client_code: client_code, order_book: order_book}} = socket
       )
       when topic == "order-stream-" <> client_code do
+    API.reset_cache(token)
+
     updated_order =
       Enum.find(order_book, &(&1["orderid"] == get_in(order_status, ["orderData", "orderid"])))
 
     socket =
       case {updated_order, order_status} do
+        {%{"status" => updated_order_status},
+         %{"orderData" => %{"orderid" => order_id, "status" => order_status} = order_data}}
+        when bit_size(order_id) > 0 and updated_order_status not in ["cancelled", "rejected"] and
+               order_status in ["cancelled", "rejected"] ->
+          socket
+          |> stream_delete(:order_book, order_data)
+          |> assign(order_book: Enum.filter(order_book, &(&1["orderid"] != order_id)))
+
         {%{}, _} ->
           updated_order = Map.merge(updated_order, order_status["orderData"])
 
@@ -254,11 +264,7 @@ defmodule AngelTradingWeb.OrdersLive do
         {_, %{"orderData" => %{"orderid" => order_id} = order_data}}
         when bit_size(order_id) > 0 ->
           socket
-          |> stream_insert(
-            :order_book,
-            order_data,
-            at: -1
-          )
+          |> stream_insert(:order_book, order_data, at: -1)
           |> assign(order_book: [order_data | order_book])
 
         _ ->
