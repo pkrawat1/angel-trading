@@ -25,7 +25,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
         />
         <.input field={f[:totp_secret]} value={@params["totp_secret"]} placeholder="Totp secret" />
         <:actions>
-          <.button class="w-full">Add</.button>
+          <.button class="w-full dark:bg-gray-500">ADD CLIENT</.button>
         </:actions>
       </.simple_form>
       <.bottom_nav active_page={:client} />

@@ -1,17 +1,17 @@
 <li
   :for={token <- @token_list}
-  class="cursor-pointer flex justify-between items-center py-2 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg"
+  class="cursor-pointer flex justify-between items-center py-2 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:bg-gray-900 dark:border-gray-800 dark:text-gray-200"
   phx-click={JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/watchlist/quote")}
   phx-value-symbol={token["symboltoken"]}
   phx-value-exchange={token["exchange"]}
 >
   <div class="flex">
-    <span class="flex bg-gray-100 rounded-full h-10 w-10 mr-2 justify-center items-center">
+    <span class="flex bg-gray-100 rounded-full h-10 w-10 mr-2 justify-center items-center dark:bg-gray-800">
       <%= token["tradingsymbol"] |> String.split("-") |> List.last() %>
     </span>
     <span>
       <%= token["tradingsymbol"] |> String.split("-") |> List.first() %>
-      <small class="text-xs text-blue-600 bg-gray-100 me-2 px-1 py-0.5 rounded">
+      <small class="text-xs text-blue-600 bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
         <%= token["exchange"] %>
       </small>
       <br />

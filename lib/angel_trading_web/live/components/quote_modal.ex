@@ -7,27 +7,31 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
       <.modal show id="order-place-modal" on_cancel={@on_cancel}>
         <div class="text-xs md:text-sm uppercase -m-10 md:-m-8">
           <.header>
-            <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
-            <small class="text-xs text-blue-500">
-              <%= @quote["exchange"] %>
-            </small>
-            <br />
-            <div class="text-xs md:text-sm">
-              <span :if={@quote["is_gain_today?"]} class="text-green-700">
-                <%= number_to_currency(@quote["ltp"]) %>
-                <.icon name="hero-arrow-up" />
-              </span>
-              <span :if={!@quote["is_gain_today?"]} class="text-red-500">
-                <%= number_to_currency(@quote["ltp"]) %>
-                <.icon name="hero-arrow-down" />
-              </span>
-              <span>
-                <%= (@quote["ltp"] - @quote["close"]) |> Float.floor(2) %> (<%= @quote["ltp_percent"]
-                |> Float.floor(2) %>%)
-              </span>
+            <div class="dark:text-gray-200">
+              <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
+              <small class="text-xs text-blue-500">
+                <%= @quote["exchange"] %>
+              </small>
+              <br />
+              <div class="text-xs md:text-sm">
+                <span :if={@quote["is_gain_today?"]} class="text-green-700 dark:text-green-500">
+                  <%= number_to_currency(@quote["ltp"]) %>
+                  <.icon name="hero-arrow-up" />
+                </span>
+                <span :if={!@quote["is_gain_today?"]} class="text-red-500">
+                  <%= number_to_currency(@quote["ltp"]) %>
+                  <.icon name="hero-arrow-down" />
+                </span>
+                <span>
+                  <%= (@quote["ltp"] - @quote["close"]) |> Float.floor(2) %> (<%= @quote[
+                    "ltp_percent"
+                  ]
+                  |> Float.floor(2) %>%)
+                </span>
+              </div>
             </div>
           </.header>
-          <section class="my-5">
+          <section class="my-5 dark:text-gray-200">
             <div class="flex justify-between text-center">
               <span>
                 Open <br />
@@ -55,7 +59,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                 <tbody>
                   <tr :for={buy <- @quote["depth"]["buy"]}>
                     <td><%= buy["quantity"] %></td>
-                    <td class="text-right text-green-700"><%= buy["price"] %></td>
+                    <td class="text-right text-green-700 dark:text-green-500"><%= buy["price"] %></td>
                   </tr>
                   <tr class="border-y">
                     <td><%= @quote["totBuyQuan"] %></td>
@@ -106,7 +110,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
   def render_place_order_actions(assigns) do
     ~H"""
     <section id="order-place-actions">
-      <div class="w-full inline-flex rounded-md text-center" role="group">
+      <div class="w-full inline-flex rounded-md text-center text-sm font-medium" role="group">
         <% order_params = %{
           symbol_token: @quote["symbolToken"],
           exchange: @quote["exchange"],
@@ -139,7 +143,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
   def render_modify_order_actions(assigns) do
     ~H"""
     <section id="modify-order-actions bottom-0">
-      <div class="w-full inline-flex rounded-md text-center" role="group">
+      <div class="w-full inline-flex rounded-md text-center text-sm font-medium" role="group">
         <% order_params = %{
           symbol_token: @quote["symbolToken"],
           exchange: @quote["exchange"],

@@ -1,7 +1,7 @@
 <ul class="grid grid-cols-2 gap-x-2 gap-y-2 my-4" id="watchlist" phx-update="stream">
   <li
     :for={{dom_id, watchlist} <- @streams.watchlist}
-    class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md p-3 bg-white ring-1 ring-slate-200 shadow"
+    class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md p-3 bg-white text-slate-900 ring-1 ring-slate-200 shadow dark:bg-gray-900 dark:ring-slate-800 dark:text-slate-200"
     id={dom_id}
     phx-click={JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/watchlist/quote")}
     phx-value-symbol={watchlist["symboltoken"]}
@@ -9,12 +9,15 @@
   >
     <dl class="relative items-center text-sm">
       <div>
-        <dd class="flex font-semibold text-slate-900 justify-between">
+        <dd class="flex font-semibold justify-between">
           <span class="truncate">
             <%= watchlist["tradingsymbol"] |> String.split("-") |> List.first() %>
           </span>
           <div>
-            <span :if={watchlist["is_gain_today?"]} class="flex items-center text-green-700">
+            <span
+              :if={watchlist["is_gain_today?"]}
+              class="flex items-center text-green-700 dark:text-green-500"
+            >
               <%= number_to_currency(watchlist["ltp"]) %>
               <.icon name="hero-arrow-up h-3 w-3" />
             </span>
@@ -26,8 +29,8 @@
         </dd>
       </div>
       <div>
-        <dd class="mt-2 flex text-slate-900 justify-between">
-          <small class="font-semibold text-blue-600 bg-gray-100 me-2 px-1 rounded">
+        <dd class="mt-2 flex justify-between">
+          <small class="font-semibold text-blue-600 bg-gray-100 me-2 px-1 rounded dark:bg-gray-800">
             <%= watchlist["exchange"] %>
           </small>
           <span>

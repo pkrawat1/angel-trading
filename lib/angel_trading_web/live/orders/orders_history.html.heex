@@ -24,7 +24,7 @@
                 (order["transactiontype"] == "BUY" and order["price"] > order["ltp"]) ||
                   (order["transactiontype"] == "SELL" and order["price"] < order["ltp"]),
                 do: "text-red-500",
-                else: "text-green-700"
+                else: "text-green-700 dark:text-green-500"
               )
             ]}>
               <%= number_to_currency(order["price"]) %>
@@ -38,7 +38,7 @@
             <small class={[
               if(order["transactiontype"] == "SELL",
                 do: "bg-red-100 text-red-500",
-                else: "bg-green-200 text-green-700"
+                else: "bg-green-200 text-green-700 dark:text-green-500"
               ),
               "text-xs me-2 px-1 py-0.5 rounded"
             ]}>
@@ -53,7 +53,7 @@
           </span>
           <div>
             LTP
-            <span :if={order["is_gain_today?"]} class="text-green-700">
+            <span :if={order["is_gain_today?"]} class="text-green-700 dark:text-green-500">
               <%= number_to_currency(order["ltp"]) %>
             </span>
             <span :if={!order["is_gain_today?"]} class="text-red-500">
@@ -74,7 +74,7 @@
           <span class={[
             if(order["status"] in ["rejected", "cancelled"],
               do: "bg-red-100 text-red-500",
-              else: "bg-green-200 text-green-700"
+              else: "bg-green-200 text-green-700 dark:text-green-500"
             ),
             "px-1 py-0.5 rounded uppercase"
           ]}>

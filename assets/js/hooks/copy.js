@@ -7,7 +7,7 @@ export default {
       value={"Any value"}
     />
     <span data-to="#data-copy" phx-hook="Copy">
-      <.icon name="hero-share text-green-700" />
+      <.icon name="hero-share text-green-700 dark:text-green-500" />
     </span>
   */
   mounted() {

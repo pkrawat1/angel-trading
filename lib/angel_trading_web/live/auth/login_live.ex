@@ -32,7 +32,7 @@ defmodule AngelTradingWeb.LoginLive do
           minlength="6"
         />
         <:actions>
-          <.button class="w-full">Login</.button>
+          <.button class="w-full dark:bg-gray-500">LOGIN</.button>
         </:actions>
       </.simple_form>
     </div>
