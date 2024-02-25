@@ -55,7 +55,7 @@ defmodule AngelTrading.API do
       {fn ->
          TradeGalleon.call(AngelOne, :portfolio, token: token)
        end, []},
-      :timer.minutes(15)
+      :timer.minutes(5)
     )
   end
 

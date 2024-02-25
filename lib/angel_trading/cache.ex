@@ -12,13 +12,20 @@ defmodule AngelTrading.Cache do
   * from cache if exists.
   * from the callback function `fun` returning the data
   """
-  def get(cache_key, {fun, args}, expiry \\ :timer.hours(2)) do
-    cache_key = cache_key(cache_key)
+  def get(raw_cache_key, {fun, args}, expiry \\ :timer.minutes(15)) do
+    cache_key = cache_key(raw_cache_key)
 
     with {:ok, nil} <- Cachex.get(@cache_name, cache_key),
          {:ok, _} = result <- apply(fun, args) do
       Logger.info("[CACHE][MISS][#{cache_key}]")
       Cachex.put(@cache_name, cache_key, result, ttl: expiry)
+
+      Task.start(fn ->
+        Logger.info("[CACHE][RENEW][#{cache_key}] in #{expiry}")
+        Process.sleep(expiry)
+        get(raw_cache_key, {fun, args}, expiry)
+      end)
+
       result
     else
       {:ok, result} ->
