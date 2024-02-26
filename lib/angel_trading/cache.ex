@@ -17,11 +17,11 @@ defmodule AngelTrading.Cache do
 
     with {:ok, nil} <- Cachex.get(@cache_name, cache_key),
          {:ok, _} = result <- apply(fun, args) do
-      Logger.info("[CACHE][MISS][#{cache_key}]")
+      Logger.info("[CACHE][RENEWED][#{cache_key}]")
       Cachex.put(@cache_name, cache_key, result, ttl: expiry)
 
       Task.start(fn ->
-        Logger.info("[CACHE][RENEW][#{cache_key}] in #{expiry}")
+        Logger.info("[CACHE][TRIGGER-RENEW][#{cache_key}] in #{expiry / (1000 * 60)} minutes")
         Process.sleep(expiry)
         get(raw_cache_key, {fun, args}, expiry)
       end)
