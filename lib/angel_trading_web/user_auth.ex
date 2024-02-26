@@ -227,5 +227,5 @@ defmodule AngelTradingWeb.UserAuth do
   defp now(), do: Timex.now("Asia/Kolkata")
 
   defp create_user_hash(user, password),
-    do: :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.encode64()
+    do: :sha256 |> :crypto.hash(user <> "|" <> password) |> Base.url_encode64()
 end
