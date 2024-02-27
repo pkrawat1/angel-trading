@@ -41,7 +41,7 @@ defmodule AngelTradingWeb.OrderLive do
             }} <- Utils.decrypt(:client_tokens, client_data) do
         API.reset_cache(token)
         {quantity, _} = params |> Map.get("quantity", "0") |> Integer.parse()
-        {price, _} = params |> Map.get("price", "0") |> Integer.parse()
+        {price, _} = params |> Map.get("price", "0.0") |> Float.parse()
 
         socket
         |> assign(:page_title, String.capitalize(transaction_type) <> " Order")
