@@ -93,6 +93,11 @@
             <%= number_to_currency(
               if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.ceil())
             ) %>
+            <span :if={@order[:charges]} class="text-orange-600 animate-pulse">
+              + Charges(<%= @order[:charges]["total_charges"]
+              |> Float.round(2)
+              |> number_to_currency() %>)
+            </span>
           </span>
           <span class="text-right">
             Avilable Cash(<small><b><%= @name %></b></small>)<br />

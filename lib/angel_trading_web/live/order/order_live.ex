@@ -369,7 +369,7 @@ defmodule AngelTradingWeb.OrderLive do
   end
 
   defp estimate_charges(order, token) do
-    with {:ok, %{"data" => %{"charges" => charges}}} <-
+    with {:ok, %{"data" => %{"charges" => [charges | _]}}} <-
            API.estimate_charges(token, [
              %{
                exchange: order.exchange,
