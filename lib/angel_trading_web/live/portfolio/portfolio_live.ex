@@ -17,7 +17,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
     if connected?(socket) do
       :ok = PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
-      Process.send_after(self(), :subscribe_to_feed, 500)
+      :timer.send_after(500, self(), :subscribe_to_feed)
       :timer.send_interval(30000, self(), :subscribe_to_feed)
     end
 
@@ -350,22 +350,23 @@ defmodule AngelTradingWeb.PortfolioLive do
   end
 
   defp subscribe_to_quote_feed(client_code, tokens, mode) do
-    WebSockex.send_frame(
+    WebSockex.cast(
       :"#{client_code}-quote-stream",
-      {:text,
-       Jason.encode!(%{
-         correlationID: client_code,
-         action: 1,
-         params: %{
-           mode: mode,
-           tokenList: [
-             %{
-               exchangeType: 1,
-               tokens: tokens
-             }
-           ]
-         }
-       })}
+      {:send,
+       {:text,
+        Jason.encode!(%{
+          correlationID: client_code,
+          action: 1,
+          params: %{
+            mode: mode,
+            tokenList: [
+              %{
+                exchangeType: 1,
+                tokens: tokens
+              }
+            ]
+          }
+        })}}
     )
   end
 end
