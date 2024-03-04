@@ -319,22 +319,23 @@ defmodule AngelTradingWeb.OrderLive do
   end
 
   defp subscribe_to_quote_feed(%{assigns: %{client_code: client_code, order: order}} = socket) do
-    WebSockex.send_frame(
+    WebSockex.cast(
       :"#{client_code}-quote-stream",
-      {:text,
-       Jason.encode!(%{
-         correlationID: client_code,
-         action: 1,
-         params: %{
-           mode: 3,
-           tokenList: [
-             %{
-               exchangeType: 1,
-               tokens: [order.symbol_token]
-             }
-           ]
-         }
-       })}
+      {:send,
+       {:text,
+        Jason.encode!(%{
+          correlationID: client_code,
+          action: 1,
+          params: %{
+            mode: 3,
+            tokenList: [
+              %{
+                exchangeType: 1,
+                tokens: [order.symbol_token]
+              }
+            ]
+          }
+        })}}
     )
 
     socket
@@ -368,7 +369,7 @@ defmodule AngelTradingWeb.OrderLive do
     socket
   end
 
-  defp estimate_charges(order, token) do
+  defp estimate_charges(%{quantity: quantity} = order, token) when quantity > 0 do
     with {:ok, %{"data" => %{"charges" => [charges | _]}}} <-
            API.estimate_charges(token, [
              %{
@@ -391,4 +392,6 @@ defmodule AngelTradingWeb.OrderLive do
         order
     end
   end
+
+  defp estimate_charges(order, _), do: order
 end

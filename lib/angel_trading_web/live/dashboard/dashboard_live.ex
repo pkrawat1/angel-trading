@@ -39,22 +39,23 @@ defmodule AngelTradingWeb.DashboardLive do
     socket_process = :"#{client_code}-quote-stream"
 
     subscribe_to_feed = fn ->
-      WebSockex.send_frame(
+      WebSockex.cast(
         socket_process,
-        {:text,
-         Jason.encode!(%{
-           correlationID: client_code,
-           action: 1,
-           params: %{
-             mode: 3,
-             tokenList: [
-               %{
-                 exchangeType: 1,
-                 tokens: symbol_tokens
-               }
-             ]
-           }
-         })}
+        {:send,
+         {:text,
+          Jason.encode!(%{
+            correlationID: client_code,
+            action: 1,
+            params: %{
+              mode: 3,
+              tokenList: [
+                %{
+                  exchangeType: 1,
+                  tokens: symbol_tokens
+                }
+              ]
+            }
+          })}}
       )
     end
 

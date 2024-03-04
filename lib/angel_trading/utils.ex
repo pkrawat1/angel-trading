@@ -16,6 +16,9 @@ defmodule AngelTrading.Utils do
     Plug.Crypto.decrypt(secret(), to_string(context), ciphertext, max_age: max_age)
   end
 
+  def quote_stream_process(client_code), do: :"#{client_code}-quote-stream"
+  def order_stream_process(client_code), do: :"#{client_code}-order-stream"
+
   # Using float calculation as of now. Since most of the data is coming from angel api.
   # I could add ex_money to manage calculations in decimal money format.
   def formatted_holdings(holdings) do

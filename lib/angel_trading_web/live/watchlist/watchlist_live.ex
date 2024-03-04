@@ -376,22 +376,23 @@ defmodule AngelTradingWeb.WatchlistLive do
   defp subscribe_to_quote_feed(
          %{assigns: %{client_code: client_code, watchlist: watchlist}} = socket
        ) do
-    WebSockex.send_frame(
+    WebSockex.cast(
       :"#{client_code}-quote-stream",
-      {:text,
-       Jason.encode!(%{
-         correlationID: client_code,
-         action: 1,
-         params: %{
-           mode: 3,
-           tokenList: [
-             %{
-               exchangeType: 1,
-               tokens: Enum.map(watchlist, & &1["symboltoken"])
-             }
-           ]
-         }
-       })}
+      {:send,
+       {:text,
+        Jason.encode!(%{
+          correlationID: client_code,
+          action: 1,
+          params: %{
+            mode: 3,
+            tokenList: [
+              %{
+                exchangeType: 1,
+                tokens: Enum.map(watchlist, & &1["symboltoken"])
+              }
+            ]
+          }
+        })}}
     )
 
     socket
