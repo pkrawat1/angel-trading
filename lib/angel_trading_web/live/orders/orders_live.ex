@@ -77,22 +77,23 @@ defmodule AngelTradingWeb.OrdersLive do
     order_socket_process = :"#{client_code}-order-stream"
 
     subscribe_to_feed = fn ->
-      WebSockex.send_frame(
+      WebSockex.cast(
         socket_process,
-        {:text,
-         Jason.encode!(%{
-           correlationID: client_code,
-           action: 1,
-           params: %{
-             mode: 3,
-             tokenList: [
-               %{
-                 exchangeType: 1,
-                 tokens: Enum.map(socket.assigns.order_book, & &1["symboltoken"])
-               }
-             ]
-           }
-         })}
+        {:send,
+         {:text,
+          Jason.encode!(%{
+            correlationID: client_code,
+            action: 1,
+            params: %{
+              mode: 3,
+              tokenList: [
+                %{
+                  exchangeType: 1,
+                  tokens: Enum.map(socket.assigns.order_book, & &1["symboltoken"])
+                }
+              ]
+            }
+          })}}
       )
     end
 
@@ -115,9 +116,12 @@ defmodule AngelTradingWeb.OrdersLive do
     with nil <- Process.whereis(order_socket_process),
          {:ok, pid} when is_pid(pid) <-
            API.order_socket(client_code, token, feed_token, "order-stream-" <> client_code) do
+      WebSockex.cast(order_socket_process, :subscriber_tick)
       Logger.info("[Order] Order status web socket (#{order_socket_process}) started")
     else
       pid when is_pid(pid) ->
+        WebSockex.cast(order_socket_process, :subscriber_tick)
+
         Logger.info(
           "[Order] Order status web socket (#{order_socket_process} #{inspect(pid)}) already established"
         )

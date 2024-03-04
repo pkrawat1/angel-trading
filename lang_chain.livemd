@@ -1,0 +1,77 @@
+# Langchain
+
+```elixir
+Mix.install([
+  {:langchain, "~> 0.1.8"}
+])
+```
+
+## Section
+
+```elixir
+defmodule MyApp do
+  @pretend_db %{
+    1 => %{user_id: 1, name: "Michael Johnson", account_type: :trial, favorite_animal: "Horse"},
+    2 => %{user_id: 2, name: "Joan Jett", account_type: :member, favorite_animal: "Aardvark"}
+  }
+
+  def get_user_info(user_id) do
+    @pretend_db[user_id]
+  end
+end
+```
+
+```elixir
+alias LangChain.Function
+
+function =
+  Function.new!(%{
+    name: "get_user_info",
+    description: "Return JSON object of the current users's relevant information.",
+    function: fn _args, %{user_id: user_id} = _context ->
+      # Use the provided user_id context to call our Elixir function.
+      # ChatGPT responses must be text. Convert the returned Map into JSON.
+      Jason.encode!(MyApp.get_user_info(user_id))
+    end
+  })
+```
+
+```elixir
+alias LangChain.Message
+
+messages = [
+  Message.new_system!(~s(You are a helpful haiku poem generating assistant.
+    ONLY generate a haiku for users with an `account_type` of "member".
+    If the user has an `account_type` of "trial", say you can't do it,
+    but you would love to help them if they upgrade and become a member.)),
+  Message.new_user!("The current user is requesting a Haiku poem about their favorite animal.")
+]
+```
+
+```elixir
+alias LangChain.ChatModels.ChatOpenAI
+
+chat_model = ChatOpenAI.new!(%{endpoint: "http://localhost:4891/v1/chat/completions"})
+```
+
+```elixir
+context = %{user_id: 1}
+```
+
+```elixir
+alias LangChain.Chains.LLMChain
+
+{:ok, updated_chain, response} =
+  %{llm: chat_model, custom_context: context, verbose: true}
+  |> LLMChain.new!()
+  # add the prompt message
+  |> LLMChain.add_messages(messages)
+  # add the functions that are available to the LLM
+  |> LLMChain.add_functions([function])
+  # keep running the LLM chain against the LLM if needed to evaluate
+  # function calls and provide a response.
+  |> LLMChain.run(while_needs_response: true)
+
+IO.puts(response.content)
+response.content
+```
