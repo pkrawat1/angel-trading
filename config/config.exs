@@ -83,7 +83,7 @@ config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
   pub_sub_module: AngelTrading.PubSub,
   supervisor: AngelTrading.WebSocketSupervisor
 
-config :tesla, adapter: Tesla.Adapter.Hackney
+config :langchain, google_ai_key: System.get_env("GOOGLE_API_KEY")
 
 config :number,
   currency: [

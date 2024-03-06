@@ -38,6 +38,7 @@ defmodule AngelTradingWeb.PortfolioLive do
               feed_token: feed_token,
               refresh_token: refresh_token
             }} <- Utils.decrypt(:client_tokens, client_data) do
+        IO.inspect token
         socket
         |> assign(:page_title, "Portfolio")
         |> assign(:token, token)

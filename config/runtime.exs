@@ -124,4 +124,6 @@ if config_env() == :prod do
     adapter: TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
     pub_sub_module: AngelTrading.PubSub,
     supervisor: AngelTrading.WebSocketSupervisor
+
+  config :langchain, google_ai_key: System.get_env("GOOGLE_API_KEY")
 end

@@ -9,3 +9,4 @@ export FIREBASE_TOKEN=
 export FIREBASE_API=
 export BREVO_API_KEY=
 export SECRET_KEY_BASE=
+export GOOGLE_API_KEY=

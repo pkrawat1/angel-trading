@@ -70,7 +70,8 @@ defmodule AngelTrading.MixProject do
       {:ezstd, "~> 1.0", runtime: false},
       {:phoenix_bakery, "~> 0.1.0", runtime: false},
       {:explorer, "~> 0.8.0"},
-      {:cachex, "~> 3.6"}
+      {:cachex, "~> 3.6"},
+      {:langchain, "~> 0.1.0"}
     ]
   end
 
