@@ -49,13 +49,17 @@ messages = [
 ```
 
 ```elixir
-alias LangChain.ChatModels.ChatOpenAI
-
-chat_model = ChatOpenAI.new!(%{endpoint: "http://localhost:4891/v1/chat/completions"})
+Application.put_env(:langchain, :google_ai_key, System.fetch_env!("LB_GOOGLEAI_API_KEY"))
 ```
 
 ```elixir
-context = %{user_id: 1}
+alias LangChain.ChatModels.ChatGoogleAI
+
+chat_model = ChatGoogleAI.new!(%{endpoint: "https://generativelanguage.googleapis.com/"})
+```
+
+```elixir
+context = %{user_id: 2}
 ```
 
 ```elixir
@@ -72,6 +76,7 @@ alias LangChain.Chains.LLMChain
   # function calls and provide a response.
   |> LLMChain.run(while_needs_response: true)
 
-IO.puts(response.content)
 response.content
 ```
+
+<!-- livebook:{"offset":2077,"stamp":{"token":"XCP.h8eD7uXhaWWBdyTzH3zGkH3DUZMB46b2VR89mj0ny2EKY05SX3g2e9nwjYGhHBPXnfIs6klJZq2ywtCNDwWqFnGQX70g_B0hF7PL3-K8ty2uVTC4GMIVU7unFg","version":2}} -->
