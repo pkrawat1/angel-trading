@@ -9,6 +9,17 @@
       <.sent_message :if={message.role == :user} message={message} />
     </li>
   </ul>
+  <.async_result :let={_} assign={@lang_chain}>
+    <:loading>
+      <div class="animate-pulse flex items-start gap-2.5 my-8">
+        <.icon name="hero-chat-bubble-oval-left-ellipsis-solid w-8 h-8 rounded-full dark:text-blue-500" />
+        <div class="text-sm font-normal py-2.5 text-gray-900 dark:text-gray-300">
+          Assistant is busy ...
+        </div>
+      </div>
+    </:loading>
+    <:failed :let={reason}><%= reason %></:failed>
+  </.async_result>
   <.simple_form :let={f} for={%{}} phx-change="" phx-submit="ask">
     <div class="flex">
       <div class="w-full">
