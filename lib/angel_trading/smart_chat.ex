@@ -5,8 +5,13 @@ defmodule AngelTrading.SmartChat do
   alias AngelTrading.{API, Utils}
 
   @init_messages [
-    Message.new_system!(~s(You are a helpful stock trading portfolio assistant.
-    ONLY generate information with the given client information provided.)),
+    Message.new_system!(
+      ~s(You are a helpful stock trading portfolio assistant.
+      ONLY generate information with the given client information provided.
+      NOTE that the currency is in india rupee. So use currency symbol, where money is involved.
+      NOTE that the minus values are negative values and should be considered when doing calculations.
+      NOTE always use proper format and distinctions when showing data. Use any markdown format for showing data properly, example tabular, list etc.)
+    ),
     Message.new_user!("As first reply, tell me the client name and funds information.")
   ]
 
