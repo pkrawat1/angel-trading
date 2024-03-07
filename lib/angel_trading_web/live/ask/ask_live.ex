@@ -34,7 +34,7 @@ defmodule AngelTradingWeb.AskLive do
         |> assign(:page_title, "Smart Assistant")
         |> assign(:token, token)
         |> assign(:client_code, client_code)
-        |> start_async(:ask_lang_chain, fn -> SmartChat.new_chain(%{client_token: token}) end)
+        # |> start_async(:ask_lang_chain, fn -> SmartChat.new_chain(%{client_token: token}) end)
         |> stream_configure(:messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
         |> stream(:messages, [])
       else

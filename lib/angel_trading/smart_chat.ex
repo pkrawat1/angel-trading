@@ -28,12 +28,12 @@ defmodule AngelTrading.SmartChat do
                  {:portfolio, API.portfolio(token)},
                {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)} do
             %{
-              profile: profile,
+              profile: Map.take(profile, ["name"]),
               holdings:
                 holdings
                 |> Utils.formatted_holdings()
                 |> Utils.calculated_overview(),
-              funds: funds
+              funds: Map.take(funds, ["net"])
             }
           else
             _ -> %{error: "Unable to fetch the client portfolio."}
