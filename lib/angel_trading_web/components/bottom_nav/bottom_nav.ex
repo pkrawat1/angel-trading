@@ -53,6 +53,15 @@ defmodule AngelTradingWeb.Components.BottomNav do
           <.icon name={"hero-user-plus-solid w-4 h-4 #{active_page_class(assigns, :client)}"} />
           <span class={active_page_class(assigns, :client)}>Client</span>
         </.link>
+        <.link
+          :if={assigns[:client_code]}
+          navigate={~p"/client/#{@client_code}/ask"}
+          type="button"
+          class="inline-flex flex-col items-center justify-center group"
+        >
+          <.icon name={"hero-chat-bubble-left-ellipsis-solid w-4 h-4 #{active_page_class(assigns, :ask)}"} />
+          <span class={active_page_class(assigns, :ask)}>Ask</span>
+        </.link>
       </div>
     </div>
     """
