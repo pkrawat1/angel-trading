@@ -85,6 +85,8 @@ config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocketOrderStatus,
 
 config :langchain, google_ai_key: System.get_env("GOOGLE_API_KEY")
 
+config :tesla, adapter: Tesla.Adapter.Hackney
+
 config :number,
   currency: [
     unit: "₹",
