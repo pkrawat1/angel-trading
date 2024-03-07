@@ -1,8 +1,6 @@
 defmodule AngelTradingWeb.AskLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.{Account, API, SmartChat, Utils}
-  alias Phoenix.PubSub
-  alias Phoenix.LiveView.AsyncResult
+  alias AngelTrading.{Account, SmartChat, Utils}
   alias LangChain.Message
   require Logger
 
@@ -34,7 +32,7 @@ defmodule AngelTradingWeb.AskLive do
         |> assign(:page_title, "Smart Assistant")
         |> assign(:token, token)
         |> assign(:client_code, client_code)
-        # |> start_async(:ask_lang_chain, fn -> SmartChat.new_chain(%{client_token: token}) end)
+        |> start_async(:ask_lang_chain, fn -> SmartChat.new_chain(%{client_token: token}) end)
         |> stream_configure(:messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
         |> stream(:messages, [])
       else

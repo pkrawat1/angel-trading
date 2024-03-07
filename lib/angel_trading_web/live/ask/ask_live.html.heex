@@ -1,5 +1,5 @@
-<section class="relative dark:text-gray-200">
-  <ul id="smart-chat-area" phx-update="stream">
+<section class="flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
+  <ul id="smart-chat-area" class="flex-1 overflow-y-auto" phx-update="stream">
     <li
       :for={{dom_id, message} <- @streams.messages}
       class="flex items-start gap-2.5 my-8"
@@ -9,7 +9,7 @@
       <.sent_message :if={message.role == :user} message={message} />
     </li>
   </ul>
-  <.simple_form :let={f} for={%{}} class="absolute" phx-change="" phx-submit="ask">
+  <.simple_form :let={f} for={%{}} phx-change="" phx-submit="ask">
     <div class="flex">
       <div class="w-full">
         <.input
@@ -23,7 +23,7 @@
           autofocus
         />
       </div>
-      <.button class="bg-transparent w-10 pt-3">
+      <.button class="!bg-transparent w-10 pt-3">
         <.icon name="hero-paper-airplane-solid w-8 h-8 text-green-500" />
       </.button>
     </div>
