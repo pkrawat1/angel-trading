@@ -67,7 +67,8 @@ defmodule AngelTradingWeb.AskLive do
         "ask",
         %{"ask" => message},
         %{assigns: %{lang_chain: %{result: lang_chain}}} = socket
-      ) do
+      )
+      when bit_size(message) > 0 do
     message = Message.new_user!(message)
 
     {:noreply,
@@ -78,4 +79,11 @@ defmodule AngelTradingWeb.AskLive do
      end)
      |> stream_insert(:messages, message)}
   end
+
+  def handle_event(
+        "ask",
+        _,
+        socket
+      ),
+      do: {:noreply, socket}
 end
