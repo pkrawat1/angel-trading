@@ -97,7 +97,6 @@ defmodule AngelTradingWeb.AskLive do
     updated_chain = LLMChain.apply_delta(socket.assigns.llm_chain, delta)
     # if this completed the delta, create the message and track on the chain
 
-    IO.inspect updated_chain
     socket =
       if updated_chain.delta == nil do
         case updated_chain.last_message do
@@ -113,7 +112,6 @@ defmodule AngelTradingWeb.AskLive do
       else
         socket
       end
-    
 
     {:noreply, assign(socket, :llm_chain, updated_chain)}
   end
@@ -128,9 +126,9 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, append_display_message(socket, display)}
   end
 
-  # def handle_info(_, socket) do
-    # {:noreply, socket}
-  # end
+  def handle_info(_, socket) do
+    {:noreply, socket}
+  end
 
   # handles async function returning a successful result
   def handle_async(:running_llm, {:ok, :ok = _success_result}, socket) do
@@ -164,7 +162,9 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   def run_chain(socket) do
-    start_async(socket, :running_llm, fn -> Agent.run_chain(socket.assigns.llm_chain) end)
+    socket
+    |> start_async(:running_llm, fn -> Agent.run_chain(socket.assigns.llm_chain) end)
+    |> assign(:async_result, AsyncResult.loading())
   end
 
   defp add_user_message(socket, user_text) when is_binary(user_text) do

@@ -24,7 +24,9 @@ defmodule AngelTrading.Agent do
     Function.new!(%{
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
-      function: fn _args, %{client_token: token} = _context ->
+      function: fn _args, %{client_token: token, live_view_pid: pid} = _context ->
+        send(pid, {:function_run, "Retrieving client portfolio information."})
+
         Jason.encode!(
           with {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
                {:portfolio, {:ok, %{"data" => holdings}}} <-
@@ -53,22 +55,30 @@ defmodule AngelTrading.Agent do
       |> LLMChain.add_messages(@init_messages)
       |> LLMChain.add_functions([client_portfolio_info()])
 
-  def run_chain(chain) do
+  def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain) do
     callback_fn =
       fn
         %MessageDelta{} = delta ->
-          send(chain.custom_context.live_view_pid, {:chat_response, delta})
+          send(live_view_pid, {:chat_response, delta})
 
-        %Message{} = data ->
-          # disregard the full-message callback. We'll use the delta
+        %Message{role: role} = data when role == :assistant ->
           send(
-            chain.custom_context.live_view_pid,
-            {:chat_response, struct(MessageDelta, %{content: ""})}
+            live_view_pid,
+            {:chat_response, struct(MessageDelta, %{Map.from_struct(data) | content: ""})}
           )
 
           :ok
+
+        %Message{} = data ->
+          send(live_view_pid, {:chat_response, data})
+
+          :ok
+
+        {:error, _reason} ->
+          :error
       end
 
+    dbg()
     case LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn) do
       # Don't return a large success result. Callbacks return what we want.
       {:ok, _updated_chain, _last_message} ->

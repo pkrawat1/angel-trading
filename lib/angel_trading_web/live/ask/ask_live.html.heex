@@ -1,13 +1,16 @@
 <section class="flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
-  <ul id="smart-chat-area" class="flex-1 overflow-y-auto" phx-update="stream">
-    <li
-      :for={{dom_id, message} <- @streams.display_messages}
-      class="flex items-start gap-2.5 my-8"
-      id={dom_id}
-    >
-      <.reply_message :if={message.role == :assistant} message={message} />
-      <.sent_message :if={message.role == :user} message={message} />
-    </li>
+  <div class="flex-1 overflow-y-auto">
+    <ul id="chat-area" phx-update="stream">
+      <li
+        :for={{dom_id, message} <- @streams.display_messages}
+        class="flex items-start gap-2.5 my-8"
+        id={dom_id}
+      >
+        <.reply_message :if={message.role == :assistant} message={message} />
+        <.function_message :if={message.role == :function_call} message={message} />
+        <.sent_message :if={message.role == :user} message={message} />
+      </li>
+    </ul>
     <li
       :if={@llm_chain.delta}
       class="flex items-start gap-2.5 my-8"
@@ -17,7 +20,7 @@
         <%= @llm_chain.delta.content %>
       </span>
     </li>
-  </ul>
+  </div>
   <.simple_form class="relative" for={@form} phx-change="validate" phx-submit="save">
     <.async_result :let={_} assign={@async_result}>
       <:loading>
