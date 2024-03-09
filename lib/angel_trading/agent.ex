@@ -78,16 +78,18 @@ defmodule AngelTrading.Agent do
           :error
       end
 
-    dbg()
+    try do
+      case LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn) do
+        # Don't return a large success result. Callbacks return what we want.
+        {:ok, _updated_chain, _last_message} ->
+          :ok
 
-    case LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn) do
-      # Don't return a large success result. Callbacks return what we want.
-      {:ok, _updated_chain, _last_message} ->
-        :ok
-
-      # return the errors for display
-      {:error, reason} ->
-        {:error, reason}
+        # return the errors for display
+        {:error, reason} ->
+          {:error, reason}
+      end
+    rescue
+      _ -> :ok
     end
   end
 end
