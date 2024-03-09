@@ -1,6 +1,11 @@
-<div class="flex flex-col w-full ml-[8%] max-w-[90%] leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-l-xl rounded-br-xl dark:bg-gray-700 shadow-md">
-  <p class="text-sm font-normal break-words overflow-x-auto py-2.5 text-gray-900 dark:text-gray-300">
-    <%= @message.content %>
-  </p>
+<.icon name="hero-user-circle dark:text-gray-200" />
+<div class="flex flex-col w-full max-w-[90%] leading-none">
+  <div class="flex items-center space-x-2 rtl:space-x-reverse">
+    <span class="font-semibold text-gray-900 capitalize dark:text-white">
+      You
+    </span>
+  </div>
+  <div class="break-words overflow-x-auto py-2.5 text-gray-900 dark:text-gray-300">
+    <.markdown text={@message.content} />
+  </div>
 </div>
-<.icon name="hero-user-circle-solid w-8 h-8 rounded-full dark:text-blue-500" />

@@ -5,10 +5,12 @@ defmodule AngelTrading.Agent.ChatMessage do
 
   @primary_key false
   embedded_schema do
-    field :role, Ecto.Enum,
+    field(:role, Ecto.Enum,
       values: [:system, :user, :assistant, :function, :function_call],
       default: :user
-    field :hidden, :boolean, default: true
+    )
+
+    field(:hidden, :boolean, default: true)
     field(:content, :string)
   end
 
