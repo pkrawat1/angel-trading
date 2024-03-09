@@ -2,7 +2,7 @@
 
 ```elixir
 Mix.install([
-  {:langchain, "~> 0.1.8"}
+  {:langchain, "~> 0.1.10"}
 ])
 ```
 
@@ -55,7 +55,8 @@ Application.put_env(:langchain, :google_ai_key, System.fetch_env!("LB_GOOGLEAI_A
 ```elixir
 alias LangChain.ChatModels.ChatGoogleAI
 
-chat_model = ChatGoogleAI.new!(%{endpoint: "https://generativelanguage.googleapis.com/"})
+chat_model =
+  ChatGoogleAI.new!(%{endpoint: "https://generativelanguage.googleapis.com/", stream: true})
 ```
 
 ```elixir
@@ -64,6 +65,19 @@ context = %{user_id: 2}
 
 ```elixir
 alias LangChain.Chains.LLMChain
+alias LangChain.MessageDelta
+
+callback = fn
+  %MessageDelta{} = data ->
+    # we received a piece of data
+    IO.write(data.content)
+
+  %Message{} = data ->
+    # we received the finshed message once fully complete
+    IO.puts("")
+    IO.puts("")
+    IO.inspect(data.content, label: "COMPLETED MESSAGE")
+end
 
 {:ok, updated_chain, response} =
   %{llm: chat_model, custom_context: context, verbose: true}
@@ -74,7 +88,7 @@ alias LangChain.Chains.LLMChain
   |> LLMChain.add_functions([function])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
-  |> LLMChain.run(while_needs_response: true)
+  |> LLMChain.run(while_needs_response: true, callback_fn: callback)
 
 response.content
 ```
@@ -92,4 +106,4 @@ alias LangChain.Chains.LLMChain
 IO.puts(response.content)
 ```
 
-<!-- livebook:{"offset":2435,"stamp":{"token":"XCP.MUUD8pOreUzapgYdzyIcS2prxTrhsGK9lXkvHhbqCz0eyix1oDUNk4u_b7A1DrofquNVQa1Q49k25-07FN78xKOXeH7yODQ6VSzLqpq4adPWO8lTg_lT6_WDeA","version":2}} -->
+<!-- livebook:{"offset":2783,"stamp":{"token":"XCP.pSc05vRSBic6JxFbW73nz1MExehAOJkX8INy6MPGBLnroF6-omvErSzDj5oZNQSKnS2Ogo_MveDmX1EwcJKb8Y2RsWYtkfu9T5eO4-DiihDRlOOvlsOY87P-ZA","version":2}} -->

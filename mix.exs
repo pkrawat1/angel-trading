@@ -46,6 +46,7 @@ defmodule AngelTrading.MixProject do
     [
       {:phoenix, "~> 1.7.7"},
       {:phoenix_html, "~> 3.3"},
+      {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.0"},
       {:floki, ">= 0.30.0", only: :test},
@@ -71,7 +72,7 @@ defmodule AngelTrading.MixProject do
       {:phoenix_bakery, "~> 0.1.0", runtime: false},
       {:explorer, "~> 0.8.0"},
       {:cachex, "~> 3.6"},
-      {:langchain, "~> 0.1.0"},
+      {:langchain, "~> 0.1.10"},
       {:earmark, "~> 1.4"}
     ]
   end

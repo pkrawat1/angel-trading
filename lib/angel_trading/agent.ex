@@ -1,5 +1,5 @@
 defmodule AngelTrading.Agent do
-  alias LangChain.{Function, Message}
+  alias LangChain.{Function, Message, MessageDelta}
   alias LangChain.MessageDelta
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatGoogleAI
@@ -24,16 +24,6 @@ defmodule AngelTrading.Agent do
     Function.new!(%{
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
-      parameters_schema: %{
-        type: "object",
-        properties: %{
-          client_token: %{
-            type: "string",
-            description: "The token for a particular client to be passed to angel api's."
-          }
-        },
-        required: [:client_token]
-      },
       function: fn _args, %{client_token: token} = _context ->
         Jason.encode!(
           with {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
@@ -66,11 +56,16 @@ defmodule AngelTrading.Agent do
   def run_chain(chain) do
     callback_fn =
       fn
-        %MessageDelta{} = data ->
-          send(live_view_pid, {:chat_response, delta})
+        %MessageDelta{} = delta ->
+          send(chain.custom_context.live_view_pid, {:chat_response, delta})
 
         %Message{} = data ->
           # disregard the full-message callback. We'll use the delta
+          send(
+            chain.custom_context.live_view_pid,
+            {:chat_response, struct(MessageDelta, %{content: ""})}
+          )
+
           :ok
       end
 

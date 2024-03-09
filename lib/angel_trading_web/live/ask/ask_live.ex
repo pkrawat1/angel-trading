@@ -3,10 +3,13 @@ defmodule AngelTradingWeb.AskLive do
   alias AngelTrading.{Account, Agent, Utils}
   alias Phoenix.LiveView.AsyncResult
   alias AngelTrading.Agent.ChatMessage
+  alias LangChain.Message
+  alias LangChain.Chains.LLMChain
   require Logger
 
   embed_templates "*"
 
+  @impl true
   def mount(
         %{"client_code" => client_code},
         %{"user_hash" => user_hash},
@@ -33,8 +36,8 @@ defmodule AngelTradingWeb.AskLive do
         |> assign(:page_title, "Smart Assistant")
         |> assign(:token, token)
         |> assign(:client_code, client_code)
-        |> assign(:llm_chain, SmartChat.new_chain(%{client_token: token, live_view_pid: self()}))
-        |> stream_configure(:messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
+        |> assign(:llm_chain, Agent.new_chain(%{client_token: token, live_view_pid: self()}))
+        |> stream_configure(:display_messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
         |> stream(:display_messages, [
           %ChatMessage{
             role: :assistant,
@@ -43,6 +46,7 @@ defmodule AngelTradingWeb.AskLive do
           }
         ])
         |> reset_chat_message_form()
+        |> assign(:async_result, AsyncResult.ok(%AsyncResult{}, :ok))
       else
         _ ->
           socket
@@ -70,7 +74,7 @@ defmodule AngelTradingWeb.AskLive do
           socket
           |> add_user_message(message.content)
           |> reset_chat_message_form()
-          |> start_async(:running_llm, Agent.run_chain(socket.assigns.llm_chain))
+          |> run_chain()
 
         {:error, changeset} ->
           assign_form(socket, changeset)
@@ -92,6 +96,8 @@ defmodule AngelTradingWeb.AskLive do
     # message, optionally display the message
     updated_chain = LLMChain.apply_delta(socket.assigns.llm_chain, delta)
     # if this completed the delta, create the message and track on the chain
+
+    IO.inspect updated_chain
     socket =
       if updated_chain.delta == nil do
         case updated_chain.last_message do
@@ -107,6 +113,7 @@ defmodule AngelTradingWeb.AskLive do
       else
         socket
       end
+    
 
     {:noreply, assign(socket, :llm_chain, updated_chain)}
   end
@@ -121,8 +128,43 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, append_display_message(socket, display)}
   end
 
-  def handle_info(_, socket) do
+  # def handle_info(_, socket) do
+    # {:noreply, socket}
+  # end
+
+  # handles async function returning a successful result
+  def handle_async(:running_llm, {:ok, :ok = _success_result}, socket) do
+    # discard the result of the successful async function. The side-effects are
+    # what we want.
+    socket =
+      socket
+      |> assign(:async_result, AsyncResult.ok(%AsyncResult{}, :ok))
+
     {:noreply, socket}
+  end
+
+  # handles async function returning an error as a result
+  def handle_async(:running_llm, {:ok, {:error, reason}}, socket) do
+    socket =
+      socket
+      |> put_flash(:error, reason)
+      |> assign(:async_result, AsyncResult.failed(%AsyncResult{}, reason))
+
+    {:noreply, socket}
+  end
+
+  # handles async function exploding
+  def handle_async(:running_llm, {:exit, reason}, socket) do
+    socket =
+      socket
+      |> put_flash(:error, "Call failed: #{inspect(reason)}")
+      |> assign(:async_result, %AsyncResult{})
+
+    {:noreply, socket}
+  end
+
+  def run_chain(socket) do
+    start_async(socket, :running_llm, fn -> Agent.run_chain(socket.assigns.llm_chain) end)
   end
 
   defp add_user_message(socket, user_text) when is_binary(user_text) do
@@ -141,5 +183,9 @@ defmodule AngelTradingWeb.AskLive do
 
   defp append_display_message(socket, %ChatMessage{} = message) do
     stream_insert(socket, :display_messages, message)
+  end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
   end
 end

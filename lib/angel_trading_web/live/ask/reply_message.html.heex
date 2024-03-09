@@ -6,6 +6,6 @@
     </span>
   </div>
   <div class="text-sm font-normal break-words overflow-x-auto py-2.5 text-gray-900 dark:text-gray-300">
-    <%= raw(Earmark.as_html!(@message.content)) %>
+    <%= @message.content %>
   </div>
 </div>
