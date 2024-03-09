@@ -1,4 +1,4 @@
-defmodule AngelTrading.SmartChat do
+defmodule AngelTrading.Agent do
   alias LangChain.{Function, Message}
   alias LangChain.MessageDelta
   alias LangChain.Chains.LLMChain
@@ -12,8 +12,7 @@ defmodule AngelTrading.SmartChat do
       NOTE that the currency is in india rupee. So use currency symbol, where money is involved.
       NOTE that the minus values are negative values and should be considered when doing calculations.
       NOTE always use proper format and distinctions when showing data. Use any markdown format for showing data properly, example tabular, list etc.)
-    ),
-    Message.new_user!("As first reply, tell me the client name and funds information.")
+    )
   ]
 
   @chat_model ChatGoogleAI.new!(%{
@@ -25,6 +24,16 @@ defmodule AngelTrading.SmartChat do
     Function.new!(%{
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          client_token: %{
+            type: "string",
+            description: "The token for a particular client to be passed to angel api's."
+          }
+        },
+        required: [:client_token]
+      },
       function: fn _args, %{client_token: token} = _context ->
         Jason.encode!(
           with {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
@@ -53,26 +62,26 @@ defmodule AngelTrading.SmartChat do
       |> LLMChain.new!()
       |> LLMChain.add_messages(@init_messages)
       |> LLMChain.add_functions([client_portfolio_info()])
-      |> LLMChain.run(callback_fn: callback(), while_needs_response: true)
 
-  def run(updated_chain, messages, functions),
-    do:
-      updated_chain
-      |> LLMChain.add_messages(messages)
-      |> LLMChain.add_functions(functions)
-      |> LLMChain.run(while_needs_response: true)
+  def run_chain(chain) do
+    callback_fn =
+      fn
+        %MessageDelta{} = data ->
+          send(live_view_pid, {:chat_response, delta})
 
-  def callback() do
-    fn
-      %MessageDelta{} = data ->
-        # we received a piece of data
-        IO.write(data.content)
+        %Message{} = data ->
+          # disregard the full-message callback. We'll use the delta
+          :ok
+      end
 
-      %Message{} = data ->
-        # we received the finshed message once fully complete
-        IO.puts("")
-        IO.puts("")
-        IO.inspect(data.content, label: "COMPLETED MESSAGE")
+    case LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn) do
+      # Don't return a large success result. Callbacks return what we want.
+      {:ok, _updated_chain, _last_message} ->
+        :ok
+
+      # return the errors for display
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 end

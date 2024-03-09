@@ -1,7 +1,7 @@
 <section class="flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
   <ul id="smart-chat-area" class="flex-1 overflow-y-auto" phx-update="stream">
     <li
-      :for={{dom_id, message} <- @streams.messages}
+      :for={{dom_id, message} <- @streams.display_messages}
       class="flex items-start gap-2.5 my-8"
       id={dom_id}
     >
@@ -9,7 +9,7 @@
       <.sent_message :if={message.role == :user} message={message} />
     </li>
   </ul>
-  <.simple_form :let={f} for={%{}} phx-change="" phx-submit="ask">
+  <.simple_form :let={f} for={@form} phx-change="validate" phx-submit="save">
     <.async_result :let={_} assign={@lang_chain}>
       <:loading>
         <div class="animate-pulse flex items-start gap-2.5 -mb-8">
@@ -26,7 +26,7 @@
         <.input
           input_class="resize-none"
           type="textarea"
-          rows={1}
+          rows={8}
           field={f[:ask]}
           placeholder="Ask"
           autocomplete="off"

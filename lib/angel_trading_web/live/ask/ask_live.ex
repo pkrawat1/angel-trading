@@ -1,8 +1,8 @@
 defmodule AngelTradingWeb.AskLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.{Account, SmartChat, Utils}
-  alias LangChain.Message
+  alias AngelTrading.{Account, Agent, Utils}
   alias Phoenix.LiveView.AsyncResult
+  alias AngelTrading.Agent.ChatMessage
   require Logger
 
   embed_templates "*"
@@ -33,10 +33,16 @@ defmodule AngelTradingWeb.AskLive do
         |> assign(:page_title, "Smart Assistant")
         |> assign(:token, token)
         |> assign(:client_code, client_code)
-        |> assign(:lang_chain, AsyncResult.loading())
-        |> start_async(:ask_lang_chain, fn -> SmartChat.new_chain(%{client_token: token}) end)
+        |> assign(:llm_chain, SmartChat.new_chain(%{client_token: token, live_view_pid: self()}))
         |> stream_configure(:messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
-        |> stream(:messages, [])
+        |> stream(:display_messages, [
+          %ChatMessage{
+            role: :assistant,
+            hidden: false,
+            content: "Hello! I'm your personal Assistant! How can I help you today?"
+          }
+        ])
+        |> reset_chat_message_form()
       else
         _ ->
           socket
@@ -47,37 +53,30 @@ defmodule AngelTradingWeb.AskLive do
     {:ok, socket}
   end
 
-  def handle_async(:ask_lang_chain, {:ok, {_, lang_chain, response}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:lang_chain, AsyncResult.ok(socket.assigns.lang_chain, lang_chain))
-     |> stream_insert(:messages, response)}
+  @impl true
+  def handle_event("validate", %{"chat_message" => params}, socket) do
+    changeset =
+      params
+      |> ChatMessage.create_changeset()
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign_form(socket, changeset)}
   end
 
-  def handle_async(:ask_lang_chain, {:exit, _}, socket) do
-    {:noreply,
-     assign(
-       socket,
-       :lang_chain,
-       AsyncResult.failed(socket.assigns.lang_chain, {:exit, "Seems AI is stuck in traffic."})
-     )}
-  end
+  def handle_event("save", %{"chat_message" => params}, socket) do
+    socket =
+      case ChatMessage.new(params) do
+        {:ok, %ChatMessage{} = message} ->
+          socket
+          |> add_user_message(message.content)
+          |> reset_chat_message_form()
+          |> start_async(:running_llm, Agent.run_chain(socket.assigns.llm_chain))
 
-  def handle_event(
-        "ask",
-        %{"ask" => message},
-        %{assigns: %{lang_chain: %{result: lang_chain}}} = socket
-      )
-      when bit_size(message) > 0 do
-    message = Message.new_user!(message)
+        {:error, changeset} ->
+          assign_form(socket, changeset)
+      end
 
-    {:noreply,
-     socket
-     |> assign(:lang_chain, AsyncResult.loading())
-     |> start_async(:ask_lang_chain, fn ->
-       SmartChat.run(lang_chain, [message], [])
-     end)
-     |> stream_insert(:messages, message)}
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -86,4 +85,61 @@ defmodule AngelTradingWeb.AskLive do
         socket
       ),
       do: {:noreply, socket}
+
+  @impl true
+  def handle_info({:chat_response, %LangChain.MessageDelta{} = delta}, socket) do
+    # apply the delta message to our tracked LLMChain. If it completes the
+    # message, optionally display the message
+    updated_chain = LLMChain.apply_delta(socket.assigns.llm_chain, delta)
+    # if this completed the delta, create the message and track on the chain
+    socket =
+      if updated_chain.delta == nil do
+        case updated_chain.last_message do
+          # Messages that only execute a function have no content. Don't display if no content.
+          %Message{role: role, content: content}
+          when role in [:user, :assistant] and is_binary(content) ->
+            append_display_message(socket, %ChatMessage{role: role, content: content})
+
+          # otherwise, not a message for display
+          _other ->
+            socket
+        end
+      else
+        socket
+      end
+
+    {:noreply, assign(socket, :llm_chain, updated_chain)}
+  end
+
+  def handle_info({:function_run, message}, socket) do
+    display = %ChatMessage{
+      role: :function_call,
+      hidden: false,
+      content: message
+    }
+
+    {:noreply, append_display_message(socket, display)}
+  end
+
+  def handle_info(_, socket) do
+    {:noreply, socket}
+  end
+
+  defp add_user_message(socket, user_text) when is_binary(user_text) do
+    # NOT the first message. Submit the user's text as-is.
+    updated_chain = LLMChain.add_message(socket.assigns.llm_chain, Message.new_user!(user_text))
+
+    socket
+    |> assign(llm_chain: updated_chain)
+    |> append_display_message(%ChatMessage{role: :user, content: user_text})
+  end
+
+  defp reset_chat_message_form(socket) do
+    changeset = ChatMessage.create_changeset(%{})
+    assign_form(socket, changeset)
+  end
+
+  defp append_display_message(socket, %ChatMessage{} = message) do
+    stream_insert(socket, :display_messages, message)
+  end
 end
