@@ -3,7 +3,7 @@ defmodule AngelTradingWeb.AskLive do
   alias AngelTrading.{Account, Agent, Utils}
   alias Phoenix.LiveView.AsyncResult
   alias AngelTrading.Agent.ChatMessage
-  alias LangChain.Message
+  alias LangChain.{Message, MessageDelta}
   alias LangChain.Chains.LLMChain
   require Logger
 
@@ -45,6 +45,7 @@ defmodule AngelTradingWeb.AskLive do
             content: "Hello! I'm your personal Assistant! How can I help you today?"
           }
         ])
+        |> assign(:delta, nil)
         |> reset_chat_message_form()
         |> assign(:async_result, AsyncResult.ok(%AsyncResult{}, :ok))
       else
@@ -91,29 +92,24 @@ defmodule AngelTradingWeb.AskLive do
       do: {:noreply, socket}
 
   @impl true
-  def handle_info({:chat_response, %LangChain.MessageDelta{} = delta}, socket) do
-    # apply the delta message to our tracked LLMChain. If it completes the
-    # message, optionally display the message
-    updated_chain = LLMChain.apply_delta(socket.assigns.llm_chain, delta)
-    # if this completed the delta, create the message and track on the chain
-
+  def handle_info({:chat_response, %MessageDelta{} = delta}, socket) do
     socket =
-      if updated_chain.delta == nil do
-        case updated_chain.last_message do
-          # Messages that only execute a function have no content. Don't display if no content.
-          %Message{role: role, content: content}
-          when role in [:user, :assistant] and is_binary(content) ->
-            append_display_message(socket, %ChatMessage{role: role, content: content})
+      case delta do
+        # Messages that only execute a function have no content. Don't display if no content.
+        %MessageDelta{role: role, content: content, status: :complete}
+        when role in [:user, :assistant] and is_binary(content) ->
+          socket
+          |> append_display_message(%ChatMessage{role: role, content: content})
+          |> assign(:delta, nil)
 
-          # otherwise, not a message for display
-          _other ->
-            socket
-        end
-      else
-        socket
+        _ ->
+          content = Map.get(socket.assigns.delta || %{}, :content, "") <> (delta.content || "")
+          assign(socket, :delta, %MessageDelta{delta | content: content})
       end
 
-    {:noreply, assign(socket, :llm_chain, updated_chain)}
+    IO.inspect(delta)
+
+    {:noreply, socket}
   end
 
   def handle_info({:function_run, message}, socket) do
@@ -131,12 +127,13 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   # handles async function returning a successful result
-  def handle_async(:running_llm, {:ok, :ok = _success_result}, socket) do
+  def handle_async(:running_llm, {:ok, {:ok, chain, _last_response} = _success_result}, socket) do
     # discard the result of the successful async function. The side-effects are
     # what we want.
     socket =
       socket
       |> assign(:async_result, AsyncResult.ok(%AsyncResult{}, :ok))
+      |> assign(:llm_chain, chain)
 
     {:noreply, socket}
   end

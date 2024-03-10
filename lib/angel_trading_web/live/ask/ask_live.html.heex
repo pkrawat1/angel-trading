@@ -11,10 +11,10 @@
         <.sent_message :if={message.role == :user} message={message} />
       </li>
     </ul>
-    <li :if={@llm_chain.delta} class="flex items-start gap-2.5 my-8">
-      <.reply_message :if={@llm_chain.delta.role == :assistant} message={@llm_chain.delta} />
-      <span :if={@llm_chain.delta.role != :assistant} class="whitespace-pre-wrap">
-        <%= @llm_chain.delta.content %>
+    <li :if={@delta} class="flex items-start gap-2.5 my-8">
+      <.reply_message :if={@delta.role == :assistant} message={@delta} />
+      <span :if={@delta.role != :assistant} class="whitespace-pre-wrap">
+        <%= @delta.content %>
       </span>
     </li>
   </div>

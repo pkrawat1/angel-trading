@@ -11,7 +11,8 @@ defmodule AngelTrading.Agent do
       ONLY generate information with the given client information provided.
       NOTE that the currency is in india rupee. So use currency symbol, where money is involved.
       NOTE that the minus values are negative values and should be considered when doing calculations.
-      NOTE always use proper format and distinctions when showing data. Use any markdown format for showing data properly, example tabular, list etc.)
+      NOTE always use proper format and distinctions when showing data. Use any markdown format for showing data properly, example tabular, list etc.
+      NOTE all the questions will be related to the user's client. They are not the user's details but his/here clients info.)
     )
   ]
 
@@ -64,7 +65,7 @@ defmodule AngelTrading.Agent do
         %Message{role: role} = data when role == :assistant ->
           send(
             live_view_pid,
-            {:chat_response, struct(MessageDelta, %{Map.from_struct(data) | content: ""})}
+            {:chat_response, struct(MessageDelta, Map.from_struct(data))}
           )
 
           :ok
@@ -78,18 +79,6 @@ defmodule AngelTrading.Agent do
           :error
       end
 
-    try do
-      case LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn) do
-        # Don't return a large success result. Callbacks return what we want.
-        {:ok, _updated_chain, _last_message} ->
-          :ok
-
-        # return the errors for display
-        {:error, reason} ->
-          {:error, reason}
-      end
-    rescue
-      _ -> :ok
-    end
+    LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn)
   end
 end
