@@ -1,5 +1,5 @@
 <section class="flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
-  <div class="flex-1 overflow-y-auto">
+  <div class="flex-1 overflow-y-auto" id="chat-wrapper" phx-hook="ScrollToBottom">
     <ul id="chat-area" phx-update="stream">
       <li
         :for={{dom_id, message} <- @streams.display_messages}
@@ -11,24 +11,24 @@
         <.sent_message :if={message.role == :user} message={message} />
       </li>
     </ul>
-    <li :if={@delta} class="flex items-start gap-2.5 my-8">
+    <div :if={@delta} class="flex items-start gap-2.5 my-8">
       <.reply_message :if={@delta.role == :assistant} message={@delta} />
       <span :if={@delta.role != :assistant} class="whitespace-pre-wrap">
         <%= @delta.content %>
       </span>
-    </li>
+    </div>
   </div>
-  <.simple_form class="relative" for={@form} phx-change="validate" phx-submit="save">
-    <.async_result :let={_} assign={@async_result}>
-      <:loading>
-        <div class="animate-pulse flex items-start gap-2.5 -mb-8">
-          <.icon name="hero-chat-bubble-oval-left-ellipsis-solid w-8 h-8 rounded-full dark:text-blue-500" />
-          <div class="text-sm font-normal py-2.5 text-gray-900 dark:text-gray-300">
-            Assistant is busy ...
-          </div>
+  <.async_result :let={_} assign={@async_result}>
+    <:loading>
+      <div class="animate-pulse flex items-start gap-2.5">
+        <.icon name="hero-chat-bubble-oval-left-ellipsis-solid w-8 h-8 rounded-full dark:text-blue-500" />
+        <div class="text-sm font-normal py-2.5 text-gray-900 dark:text-gray-300">
+          Assistant is busy ...
         </div>
-      </:loading>
-    </.async_result>
+      </div>
+    </:loading>
+  </.async_result>
+  <.simple_form class="relative -my-8" for={@form} phx-change="validate" phx-submit="save">
     <.input
       input_class="resize-none"
       type="textarea"
