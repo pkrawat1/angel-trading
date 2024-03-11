@@ -49,12 +49,59 @@ defmodule AngelTrading.Agent do
     })
   end
 
+  def candle_data do
+    Function.new!(%{
+      name: "get_candle_data",
+      description:
+        "Return JSON object of the candle data for a stock recorded in 1 week time with 1 hour gap.",
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          exchange: %{type: "string", description: "Exchange name"},
+          symbol_token: %{
+            type: "string",
+            description: "Symbol token is numeric code for the stock found in stock detail"
+          }
+        },
+        required: ["exchange", "symbol_token"]
+      },
+      function: fn %{"exchange" => exchange, "symbol_token" => symbol_token},
+                   %{client_token: token, live_view_pid: pid} = _context ->
+        Jason.encode!(
+          with {:ok, %{"data" => candle_data}} <-
+                 API.candle_data(
+                   token,
+                   exchange,
+                   symbol_token,
+                   "ONE_HOUR",
+                   Timex.now("Asia/Kolkata")
+                   |> Timex.shift(weeks: -1)
+                   |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
+                   Timex.now("Asia/Kolkata")
+                   |> Timex.shift(days: 1)
+                   |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
+                 ) do
+            IO.inspect(Utils.formatted_candle_data(candle_data))
+
+            %{
+              candle_data: Utils.formatted_candle_data(candle_data)
+            }
+          else
+            e ->
+              IO.inspect(e)
+              %{error: "Unable to fetch the candle data."}
+          end
+        )
+      end
+    })
+  end
+
   def new_chain(context),
     do:
       %{llm: @chat_model, custom_context: context, verbose: false}
       |> LLMChain.new!()
       |> LLMChain.add_messages(@init_messages)
-      |> LLMChain.add_functions([client_portfolio_info()])
+      |> LLMChain.add_functions([client_portfolio_info(), candle_data()])
 
   def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain) do
     callback_fn =
