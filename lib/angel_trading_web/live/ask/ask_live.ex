@@ -95,7 +95,6 @@ defmodule AngelTradingWeb.AskLive do
   def handle_info({:chat_response, %MessageDelta{} = delta}, socket) do
     socket =
       case delta do
-        # Messages that only execute a function have no content. Don't display if no content.
         %MessageDelta{role: role, content: content, status: :complete}
         when role in [:user, :assistant] and is_binary(content) ->
           socket
@@ -126,10 +125,7 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, socket}
   end
 
-  # handles async function returning a successful result
   def handle_async(:running_llm, {:ok, {:ok, chain, _last_response} = _success_result}, socket) do
-    # discard the result of the successful async function. The side-effects are
-    # what we want.
     socket =
       socket
       |> assign(:async_result, AsyncResult.ok(%AsyncResult{}, :ok))
@@ -138,7 +134,6 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, socket}
   end
 
-  # handles async function returning an error as a result
   def handle_async(:running_llm, {:ok, {:error, reason}}, socket) do
     socket =
       socket
@@ -148,7 +143,6 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, socket}
   end
 
-  # handles async function exploding
   def handle_async(:running_llm, {:exit, reason}, socket) do
     socket =
       socket
@@ -165,7 +159,6 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   defp add_user_message(socket, user_text) when is_binary(user_text) do
-    # NOT the first message. Submit the user's text as-is.
     updated_chain = LLMChain.add_message(socket.assigns.llm_chain, Message.new_user!(user_text))
 
     socket
