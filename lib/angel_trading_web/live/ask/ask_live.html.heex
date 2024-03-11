@@ -1,5 +1,5 @@
-<section class="flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
-  <div class="flex-1 overflow-y-auto" id="chat-wrapper" phx-hook="ScrollToBottom">
+<section class="relative flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
+  <div class="overflow-y-auto h-[calc(100%-8rem)]" id="chat-wrapper" phx-hook="ScrollToBottom">
     <ul id="chat-area" phx-update="stream">
       <li
         :for={{dom_id, message} <- @streams.display_messages}
@@ -28,11 +28,16 @@
       </div>
     </:loading>
   </.async_result>
-  <.simple_form class="relative -my-8" for={@form} phx-change="validate" phx-submit="save">
+  <.simple_form
+    class="absolute bottom-0 w-full -my-8"
+    for={@form}
+    phx-change="validate"
+    phx-submit="save"
+  >
     <.input
       input_class="resize-none"
       type="textarea"
-      rows={5}
+      rows={3}
       field={@form[:content]}
       placeholder="Ask"
       autocomplete="off"
@@ -41,7 +46,7 @@
       autofocus
     />
     <:actions>
-      <.button phx-disable-with="⏳..." class="absolute top-32 right-3 !bg-transparent w-10 pt-3">
+      <.button phx-disable-with="⏳..." class="absolute top-20 right-3 !bg-transparent w-10 pt-3">
         <.icon name="hero-paper-airplane-solid w-8 h-8 text-green-500" />
       </.button>
     </:actions>
