@@ -23,7 +23,7 @@ Implements
   <img width="250" alt="Screenshot 2024-01-30 at 9 45 28 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/96c928d6-b55a-4628-9373-99375dad35af">
   <img width="250" alt="Screenshot 2024-01-30 at 9 46 39 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/355d3e44-3967-4d6d-b0f2-5117d6727c45">
   <img width="250" alt="Screenshot 2024-01-30 at 9 46 55 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/d1a1b485-b1c8-4ddc-8567-eb88b22c5748">
-  <a href="https://www.loom.com/share/ccb5ea5a390e4f20b140a10824fd6941">
+  <a href="https://www.loom.com/share/60816921d58245b6b5e1e33a96ec66a6?sid=a0380d2c-5934-4cfd-8244-c70f2cd90f39">
     <img style="height:532px;" src="https://cdn.loom.com/sessions/thumbnails/ccb5ea5a390e4f20b140a10824fd6941-with-play.gif">
   </a>
 </div>
