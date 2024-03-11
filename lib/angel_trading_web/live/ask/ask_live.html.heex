@@ -1,16 +1,25 @@
 <section class="flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-9rem)] flex-col ddark:text-gray-200">
-  <ul id="smart-chat-area" class="flex-1 overflow-y-auto" phx-update="stream">
-    <li
-      :for={{dom_id, message} <- @streams.messages}
-      class="flex items-start gap-2.5 my-8"
-      id={dom_id}
-    >
-      <.reply_message :if={message.role == :assistant} message={message} />
-      <.sent_message :if={message.role == :user} message={message} />
+  <div class="flex-1 overflow-y-auto">
+    <ul id="chat-area" phx-update="stream">
+      <li
+        :for={{dom_id, message} <- @streams.display_messages}
+        class="flex items-start gap-2.5 my-8"
+        id={dom_id}
+      >
+        <.reply_message :if={message.role == :assistant} message={message} />
+        <.function_message :if={message.role == :function_call} message={message} />
+        <.sent_message :if={message.role == :user} message={message} />
+      </li>
+    </ul>
+    <li :if={@delta} class="flex items-start gap-2.5 my-8">
+      <.reply_message :if={@delta.role == :assistant} message={@delta} />
+      <span :if={@delta.role != :assistant} class="whitespace-pre-wrap">
+        <%= @delta.content %>
+      </span>
     </li>
-  </ul>
-  <.simple_form :let={f} for={%{}} phx-change="" phx-submit="ask">
-    <.async_result :let={_} assign={@lang_chain}>
+  </div>
+  <.simple_form class="relative" for={@form} phx-change="validate" phx-submit="save">
+    <.async_result :let={_} assign={@async_result}>
       <:loading>
         <div class="animate-pulse flex items-start gap-2.5 -mb-8">
           <.icon name="hero-chat-bubble-oval-left-ellipsis-solid w-8 h-8 rounded-full dark:text-blue-500" />
@@ -19,26 +28,23 @@
           </div>
         </div>
       </:loading>
-      <:failed :let={reason}><%= reason %></:failed>
     </.async_result>
-    <div class="flex">
-      <div class="w-full">
-        <.input
-          input_class="resize-none"
-          type="textarea"
-          rows={1}
-          field={f[:ask]}
-          placeholder="Ask"
-          autocomplete="off"
-          phx-debounce="500"
-          disabled={!@lang_chain.ok?}
-          autofocus
-        />
-      </div>
-      <.button class="!bg-transparent w-10 pt-3 disabled">
+    <.input
+      input_class="resize-none"
+      type="textarea"
+      rows={5}
+      field={@form[:content]}
+      placeholder="Ask"
+      autocomplete="off"
+      phx-debounce="500"
+      disabled={!@async_result.ok?}
+      autofocus
+    />
+    <:actions>
+      <.button phx-disable-with="⏳..." class="absolute top-32 right-3 !bg-transparent w-10 pt-3">
         <.icon name="hero-paper-airplane-solid w-8 h-8 text-green-500" />
       </.button>
-    </div>
+    </:actions>
   </.simple_form>
 </section>
 <.bottom_nav client_code={@client_code} active_page={:ask} />

@@ -669,4 +669,30 @@ defmodule AngelTradingWeb.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
+  @doc """
+  Render the raw content as markdown. Returns HTML rendered text.
+  """
+  def render_markdown(nil), do: Phoenix.HTML.raw(nil)
+
+  def render_markdown(text) when is_binary(text) do
+    # NOTE: This allows explicit HTML to come through.
+    #   - Don't allow this with user input.
+    text |> Earmark.as_html!(escape: false) |> Phoenix.HTML.raw()
+  end
+
+  @doc """
+  Render a markdown containing web component.
+  """
+  attr :text, :string, required: true
+  attr :class, :string, default: nil
+  attr :rest, :global
+
+  def markdown(%{text: nil} = assigns), do: ~H""
+
+  def markdown(assigns) do
+    ~H"""
+    <div class={["prose dark:prose-invert", @class]} {@rest}><%= render_markdown(@text) %></div>
+    """
+  end
 end
