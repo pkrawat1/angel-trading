@@ -185,6 +185,12 @@ defmodule AngelTrading.Agent do
           :error
       end
 
-    LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn)
+    try do
+      LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn)
+    rescue
+      _ ->
+        {:error,
+         "Uh-oh! Looks like our AI server's taking a coffee break. Hang tight and give it another shot in a bit!"}
+    end
   end
 end

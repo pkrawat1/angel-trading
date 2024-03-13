@@ -84,12 +84,9 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, socket}
   end
 
-  def handle_event(
-        "ask",
-        _,
-        socket
-      ),
-      do: {:noreply, socket}
+  def handle_event("retry", _, socket) do
+    {:noreply, run_chain(socket)}
+  end
 
   @impl true
   def handle_info({:chat_response, %MessageDelta{} = delta}, socket) do
@@ -119,6 +116,14 @@ defmodule AngelTradingWeb.AskLive do
     }
 
     {:noreply, append_display_message(socket, display)}
+  end
+
+  def handle_info({:llm_error, message}, socket) do
+    socket =
+      socket
+      |> put_flash(:error, message)
+
+    {:noreply, socket}
   end
 
   def handle_info(_, socket) do
