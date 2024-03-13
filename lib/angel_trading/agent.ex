@@ -61,7 +61,9 @@ defmodule AngelTrading.Agent do
         },
         required: ["name"]
       },
-      function: fn %{"name" => name}, %{client_token: token} = _context ->
+      function: fn %{"name" => name}, %{client_token: token, live_view_pid: pid} = _context ->
+        send(pid, {:function_run, "Retrieving stock information for #{name}"})
+
         Jason.encode!(
           case YahooFinance.search(name) do
             {:ok, yahoo_quotes} when yahoo_quotes != [] ->
@@ -110,12 +112,22 @@ defmodule AngelTrading.Agent do
           symbol_token: %{
             type: "string",
             description: "Symbol token is numeric code for the stock found in stock detail"
+          },
+          trading_symbol: %{
+            type: "string",
+            description: "Trading symbol for the stock found in the stock details details"
           }
         },
         required: ["exchange", "symbol_token"]
       },
-      function: fn %{"exchange" => exchange, "symbol_token" => symbol_token},
-                   %{client_token: token} = _context ->
+      function: fn %{
+                     "exchange" => exchange,
+                     "symbol_token" => symbol_token,
+                     "trading_symbol" => trading_symbol
+                   },
+                   %{client_token: token, live_view_pid: pid} = _context ->
+        send(pid, {:function_run, "Retrieving candle data information for #{trading_symbol}"})
+
         Jason.encode!(
           with {:ok, %{"data" => candle_data}} <-
                  API.candle_data(
