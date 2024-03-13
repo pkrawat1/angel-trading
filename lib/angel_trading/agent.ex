@@ -3,7 +3,7 @@ defmodule AngelTrading.Agent do
   alias LangChain.MessageDelta
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatGoogleAI
-  alias AngelTrading.{API, Utils}
+  alias AngelTrading.{API, Utils, YahooFinance}
 
   @init_messages [
     Message.new_system!(
@@ -49,11 +49,60 @@ defmodule AngelTrading.Agent do
     })
   end
 
+  def search_stock do
+    Function.new!(%{
+      name: "search_stock_details",
+      description:
+        "Return JSON object of the stock details including symbol, token, exchange etc.",
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          name: %{type: "string", description: "Stock Name"}
+        },
+        required: ["name"]
+      },
+      function: fn %{"name" => name}, %{client_token: token} = _context ->
+        Jason.encode!(
+          case YahooFinance.search(name) do
+            {:ok, yahoo_quotes} when yahoo_quotes != [] ->
+              token_list =
+                yahoo_quotes
+                |> Enum.map(
+                  &(&1.symbol
+                    |> String.slice(0..(String.length(name) - 1))
+                    |> String.split(".")
+                    |> List.first())
+                )
+                |> MapSet.new()
+                |> Enum.map(&API.search_token(token, "NSE", &1))
+                |> Enum.flat_map(fn
+                  {:ok, %{"data" => token_list}} -> token_list
+                  _ -> []
+                end)
+                |> Enum.uniq_by(& &1["tradingsymbol"])
+                |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
+                |> Enum.map(
+                  &(&1
+                    |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
+                )
+
+              %{
+                token_list: token_list
+              }
+
+            _ ->
+              %{error: "No match found for the name."}
+          end
+        )
+      end
+    })
+  end
+
   def candle_data do
     Function.new!(%{
       name: "get_candle_data",
       description:
-        "Return JSON object of the candle data for a stock recorded in 1 week time with 1 hour gap.",
+        "Return JSON object of the candle data (RSI) for a stock recorded in 1 week time with 1 hour gap.",
       parameters_schema: %{
         type: "object",
         properties: %{
@@ -66,7 +115,7 @@ defmodule AngelTrading.Agent do
         required: ["exchange", "symbol_token"]
       },
       function: fn %{"exchange" => exchange, "symbol_token" => symbol_token},
-                   %{client_token: token, live_view_pid: pid} = _context ->
+                   %{client_token: token} = _context ->
         Jason.encode!(
           with {:ok, %{"data" => candle_data}} <-
                  API.candle_data(
@@ -81,8 +130,6 @@ defmodule AngelTrading.Agent do
                    |> Timex.shift(days: 1)
                    |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
                  ) do
-            IO.inspect(Utils.formatted_candle_data(candle_data))
-
             %{
               candle_data: Utils.formatted_candle_data(candle_data)
             }
@@ -101,7 +148,7 @@ defmodule AngelTrading.Agent do
       %{llm: @chat_model, custom_context: context, verbose: false}
       |> LLMChain.new!()
       |> LLMChain.add_messages(@init_messages)
-      |> LLMChain.add_functions([client_portfolio_info(), candle_data()])
+      |> LLMChain.add_functions([search_stock(), client_portfolio_info(), candle_data()])
 
   def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain) do
     callback_fn =

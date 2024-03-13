@@ -43,6 +43,7 @@
       autocomplete="off"
       phx-debounce="500"
       disabled={!@async_result.ok?}
+      phx-hook="CtrlEnterSubmits"
       autofocus
     />
     <:actions>
