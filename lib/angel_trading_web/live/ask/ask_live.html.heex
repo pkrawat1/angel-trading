@@ -17,25 +17,25 @@
         <%= @delta.content %>
       </span>
     </div>
-  </div>
-  <.async_result :let={_} assign={@async_result}>
-    <:loading>
-      <div class="animate-pulse flex items-start gap-2.5">
-        <.icon name="hero-chat-bubble-oval-left-ellipsis-solid w-8 h-8 rounded-full dark:text-blue-500" />
-        <div class="text-sm font-normal py-2.5 text-gray-900 dark:text-gray-300">
-          Assistant is busy ...
+    <.async_result :let={_} assign={@async_result}>
+      <:loading>
+        <div class="animate-pulse flex items-start gap-2.5">
+          <.icon name="hero-chat-bubble-oval-left-ellipsis-solid w-8 h-8 rounded-full dark:text-blue-500" />
+          <div class="text-sm font-normal py-2.5 text-gray-900 dark:text-gray-300">
+            Assistant is busy ...
+          </div>
         </div>
-      </div>
-    </:loading>
-    <:failed :let={_reason}>
-      <.link
-        phx-click="retry"
-        class="animate-pulse bg-transparent text-left !text-red-500 w-28 z-10 pl-0"
-      >
-        <.icon name="hero-arrow-path pr-2.5" /> Retry
-      </.link>
-    </:failed>
-  </.async_result>
+      </:loading>
+      <:failed :let={_reason}>
+        <.link
+          phx-click="retry"
+          class="animate-pulse bg-transparent text-left !text-red-500 w-28 z-10 pl-0"
+        >
+          <.icon name="hero-arrow-path pr-2.5" /> Retry
+        </.link>
+      </:failed>
+    </.async_result>
+  </div>
   <.simple_form
     class="absolute bottom-0 w-full -my-8"
     for={@form}
