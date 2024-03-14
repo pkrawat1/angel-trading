@@ -95,20 +95,19 @@ defmodule AngelTrading.Client do
 
     - exchange: Stock exchange name.
     - symbol_token: Numeric code for the stock.
-    - trading_symbol: Trading symbol for the stock.
     - token: Client token for authentication.
 
   ## Examples
 
-      iex> AngelTrading.Client.get_candle_data("NSE", "3045", "RELIANCE", "valid_token")
+      iex> AngelTrading.Client.get_candle_data("NSE", "3045", "valid_token")
       {:ok, %{candle_data: [%{date: ~U[2023-05-01 10:00:00Z], ...}, ...]}}
 
-      iex> AngelTrading.Client.get_candle_data("INVALID", "123", "INVALID", "valid_token")
+      iex> AngelTrading.Client.get_candle_data("INVALID", "123", "valid_token")
       {:error, :invalid_input}
 
   """
-  @spec get_candle_data(binary, binary, binary, binary) :: {:ok, map} | {:error, atom}
-  def get_candle_data(exchange, symbol_token, trading_symbol, token) do
+  @spec get_candle_data(binary, binary, binary) :: {:ok, map} | {:error, atom}
+  def get_candle_data(exchange, symbol_token, token) do
     case API.candle_data(
            token,
            exchange,
@@ -126,6 +125,126 @@ defmodule AngelTrading.Client do
 
       _ ->
         {:error, :invalid_input}
+    end
+  end
+
+  @doc """
+  Returns a function that fetches the client's portfolio information.
+
+  ## Examples
+
+      iex> AngelTrading.Client.client_portfolio_info_function()
+      %LangChain.Function{...}
+
+  """
+  @spec client_portfolio_info_function :: LangChain.Function.t()
+  def client_portfolio_info_function do
+    %LangChain.Function{
+      name: "get_client_portfolio_info",
+      description: "Return JSON object of the client's information.",
+      function: &client_portfolio_info_fn/2
+    }
+  end
+
+  defp client_portfolio_info_fn(_args, %{client_token: token, live_view_pid: pid} = _context) do
+    send(pid, {:function_run, "Retrieving client portfolio information."})
+
+    case get_client_portfolio_info(token) do
+      {:ok, %{profile: profile, funds: funds} = portfolio} ->
+        Jason.encode!(%{
+          portfolio
+          | profile: Map.take(profile, ["name"]),
+            funds: Map.take(funds, ["net"])
+        })
+
+      _ ->
+        Jason.encode!(%{error: "Unable to fetch the client portfolio."})
+    end
+  end
+
+  @doc """
+  Returns a function that searches for stock details based on the provided name.
+
+  ## Examples
+
+      iex> AngelTrading.Client.search_stock_function()
+      %LangChain.Function{...}
+
+  """
+  @spec search_stock_function :: LangChain.Function.t()
+  def search_stock_function do
+    %LangChain.Function{
+      name: "search_stock_details",
+      description: "Return JSON object of the stock details like symbol, token, exchange etc.",
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          name: %{type: "string", description: "Stock Name"}
+        },
+        required: ["name"]
+      },
+      function: &search_stock_fn/2
+    }
+  end
+
+  defp search_stock_fn(%{"name" => name}, %{client_token: token, live_view_pid: pid} = _context) do
+    send(pid, {:function_run, "Retrieving stock information for #{name}"})
+
+    with {:ok, result} <- search_stock(name, token) do
+      Jason.encode!(result)
+    else
+      _ -> Jason.encode!(%{error: "No match found for the name."})
+    end
+  end
+
+  @doc """
+  Returns a function that retrieves candle data (RSI) for a given stock.
+
+  ## Examples
+
+      iex> AngelTrading.Client.candle_data_function()
+      %LangChain.Function{...}
+
+  """
+  @spec candle_data_function :: LangChain.Function.t()
+  def candle_data_function do
+    %LangChain.Function{
+      name: "get_candle_data",
+      description:
+        "Return JSON object of the candle data (RSI) for a stock recorded in 1 week time with 1 hour gap.",
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          exchange: %{type: "string", description: "Exchange name"},
+          symbol_token: %{
+            type: "string",
+            description: "Symbol token is numeric code for the stock found in stock detail"
+          },
+          trading_symbol: %{
+            type: "string",
+            description: "Trading symbol for the stock found in the stock details details"
+          }
+        },
+        required: ["exchange", "symbol_token", "trading_symbol"]
+      },
+      function: &candle_data_fn/2
+    }
+  end
+
+  defp candle_data_fn(
+         %{
+           "exchange" => exchange,
+           "symbol_token" => symbol_token,
+           "trading_symbol" => trading_symbol
+         },
+         %{client_token: token, live_view_pid: pid} = _context
+       ) do
+    send(pid, {:function_run, "Retrieving candle data information for #{trading_symbol}"})
+
+    with {:ok, result} <- get_candle_data(exchange, symbol_token, token) do
+      Jason.encode!(result)
+    else
+      _ -> Jason.encode!(%{error: "Unable to fetch the candle data."})
     end
   end
 end

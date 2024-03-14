@@ -28,12 +28,12 @@
       </div>
     </:loading>
     <:failed :let={_reason}>
-      <.button
+      <.link
         phx-click="retry"
         class="animate-pulse bg-transparent text-left !text-red-500 w-28 z-10 pl-0"
       >
         <.icon name="hero-arrow-path pr-2.5" /> Retry
-      </.button>
+      </.link>
     </:failed>
   </.async_result>
   <.simple_form

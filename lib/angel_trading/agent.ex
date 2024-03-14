@@ -21,96 +21,47 @@ defmodule AngelTrading.Agent do
                 endpoint: "https://generativelanguage.googleapis.com/"
               })
 
-  def client_portfolio_info do
-    Function.new!(%{
-      name: "get_client_portfolio_info",
-      description: "Return JSON object of the client's information.",
-      function: fn _args, %{client_token: token, live_view_pid: pid} = _context ->
-        send(pid, {:function_run, "Retrieving client portfolio information."})
+  @doc """
+  Creates a new language model chain with the specified context and functions.
 
-        Jason.encode!(
-          case Client.get_client_portfolio_info(token) do
-            {:ok, %{profile: profile, funds: funds} = portfolio} ->
-              %{portfolio | profile: Map.take(profile, ["name"]), funds: Map.take(funds, ["net"])}
+  ## Parameters
 
-            _ ->
-              %{error: "Unable to fetch the client portfolio."}
-          end
-        )
-      end
-    })
+    - context: A map containing the client token and live view process ID.
+
+  ## Examples
+
+      iex> context = %{client_token: "valid_token", live_view_pid: self()}
+      iex> AngelTrading.Agent.new_chain(context)
+      %LangChain.Chains.LLMChain{...}
+
+  """
+  @spec new_chain(map) :: LangChain.Chains.LLMChain.t()
+  def new_chain(context) do
+    %{llm: @chat_model, custom_context: context, verbose: false}
+    |> LLMChain.new!()
+    |> LLMChain.add_messages(@init_messages)
+    |> LLMChain.add_functions([
+      Client.client_portfolio_info_function(),
+      Client.search_stock_function(),
+      Client.candle_data_function()
+    ])
   end
 
-  def search_stock do
-    Function.new!(%{
-      name: "search_stock_details",
-      description:
-        "Return JSON object of the stock details including symbol, token, exchange etc.",
-      parameters_schema: %{
-        type: "object",
-        properties: %{
-          name: %{type: "string", description: "Stock Name"}
-        },
-        required: ["name"]
-      },
-      function: fn %{"name" => name}, %{client_token: token, live_view_pid: pid} = _context ->
-        send(pid, {:function_run, "Retrieving stock information for #{name}"})
+  @doc """
+  Runs the specified language model chain and sends responses to the provided live view process.
 
-        Jason.encode!(
-          case Client.search_stock(name, token) do
-            {:ok, result} -> result
-            _ -> %{error: "No match found for the name."}
-          end
-        )
-      end
-    })
-  end
+  ## Parameters
 
-  def candle_data do
-    Function.new!(%{
-      name: "get_candle_data",
-      description:
-        "Return JSON object of the candle data (RSI) for a stock recorded in 1 week time with 1 hour gap.",
-      parameters_schema: %{
-        type: "object",
-        properties: %{
-          exchange: %{type: "string", description: "Exchange name"},
-          symbol_token: %{
-            type: "string",
-            description: "Symbol token is numeric code for the stock found in stock detail"
-          },
-          trading_symbol: %{
-            type: "string",
-            description: "Trading symbol for the stock found in the stock details details"
-          }
-        },
-        required: ["exchange", "symbol_token"]
-      },
-      function: fn %{
-                     "exchange" => exchange,
-                     "symbol_token" => symbol_token,
-                     "trading_symbol" => trading_symbol
-                   },
-                   %{client_token: token, live_view_pid: pid} = _context ->
-        send(pid, {:function_run, "Retrieving candle data information for #{trading_symbol}"})
+    - chain: The language model chain to run.
 
-        Jason.encode!(
-          case Client.get_candle_data(exchange, symbol_token, token) do
-            {:ok, result} -> result
-            _ -> %{error: "Unable to fetch the candle data."}
-          end
-        )
-      end
-    })
-  end
+  ## Examples
 
-  def new_chain(context),
-    do:
-      %{llm: @chat_model, custom_context: context, verbose: false}
-      |> LLMChain.new!()
-      |> LLMChain.add_messages(@init_messages)
-      |> LLMChain.add_functions([search_stock(), client_portfolio_info(), candle_data()])
+      iex> chain = AngelTrading.Agent.new_chain(%{client_token: "valid_token", live_view_pid: self()})
+      iex> AngelTrading.Agent.run_chain(chain)
+      :ok
 
+  """
+  @spec run_chain(LangChain.Chains.LLMChain.t()) :: :ok | {:error, binary}
   def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain, retry \\ 0) do
     callback_fn =
       fn
