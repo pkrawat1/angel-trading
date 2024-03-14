@@ -101,9 +101,9 @@ alias LangChain.Chains.LLMChain
   |> LLMChain.add_messages([Message.new_user!("Give me two more please!")])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
-  |> LLMChain.run(while_needs_response: true)
+  |> LLMChain.run(while_needs_response: true, callback_fn: callback)
 
 IO.puts(response.content)
 ```
 
-<!-- livebook:{"offset":2783,"stamp":{"token":"XCP.pSc05vRSBic6JxFbW73nz1MExehAOJkX8INy6MPGBLnroF6-omvErSzDj5oZNQSKnS2Ogo_MveDmX1EwcJKb8Y2RsWYtkfu9T5eO4-DiihDRlOOvlsOY87P-ZA","version":2}} -->
+<!-- livebook:{"offset":2806,"stamp":{"token":"XCP.qwB7uOPIc7H5yzUFYywxSQ-wJeN9-Ij15plEFEO-h-ttGXdoOHSV1YkcHHsdb891UQpLUqcuaD1drxn5aO5XdcOWKgln57lFMbwWbuPSkp7Yp_lwDYlPx1FMuQ","version":2}} -->

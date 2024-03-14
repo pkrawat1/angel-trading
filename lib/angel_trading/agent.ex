@@ -3,7 +3,7 @@ defmodule AngelTrading.Agent do
   alias LangChain.MessageDelta
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatGoogleAI
-  alias AngelTrading.{API, Utils, YahooFinance}
+  alias AngelTrading.{API, Client, Utils, YahooFinance}
 
   @init_messages [
     Message.new_system!(
@@ -29,20 +29,12 @@ defmodule AngelTrading.Agent do
         send(pid, {:function_run, "Retrieving client portfolio information."})
 
         Jason.encode!(
-          with {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
-               {:portfolio, {:ok, %{"data" => holdings}}} <-
-                 {:portfolio, API.portfolio(token)},
-               {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)} do
-            %{
-              profile: Map.take(profile, ["name"]),
-              holdings:
-                holdings
-                |> Utils.formatted_holdings()
-                |> Utils.calculated_overview(),
-              funds: Map.take(funds, ["net"])
-            }
-          else
-            _ -> %{error: "Unable to fetch the client portfolio."}
+          case Client.get_client_portfolio_info(token) do
+            {:ok, %{profile: profile, funds: funds} = portfolio} ->
+              %{portfolio | profile: Map.take(profile, ["name"]), funds: Map.take(funds, ["net"])}
+
+            _ ->
+              %{error: "Unable to fetch the client portfolio."}
           end
         )
       end
@@ -65,35 +57,9 @@ defmodule AngelTrading.Agent do
         send(pid, {:function_run, "Retrieving stock information for #{name}"})
 
         Jason.encode!(
-          case YahooFinance.search(name) do
-            {:ok, yahoo_quotes} when yahoo_quotes != [] ->
-              token_list =
-                yahoo_quotes
-                |> Enum.map(
-                  &(&1.symbol
-                    |> String.slice(0..(String.length(name) - 1))
-                    |> String.split(".")
-                    |> List.first())
-                )
-                |> MapSet.new()
-                |> Enum.map(&API.search_token(token, "NSE", &1))
-                |> Enum.flat_map(fn
-                  {:ok, %{"data" => token_list}} -> token_list
-                  _ -> []
-                end)
-                |> Enum.uniq_by(& &1["tradingsymbol"])
-                |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
-                |> Enum.map(
-                  &(&1
-                    |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
-                )
-
-              %{
-                token_list: token_list
-              }
-
-            _ ->
-              %{error: "No match found for the name."}
+          case Client.search_stock(name, token) do
+            {:ok, result} -> result
+            _ -> %{error: "No match found for the name."}
           end
         )
       end
@@ -129,26 +95,9 @@ defmodule AngelTrading.Agent do
         send(pid, {:function_run, "Retrieving candle data information for #{trading_symbol}"})
 
         Jason.encode!(
-          with {:ok, %{"data" => candle_data}} <-
-                 API.candle_data(
-                   token,
-                   exchange,
-                   symbol_token,
-                   "ONE_HOUR",
-                   Timex.now("Asia/Kolkata")
-                   |> Timex.shift(weeks: -1)
-                   |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}"),
-                   Timex.now("Asia/Kolkata")
-                   |> Timex.shift(days: 1)
-                   |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
-                 ) do
-            %{
-              candle_data: Utils.formatted_candle_data(candle_data)
-            }
-          else
-            e ->
-              IO.inspect(e)
-              %{error: "Unable to fetch the candle data."}
+          case Client.get_candle_data(exchange, symbol_token, token) do
+            {:ok, result} -> result
+            _ -> %{error: "Unable to fetch the candle data."}
           end
         )
       end
@@ -162,7 +111,7 @@ defmodule AngelTrading.Agent do
       |> LLMChain.add_messages(@init_messages)
       |> LLMChain.add_functions([search_stock(), client_portfolio_info(), candle_data()])
 
-  def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain) do
+  def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain, retry \\ 0) do
     callback_fn =
       fn
         %MessageDelta{} = delta ->
@@ -189,8 +138,12 @@ defmodule AngelTrading.Agent do
       LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn)
     rescue
       _ ->
-        {:error,
-         "Uh-oh! Looks like our AI server's taking a coffee break. Hang tight and give it another shot in a bit!"}
+        if retry < 3 do
+          run_chain(chain, retry + 1)
+        else
+          {:error,
+           "Uh-oh! Looks like our AI server's taking a coffee break. Hang tight and give it another shot in a bit!"}
+        end
     end
   end
 end
