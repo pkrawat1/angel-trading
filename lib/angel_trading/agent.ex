@@ -1,9 +1,9 @@
 defmodule AngelTrading.Agent do
-  alias LangChain.{Function, Message, MessageDelta}
+  alias LangChain.{Message, MessageDelta}
   alias LangChain.MessageDelta
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatGoogleAI
-  alias AngelTrading.{API, Client, Utils, YahooFinance}
+  alias AngelTrading.Client
 
   @init_messages [
     Message.new_system!(
