@@ -20,6 +20,8 @@ defmodule AngelTrading.Agent do
                 stream: true,
                 endpoint: "https://generativelanguage.googleapis.com/"
               })
+  @max_retries 5
+  @initial_backoff_ms 500
 
   @doc """
   Creates a new language model chain with the specified context and functions.
@@ -52,17 +54,16 @@ defmodule AngelTrading.Agent do
 
   ## Parameters
 
-    - chain: The language model chain to run.
+  - chain: The language model chain to run.
 
   ## Examples
 
       iex> chain = AngelTrading.Agent.new_chain(%{client_token: "valid_token", live_view_pid: self()})
       iex> AngelTrading.Agent.run_chain(chain)
       :ok
-
   """
   @spec run_chain(LangChain.Chains.LLMChain.t()) :: :ok | {:error, binary}
-  def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain, retry \\ 0) do
+  def run_chain(%{custom_context: %{live_view_pid: live_view_pid}} = chain) do
     callback_fn =
       fn
         %MessageDelta{} = delta ->
@@ -74,27 +75,32 @@ defmodule AngelTrading.Agent do
             {:chat_response, struct(MessageDelta, Map.from_struct(data))}
           )
 
+        :ok ->
           :ok
 
         %Message{} = data ->
           send(live_view_pid, {:chat_response, data})
 
-          :ok
-
         {:error, _reason} ->
           :error
       end
 
+    retry_with_backoff(chain, callback_fn, 0, @initial_backoff_ms)
+  end
+
+  defp retry_with_backoff(chain, callback_fn, retries, backoff_ms) when retries < @max_retries do
     try do
       LLMChain.run(chain, while_needs_response: true, callback_fn: callback_fn)
     rescue
       _ ->
-        if retry < 3 do
-          run_chain(chain, retry + 1)
-        else
-          {:error,
-           "Uh-oh! Looks like our AI server's taking a coffee break. Hang tight and give it another shot in a bit!"}
-        end
+        backoff_ms = backoff_ms * 2
+        Process.sleep(backoff_ms)
+        retry_with_backoff(chain, callback_fn, retries + 1, backoff_ms)
     end
+  end
+
+  defp retry_with_backoff(_chain, _callback_fn, _retries, _backoff_ms) do
+    {:error,
+     "Uh-oh! Looks like our AI server's taking a coffee break. Hang tight and give it another shot in a bit!"}
   end
 end
