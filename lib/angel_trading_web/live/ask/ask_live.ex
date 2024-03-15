@@ -90,21 +90,7 @@ defmodule AngelTradingWeb.AskLive do
 
   @impl true
   def handle_info({:chat_response, %MessageDelta{} = delta}, socket) do
-    socket =
-      case delta do
-        %MessageDelta{role: role, content: content, status: :complete}
-        when role in [:user, :assistant] and is_binary(content) ->
-          socket
-          |> append_display_message(%ChatMessage{role: role, content: content})
-          |> assign(:delta, nil)
-
-        _ ->
-          content = Map.get(socket.assigns.delta || %{}, :content, "") <> (delta.content || "")
-          assign(socket, :delta, %MessageDelta{delta | content: content})
-      end
-
-    IO.inspect(delta)
-
+    socket = handle_chat_response(socket, delta)
     {:noreply, socket}
   end
 
@@ -182,5 +168,19 @@ defmodule AngelTradingWeb.AskLive do
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     assign(socket, :form, to_form(changeset))
+  end
+
+  defp handle_chat_response(socket, %MessageDelta{} = delta) do
+    case delta do
+      %MessageDelta{role: role, content: content, status: :complete}
+      when role in [:user, :assistant] and is_binary(content) ->
+        socket
+        |> append_display_message(%ChatMessage{role: role, content: content})
+        |> assign(:delta, nil)
+
+      _ ->
+        content = Map.get(socket.assigns.delta || %{}, :content, "") <> (delta.content || "")
+        assign(socket, :delta, %MessageDelta{delta | content: content})
+    end
   end
 end
