@@ -137,9 +137,9 @@ defmodule AngelTrading.API do
     - token: The access token.
     - exchange: The exchange code.
     - symbol_token: The symbol token.
-    - interval: The candle interval (e.g., "1D", "1H", "15M").
-    - from: The start date (format: "YYYY-MM-DD").
-    - to: The end date (format: "YYYY-MM-DD").
+    - interval: The candle interval (e.g., "ONE_DAY", "ONE_HOUR", "FIFTEEN_MINUTES").
+    - from: The start date (format: "{YYYY}-{0M}-{0D} {h24}:{0m}").
+    - to: The end date (format: "{YYYY}-{0M}-{0D} {h24}:{0m}").
   """
   def candle_data(token, exchange, symbol_token, interval, from, to) do
     TradeGalleon.call(AngelOne, :candle_data,
@@ -215,7 +215,7 @@ defmodule AngelTrading.API do
       - quantity: The quantity.
       - transaction_type: The transaction type (e.g., "BUY", "SELL").
       - order_type: The order type (e.g., "MARKET", "LIMIT").
-      - variety: The order variety (e.g., "NORMAL", "BO", "AMO").
+      - variety: The order variety (e.g., "NORMAL", "STOPLOSS", "AMO").
       - product_type: The product type (e.g., "DELIVERY", "INTRADAY").
       - price: The order price (for limit orders).
   """
