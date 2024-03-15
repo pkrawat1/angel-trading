@@ -170,17 +170,15 @@ defmodule AngelTradingWeb.AskLive do
     assign(socket, :form, to_form(changeset))
   end
 
-  defp handle_chat_response(socket, %MessageDelta{} = delta) do
-    case delta do
-      %MessageDelta{role: role, content: content, status: :complete}
-      when role in [:user, :assistant] and is_binary(content) ->
-        socket
-        |> append_display_message(%ChatMessage{role: role, content: content})
-        |> assign(:delta, nil)
+  defp handle_chat_response(socket, %MessageDelta{role: role, content: content, status: :complete})
+       when role in [:user, :assistant] and is_binary(content) do
+    socket
+    |> append_display_message(%ChatMessage{role: role, content: content})
+    |> assign(:delta, nil)
+  end
 
-      _ ->
-        content = Map.get(socket.assigns.delta || %{}, :content, "") <> (delta.content || "")
-        assign(socket, :delta, %MessageDelta{delta | content: content})
-    end
+  defp handle_chat_response(socket, %MessageDelta{} = delta) do
+    content = Map.get(socket.assigns.delta || %{}, :content, "") <> (delta.content || "")
+    assign(socket, :delta, %MessageDelta{delta | content: content})
   end
 end
