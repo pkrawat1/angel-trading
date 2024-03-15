@@ -4,14 +4,30 @@ defmodule AngelTrading.Utils do
   require Explorer.DataFrame, as: DF
   require Explorer.Series, as: S
 
-  @doc "Encrypt any Erlang term"
-  @spec encrypt(atom, any, integer) :: binary
+  @doc """
+  Encrypt any Erlang term.
+
+  ## Examples
+
+      iex> AngelTrading.Utils.encrypt(:my_context, %{data: "secret"})
+      <<...>>
+
+  """
+  @spec encrypt(atom(), any(), integer()) :: binary()
   def encrypt(context, term, max_age \\ @max_age) do
     Plug.Crypto.encrypt(secret(), to_string(context), term, max_age: max_age)
   end
 
-  @doc "Decrypt cipher-text into an Erlang term"
-  @spec decrypt(atom, binary, integer) :: {:ok, any} | {:error, atom}
+  @doc """
+  Decrypt cipher-text into an Erlang term.
+
+  ## Examples
+
+      iex> AngelTrading.Utils.decrypt(:my_context, <<...>>)
+      {:ok, %{data: "secret"}}
+
+  """
+  @spec decrypt(atom(), binary(), integer()) :: {:ok, any()} | {:error, atom()}
   def decrypt(context, ciphertext, max_age \\ @max_age) when is_binary(ciphertext) do
     Plug.Crypto.decrypt(secret(), to_string(context), ciphertext, max_age: max_age)
   end
@@ -23,51 +39,58 @@ defmodule AngelTrading.Utils do
   # I could add ex_money to manage calculations in decimal money format.
   def formatted_holdings(holdings) do
     holdings
-    # Filter cases where stock is in split state
-    |> Enum.filter(&(&1["symboltoken"] != ""))
-    |> Enum.filter(&(&1["quantity"] != 0))
-    |> Enum.filter(&(&1 != nil))
-    |> Enum.map(fn %{
-                     "authorisedquantity" => _,
-                     "averageprice" => averageprice,
-                     "close" => close,
-                     "collateralquantity" => _,
-                     "collateraltype" => _,
-                     "exchange" => _,
-                     "haircut" => _,
-                     "isin" => _,
-                     "ltp" => ltp,
-                     "product" => _,
-                     "profitandloss" => _,
-                     "quantity" => quantity,
-                     "realisedquantity" => realisedquantity,
-                     "symboltoken" => symboltoken,
-                     "t1quantity" => _,
-                     "tradingsymbol" => _
-                   } = holding ->
-      averageprice = if averageprice > 0, do: averageprice, else: close
-      close = if realisedquantity > 0, do: close, else: averageprice
-      invested = quantity * averageprice
-      current = quantity * ltp
-      overall_gain_or_loss = quantity * (ltp - averageprice)
-      overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
-      todays_profit_or_loss = quantity * (ltp - close)
-      todays_profit_or_loss_percent = todays_profit_or_loss / invested * 100
-      ltp_percent = (ltp - close) / close * 100
+    |> Enum.filter(&filter_holding/1)
+    |> Enum.map(&format_holding/1)
+  end
 
-      Map.merge(holding, %{
-        "invested" => invested,
-        "current" => current,
-        "in_overall_profit?" => current > invested,
-        "is_gain_today?" => ltp > close,
-        "overall_gain_or_loss" => overall_gain_or_loss,
-        "overall_gain_or_loss_percent" => overall_gain_or_loss_percent,
-        "todays_profit_or_loss" => todays_profit_or_loss,
-        "todays_profit_or_loss_percent" => todays_profit_or_loss_percent,
-        "ltp_percent" => ltp_percent,
-        id: symboltoken
-      })
-    end)
+  defp filter_holding(%{"symboltoken" => symboltoken, "quantity" => quantity})
+       when symboltoken == "" or quantity == 0,
+       do: false
+
+  defp filter_holding(_), do: true
+
+  defp format_holding(
+         %{
+           "authorisedquantity" => _,
+           "averageprice" => averageprice,
+           "close" => close,
+           "collateralquantity" => _,
+           "collateraltype" => _,
+           "exchange" => _,
+           "haircut" => _,
+           "isin" => _,
+           "ltp" => ltp,
+           "product" => _,
+           "profitandloss" => _,
+           "quantity" => quantity,
+           "realisedquantity" => realisedquantity,
+           "symboltoken" => symboltoken,
+           "t1quantity" => _,
+           "tradingsymbol" => _
+         } = holding
+       ) do
+    averageprice = if averageprice > 0, do: averageprice, else: close
+    close = if realisedquantity > 0, do: close, else: averageprice
+    invested = quantity * averageprice
+    current = quantity * ltp
+    overall_gain_or_loss = quantity * (ltp - averageprice)
+    overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
+    todays_profit_or_loss = quantity * (ltp - close)
+    todays_profit_or_loss_percent = todays_profit_or_loss / invested * 100
+    ltp_percent = (ltp - close) / close * 100
+
+    Map.merge(holding, %{
+      "invested" => invested,
+      "current" => current,
+      "in_overall_profit?" => current > invested,
+      "is_gain_today?" => ltp > close,
+      "overall_gain_or_loss" => overall_gain_or_loss,
+      "overall_gain_or_loss_percent" => overall_gain_or_loss_percent,
+      "todays_profit_or_loss" => todays_profit_or_loss,
+      "todays_profit_or_loss_percent" => todays_profit_or_loss_percent,
+      "ltp_percent" => ltp_percent,
+      id: symboltoken
+    })
   end
 
   def calculated_overview(holdings) do
@@ -76,7 +99,7 @@ defmodule AngelTrading.Utils do
     total_todays_gain_or_loss = holdings |> Enum.map(& &1["todays_profit_or_loss"]) |> Enum.sum()
 
     %{
-      holdings: holdings |> Enum.sort(&(&2["tradingsymbol"] >= &1["tradingsymbol"])),
+      holdings: holdings |> Enum.sort_by(& &1["tradingsymbol"], :desc),
       total_invested: total_invested,
       total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
       total_overall_gain_or_loss: total_overall_gain_or_loss,
@@ -90,29 +113,31 @@ defmodule AngelTrading.Utils do
 
   def formatted_candle_data(candle_data) do
     candle_data
-    |> Enum.map(fn [timestamp, open, high, low, close, volume] ->
-      %{
-        time:
-          timestamp
-          |> String.split("+")
-          |> List.first()
-          |> Timex.parse!("{ISO:Extended:Z}")
-          |> Timex.to_unix(),
-        open: open,
-        high: high,
-        low: low,
-        close: close,
-        volume: volume
-      }
-    end)
+    |> Enum.map(&format_candle_data/1)
     |> calculate_rsi()
+  end
+
+  defp format_candle_data([timestamp, open, high, low, close, volume]) do
+    %{
+      time:
+        timestamp
+        |> String.split("+")
+        |> List.first()
+        |> Timex.parse!("{ISO:Extended:Z}")
+        |> Timex.to_unix(),
+      open: open,
+      high: high,
+      low: low,
+      close: close,
+      volume: volume
+    }
   end
 
   def stock_long_name(trading_symbol) do
     symbol = trading_symbol |> String.split("-") |> List.first()
 
     case AngelTrading.YahooFinance.search(symbol) do
-      {:ok, [%{long_name: long_name}]} when bit_size(long_name) > 0 -> long_name
+      {:ok, [%{long_name: long_name}]} when byte_size(long_name) > 0 -> long_name
       _ -> trading_symbol
     end
   end

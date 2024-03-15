@@ -20,7 +20,7 @@ defmodule AngelTrading.Account do
   ## Examples
 
       iex> AngelTrading.Account.get_client("ABC123")
-      {:ok, %{"name" => "John Doe", ...}}
+      {:ok, %{"body" => "encrypted_data"}}
 
   """
   def get_client(client_code) do
@@ -41,7 +41,7 @@ defmodule AngelTrading.Account do
   ## Examples
 
       iex> AngelTrading.Account.get_client_codes("user123")
-      {:ok, ["ABC123", "DEF456", ...]}
+      {:ok, %{body: %{"ABC123" =>"ABC123", "DEF456" => "DEF456", ...}}}
 
   """
   def get_client_codes(user_hash) do
@@ -61,8 +61,8 @@ defmodule AngelTrading.Account do
 
   ## Examples
 
-      iex> AngelTrading.Account.get_user("user123")
-      {:ok, %{"name" => "John Doe", "email" => "john@example.com", ...}}
+      iex> AngelTrading.Account.get_user("base64hash")
+      {:ok, %{"body" => %{"totp_secret" => "xxxx"}}}
 
   """
   def get_user(user_hash) do
@@ -130,7 +130,7 @@ defmodule AngelTrading.Account do
         "totp_secret" => totp_secret
       }) do
     with {:ok, %{body: %{^client_code => ^client_code}}} <-
-           patch("/users/#{user_hash}/clients.json", %{client_code: client_code}),
+           patch("/users/#{user_hash}/clients.json", %{client_code => client_code}),
          {:ok, %{body: %{^client_code => data}}} when is_bitstring(data) <-
            patch(
              "clients.json",
