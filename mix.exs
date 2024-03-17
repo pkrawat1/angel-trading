@@ -73,7 +73,8 @@ defmodule AngelTrading.MixProject do
       {:explorer, "~> 0.8.0"},
       {:cachex, "~> 3.6"},
       {:langchain, "~> 0.1.10"},
-      {:earmark, "~> 1.4"}
+      {:earmark, "~> 1.4"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 
