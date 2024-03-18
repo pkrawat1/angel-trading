@@ -49,10 +49,13 @@ defmodule AngelTrading.API do
   @doc """
   Authenticate the user and obtain an access token.
 
-  ## Parameters
-    - params: A map containing the login credentials.
+  ## Map containing the login parameters:
+    - clientcode: The client code.
+    - password: The password.
+    - totp: The TOTP
   """
-  def login(params), do: TradeGalleon.call(AngelOne, :login, params: params)
+  def login(%{"clientcode" => _, "password" => _, "totp" => _} = params),
+    do: TradeGalleon.call(AngelOne, :login, params: params)
 
   @doc """
   Log out the user and invalidate the access token.
