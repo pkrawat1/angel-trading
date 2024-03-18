@@ -10,6 +10,10 @@ defmodule AngelTradingWeb.UserAuth do
   @remember_me_options [sign: true, same_site: "Lax"]
   @session_valid_days 3
 
+  @doc """
+  Logs in a user with the given `user`, `password`
+  and totp(valid for 30 seconds).
+  """
   def login_user(conn, %{
         "user" => user,
         "password" => password,
@@ -39,6 +43,9 @@ defmodule AngelTradingWeb.UserAuth do
     end
   end
 
+  @doc """
+  Puts the given client tokens in the db.
+  """
   def login_client(conn, %{
         "client_code" => client_code,
         "token" => token,
@@ -75,6 +82,9 @@ defmodule AngelTradingWeb.UserAuth do
     |> redirect(to: "/")
   end
 
+  @doc """
+  Logs out the user and clears the session.
+  """
   def logout_user(conn, _params) do
     conn
     |> configure_session(renew: true)
@@ -84,6 +94,9 @@ defmodule AngelTradingWeb.UserAuth do
     |> redirect(to: ~p"/login")
   end
 
+  @doc """
+  Fetches the user session from the cookies or the session.
+  """
   def fetch_user_session(conn, _opts) do
     if get_session(conn, :user) do
       conn
@@ -99,6 +112,51 @@ defmodule AngelTradingWeb.UserAuth do
       end
     end
     |> assign(:current_user, get_session(conn, :user))
+  end
+
+  def ensure_authenticated(conn, _opts) do
+    if session_valid?(get_session(conn)) do
+      conn
+    else
+      conn
+      |> put_flash(:error, "You must log in to access this page.")
+      |> redirect(to: ~p"/login")
+      |> halt()
+    end
+  end
+
+  def redirect_if_user_is_authenticated(conn, _opts) do
+    if session_valid?(get_session(conn)) do
+      conn
+      |> put_flash(:error, "You need to log out to view this page.")
+      |> redirect(to: signed_in_path(conn))
+      |> halt()
+    else
+      conn
+    end
+  end
+
+  def on_mount(:ensure_authenticated, _params, session, socket) do
+    socket = mount_current_user(session, socket)
+
+    if session_valid?(session) do
+      {:cont, socket}
+    else
+      {:halt,
+       socket
+       |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+       |> Phoenix.LiveView.redirect(to: ~p"/login")}
+    end
+  end
+
+  def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
+    socket = mount_current_user(session, socket)
+
+    if session_valid?(session) do
+      {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
+    else
+      {:cont, socket}
+    end
   end
 
   defp put_in_session(conn, user, password) do
@@ -160,51 +218,6 @@ defmodule AngelTradingWeb.UserAuth do
         | @remember_me_options
       ]
     )
-  end
-
-  def ensure_authenticated(conn, _opts) do
-    if session_valid?(get_session(conn)) do
-      conn
-    else
-      conn
-      |> put_flash(:error, "You must log in to access this page.")
-      |> redirect(to: ~p"/login")
-      |> halt()
-    end
-  end
-
-  def redirect_if_user_is_authenticated(conn, _opts) do
-    if session_valid?(get_session(conn)) do
-      conn
-      |> put_flash(:error, "You need to log out to view this page.")
-      |> redirect(to: signed_in_path(conn))
-      |> halt()
-    else
-      conn
-    end
-  end
-
-  def on_mount(:ensure_authenticated, _params, session, socket) do
-    socket = mount_current_user(session, socket)
-
-    if session_valid?(session) do
-      {:cont, socket}
-    else
-      {:halt,
-       socket
-       |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
-       |> Phoenix.LiveView.redirect(to: ~p"/login")}
-    end
-  end
-
-  def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
-    socket = mount_current_user(session, socket)
-
-    if session_valid?(session) do
-      {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
-    else
-      {:cont, socket}
-    end
   end
 
   defp mount_current_user(session, socket) do
