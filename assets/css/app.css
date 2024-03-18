@@ -3,3 +3,11 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+html {
+  @apply h-full;
+}
+
+[data-phx-main] {
+  @apply h-full;
+}

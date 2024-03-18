@@ -12,7 +12,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
 
   def render(assigns) do
     ~H"""
-    <div class="flex justify-center">
+    <div class="flex m-auto max-w-6xl px-4 sm:px-6 lg:px-8 justify-center">
       <.simple_form :let={f} for={%{}} as={:user} autocomplete="off" phx-submit="login">
         <.input field={f[:clientcode]} value={@params["clientcode"]} placeholder="Client code" />
         <.input
