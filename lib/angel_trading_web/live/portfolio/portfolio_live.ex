@@ -231,7 +231,7 @@ defmodule AngelTradingWeb.PortfolioLive do
          exchange,
          symbol_token
        ) do
-    with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+    with {:ok, %{"data" => %{fetched: [quote]}}} <-
            API.quote(token, exchange, [symbol_token]) do
       %{"ltp" => ltp, "close" => close} = quote
 
@@ -255,7 +255,7 @@ defmodule AngelTradingWeb.PortfolioLive do
          exchange,
          symbol_token
        ) do
-    with {:ok, %{"data" => candle_data}} <-
+    with {:ok, %{"data" => %{data: candle_data}}} <-
            API.candle_data(
              token,
              exchange,
@@ -291,9 +291,9 @@ defmodule AngelTradingWeb.PortfolioLive do
     end
   end
 
-  def handle_async(:get_portfolio_data, {:ok, [_ | _] = holdings}, socket) do
+  def handle_async(:get_portfolio_data, {:ok, portfolio}, socket) do
     portfolio =
-      holdings
+      portfolio.holdings
       |> Utils.formatted_holdings()
       |> Utils.calculated_overview()
 
@@ -301,7 +301,7 @@ defmodule AngelTradingWeb.PortfolioLive do
      socket
      |> stream(
        :holdings,
-       Enum.sort(portfolio.holdings, &(&2["tradingsymbol"] >= &1["tradingsymbol"]))
+       Enum.sort(portfolio.holdings, &(&2.tradingsymbol >= &1.tradingsymbol))
      )
      |> assign(:portfolio, AsyncResult.ok(socket.assigns.portfolio, portfolio))}
   end
@@ -327,7 +327,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
     socket
-    |> stream_configure(:holdings, dom_id: &"holding-#{&1["symboltoken"]}")
+    |> stream_configure(:holdings, dom_id: &"holding-#{&1.symboltoken}")
     |> stream(:holdings, [])
     |> assign(:portfolio, AsyncResult.loading())
     |> start_async(:get_portfolio_data, fn ->

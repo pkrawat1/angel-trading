@@ -6,7 +6,7 @@
         </div>
       </:loading>
       <:failed :let={reason}><%= reason %></:failed>
-      <%= String.downcase(profile["name"]) %>
+      <%= String.downcase(profile.name) %>
     </.async_result>
   </h5>
   <.async_result :let={portfolio} assign={@portfolio}>
@@ -80,7 +80,7 @@
         <:failed :let={reason}><%= reason %></:failed>
         Available Cash
         <span class="text-green-500">
-          <%= number_to_currency(funds["net"], precision: 2) %> <br />
+          <%= number_to_currency(funds.net, precision: 2) %> <br />
         </span>
       </.async_result>
     </small>

@@ -50,58 +50,56 @@ defmodule AngelTrading.Utils do
   defp filter_holding(_), do: true
 
   defp format_holding(
-         %{
-           "authorisedquantity" => _,
-           "averageprice" => averageprice,
-           "close" => close,
-           "collateralquantity" => _,
-           "collateraltype" => _,
-           "exchange" => _,
-           "haircut" => _,
-           "isin" => _,
-           "ltp" => ltp,
-           "product" => _,
-           "profitandloss" => _,
-           "quantity" => quantity,
-           "realisedquantity" => realisedquantity,
-           "symboltoken" => symboltoken,
-           "t1quantity" => _,
-           "tradingsymbol" => _
+         %TradeGalleon.Brokers.AngelOne.Responses.Portfolio.Holding{
+           authorisedquantity: _,
+           averageprice: averageprice,
+           close: close,
+           collateralquantity: _,
+           collateraltype: _,
+           exchange: _,
+           isin: _,
+           ltp: ltp,
+           product: _,
+           profitandloss: overall_gain_or_loss,
+           pnlpercentage: overall_gain_or_loss_percent,
+           quantity: quantity,
+           realisedquantity: realisedquantity,
+           symboltoken: symboltoken,
+           t1quantity: _,
+           tradingsymbol: _
          } = holding
        ) do
     averageprice = if averageprice > 0, do: averageprice, else: close
     close = if realisedquantity > 0, do: close, else: averageprice
     invested = quantity * averageprice
     current = quantity * ltp
-    overall_gain_or_loss = quantity * (ltp - averageprice)
-    overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
     todays_profit_or_loss = quantity * (ltp - close)
     todays_profit_or_loss_percent = todays_profit_or_loss / invested * 100
     ltp_percent = (ltp - close) / close * 100
 
     Map.merge(holding, %{
-      "invested" => invested,
-      "current" => current,
-      "in_overall_profit?" => current > invested,
-      "is_gain_today?" => ltp > close,
-      "overall_gain_or_loss" => overall_gain_or_loss,
-      "overall_gain_or_loss_percent" => overall_gain_or_loss_percent,
-      "todays_profit_or_loss" => todays_profit_or_loss,
-      "todays_profit_or_loss_percent" => todays_profit_or_loss_percent,
-      "ltp_percent" => ltp_percent,
+      invested: invested,
+      current: current,
+      in_overall_profit?: current > invested,
+      is_gain_today?: ltp > close,
+      overall_gain_or_loss: overall_gain_or_loss,
+      overall_gain_or_loss_percent: overall_gain_or_loss_percent,
+      todays_profit_or_loss: todays_profit_or_loss,
+      todays_profit_or_loss_percent: todays_profit_or_loss_percent,
+      ltp_percent: ltp_percent,
       id: symboltoken
     })
   end
 
   def calculated_overview(holdings) do
-    total_invested = holdings |> Enum.map(& &1["invested"]) |> Enum.sum()
-    total_overall_gain_or_loss = holdings |> Enum.map(& &1["overall_gain_or_loss"]) |> Enum.sum()
-    total_todays_gain_or_loss = holdings |> Enum.map(& &1["todays_profit_or_loss"]) |> Enum.sum()
+    total_invested = holdings |> Enum.map(& &1.invested) |> Enum.sum()
+    total_overall_gain_or_loss = holdings |> Enum.map(& &1.overall_gain_or_loss) |> Enum.sum()
+    total_todays_gain_or_loss = holdings |> Enum.map(& &1.todays_profit_or_loss) |> Enum.sum()
 
     %{
-      holdings: holdings |> Enum.sort_by(& &1["tradingsymbol"], :desc),
+      holdings: holdings |> Enum.sort_by(& &1.tradingsymbol, :desc),
       total_invested: total_invested,
-      total_current: holdings |> Enum.map(& &1["current"]) |> Enum.sum(),
+      total_current: holdings |> Enum.map(& &1.current) |> Enum.sum(),
       total_overall_gain_or_loss: total_overall_gain_or_loss,
       total_todays_gain_or_loss: total_todays_gain_or_loss,
       in_overall_profit_today?: total_todays_gain_or_loss > 0,
