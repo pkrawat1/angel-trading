@@ -88,21 +88,21 @@ defmodule AngelTradingWeb.PortfolioLive do
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
-      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1["symboltoken"]), 3)
+      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symboltoken), 3)
     else
       pid when is_pid(pid) ->
         Logger.info(
           "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
-        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1["symboltoken"]), 3)
+        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symboltoken), 3)
 
       e ->
         with {:ok, %{"data" => %{"fetched" => quotes}}} <-
                API.quote(
                  token,
                  "NSE",
-                 Enum.map(holdings, & &1["symboltoken"])
+                 Enum.map(holdings, & &1.symboltoken)
                ) do
           Enum.each(quotes, fn quote_data ->
             send(
@@ -180,18 +180,18 @@ defmodule AngelTradingWeb.PortfolioLive do
       )
       when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price
-    updated_holding = Enum.find(holdings, &(&1["symboltoken"] == quote_data.token))
+    updated_holding = Enum.find(holdings, &(&1.symboltoken == quote_data.token))
 
     socket =
-      if updated_holding && updated_holding["ltp"] != new_ltp do
+      if updated_holding && updated_holding.ltp != new_ltp do
         updated_holding =
-          [%{updated_holding | "ltp" => new_ltp}]
+          [%{updated_holding | ltp: new_ltp}]
           |> Utils.formatted_holdings()
           |> List.first()
 
         holdings =
           Enum.map(holdings, fn holding ->
-            if holding["symboltoken"] == quote_data.token do
+            if holding.symboltoken == quote_data.token do
               updated_holding
             else
               holding
@@ -291,9 +291,9 @@ defmodule AngelTradingWeb.PortfolioLive do
     end
   end
 
-  def handle_async(:get_portfolio_data, {:ok, portfolio}, socket) do
+  def handle_async(:get_portfolio_data, {:ok, %{holdings: holdings}}, socket) do
     portfolio =
-      portfolio.holdings
+      holdings
       |> Utils.formatted_holdings()
       |> Utils.calculated_overview()
 

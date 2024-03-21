@@ -9,7 +9,7 @@
     <div class="block w-full py-6 px-3 border rounded-lg shadow hover:shadow-md capitalize text-white bg-gray-800 border-gray-700 hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800">
       <.link navigate={~p"/client/#{client.client_code}/portfolio"}>
         <h5 class="text-center mb-5 text-2xl font-bold tracking-tight">
-          <%= String.downcase(client.profile["name"]) %>
+          <%= String.downcase(client.profile.name) %>
         </h5>
         <div class="text-xl">
           <%= number_to_currency(client.total_current, precision: 0) %> <br />
@@ -60,7 +60,7 @@
           <small>
             Available Cash
             <span class="text-green-500">
-              <%= number_to_currency(client.funds["net"], precision: 2) %> <br />
+              <%= number_to_currency(client.funds.net, precision: 2) %> <br />
             </span>
           </small>
           <small :if={client.dis_status} class="text-green-500">Verified</small>

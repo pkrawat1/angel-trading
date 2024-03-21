@@ -43,8 +43,8 @@ defmodule AngelTrading.Utils do
     |> Enum.map(&format_holding/1)
   end
 
-  defp filter_holding(%{"symboltoken" => symboltoken, "quantity" => quantity})
-       when symboltoken == "" or quantity == 0,
+  defp filter_holding(%{symboltoken: symboltoken, quantity: quantity})
+       when symboltoken == nil or quantity == 0,
        do: false
 
   defp filter_holding(_), do: true
@@ -74,7 +74,10 @@ defmodule AngelTrading.Utils do
     invested = quantity * averageprice
     current = quantity * ltp
     todays_profit_or_loss = quantity * (ltp - close)
-    todays_profit_or_loss_percent = todays_profit_or_loss / invested * 100
+
+    todays_profit_or_loss_percent =
+      if todays_profit_or_loss > 0, do: todays_profit_or_loss / invested * 100, else: 0.0
+
     ltp_percent = (ltp - close) / close * 100
 
     Map.merge(holding, %{
