@@ -60,8 +60,6 @@ defmodule AngelTrading.Utils do
            isin: _,
            ltp: ltp,
            product: _,
-           profitandloss: overall_gain_or_loss,
-           pnlpercentage: overall_gain_or_loss_percent,
            quantity: quantity,
            realisedquantity: realisedquantity,
            symboltoken: symboltoken,
@@ -73,12 +71,13 @@ defmodule AngelTrading.Utils do
     close = if realisedquantity > 0, do: close, else: averageprice
     invested = quantity * averageprice
     current = quantity * ltp
+    overall_gain_or_loss = quantity * (ltp - averageprice)
+    overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
     todays_profit_or_loss = quantity * (ltp - close)
+    ltp_percent = (ltp - close) / close * 100
 
     todays_profit_or_loss_percent =
       if todays_profit_or_loss > 0, do: todays_profit_or_loss / invested * 100, else: 0.0
-
-    ltp_percent = (ltp - close) / close * 100
 
     Map.merge(holding, %{
       invested: invested,

@@ -63,6 +63,7 @@ defmodule AngelTradingWeb.OrderLive do
           ltp_percent: 0.0,
           is_gain_today?: true,
           margin_required: 0.0,
+          gross: 0,
           max: 0,
           charges: nil
         })
@@ -131,7 +132,7 @@ defmodule AngelTradingWeb.OrderLive do
 
         max =
           if order.transaction_type == "BUY" do
-            funds["net"] / price
+            funds.net / price
           else
             (selected_holding || %{"quantity" => 0})["quantity"]
           end
@@ -154,41 +155,30 @@ defmodule AngelTradingWeb.OrderLive do
 
   def handle_info(_, socket), do: {:noreply, socket}
 
-  def handle_event("increase-limit", _, %{assigns: %{order: order, token: token}} = socket) do
+  def handle_event("increase-limit", _, %{assigns: %{order: order}} = socket) do
     price = "#{order.price}" |> Decimal.add("0.05") |> Decimal.to_float()
 
-    {:noreply,
-     assign(socket,
-       order:
-         %{
-           order
-           | price: price,
-             margin_required: price * order.quantity
-         }
-         |> estimate_charges(token)
-     )}
+    handle_event(
+      "validate-order",
+      %{"order" => %{"price" => "#{price}", "quantity" => "#{order.quantity}"}},
+      socket
+    )
   end
 
-  def handle_event("decrease-limit", _, %{assigns: %{order: order, token: token}} = socket) do
-    price =
-      "#{order.price}" |> Decimal.sub("0.05") |> Decimal.to_float()
+  def handle_event("decrease-limit", _, %{assigns: %{order: order}} = socket) do
+    price = "#{order.price}" |> Decimal.sub("0.05") |> Decimal.to_float()
 
-    {:noreply,
-     assign(socket,
-       order:
-         %{
-           order
-           | price: price,
-             margin_required: price * order.quantity
-         }
-         |> estimate_charges(token)
-     )}
+    handle_event(
+      "validate-order",
+      %{"order" => %{"price" => "#{price}", "quantity" => "#{order.quantity}"}},
+      socket
+    )
   end
 
   def handle_event(
         "validate-order",
         %{"order" => %{"price" => price, "quantity" => quantity}},
-        %{assigns: %{order: order, token: token}} = socket
+        %{assigns: %{order: order, token: token, funds: funds}} = socket
       ) do
     {quantity, _} = Integer.parse("0" <> quantity)
     {price, _} = Float.parse(if price == "", do: "#{order.ltp}", else: price)
@@ -200,7 +190,8 @@ defmodule AngelTradingWeb.OrderLive do
            order
            | price: price,
              quantity: quantity,
-             margin_required: price * quantity
+             margin_required: price * quantity,
+             max: floor(funds.net / price)
          }
          |> estimate_charges(token)
      )}
@@ -298,17 +289,17 @@ defmodule AngelTradingWeb.OrderLive do
          %{assigns: %{token: token, order: %{symbol_token: symbol_token}}} = socket
        ) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
-         {:ok, %{"data" => holdings}} <- API.portfolio(token),
+         {:ok, %{"data" => %{holdings: holdings}}} <- API.portfolio(token),
          {:ok, %{"data" => funds}} <- API.funds(token) do
       funds = %{
         funds
-        | "net" => Float.parse(funds["net"]) |> Tuple.to_list() |> List.first() |> Float.floor(2)
+        | net: Float.parse(funds.net) |> elem(0) |> Float.floor(2)
       }
 
       socket
-      |> assign(name: profile["name"] |> String.split(" ") |> List.first())
+      |> assign(name: profile.name |> String.split(" ") |> List.first())
       |> assign(funds: funds)
-      |> assign(selected_holding: Enum.find(holdings, &(&1["symboltoken"] == symbol_token)))
+      |> assign(selected_holding: Enum.find(holdings, &(&1.symboltoken == symbol_token)))
     else
       {:error, %{"message" => message}} ->
         socket
@@ -369,7 +360,7 @@ defmodule AngelTradingWeb.OrderLive do
   end
 
   defp estimate_charges(%{quantity: quantity} = order, token) when quantity > 0 do
-    with {:ok, %{"data" => %{"charges" => [charges | _]}}} <-
+    with {:ok, %{"data" => %{summary: charges}}} <-
            API.estimate_charges(token, [
              %{
                exchange: order.exchange,
@@ -382,7 +373,7 @@ defmodule AngelTradingWeb.OrderLive do
                price: order.price
              }
            ]) do
-      %{order | charges: charges}
+      %{order | charges: charges, gross: order.margin_required + charges.total_charges}
     else
       e ->
         Logger.error("[Order] Error estimating charges for the order")

@@ -89,7 +89,7 @@ defmodule AngelTradingWeb.OrdersLive do
               tokenList: [
                 %{
                   exchangeType: 1,
-                  tokens: Enum.map(socket.assigns.order_book, & &1["symboltoken"])
+                  tokens: Enum.map(socket.assigns.order_book, & &1.symboltoken)
                 }
               ]
             }
@@ -190,25 +190,24 @@ defmodule AngelTradingWeb.OrdersLive do
     new_ltp = quote_data.last_traded_price
     close = quote_data.close_price
     ltp_percent = (new_ltp - close) / close * 100
-    updated_orders = Enum.filter(order_book, &(&1["symboltoken"] == quote_data.token))
+    updated_orders = Enum.filter(order_book, &(&1.symboltoken == quote_data.token))
 
     socket =
       if updated_orders != [] do
         updated_orders
-        |> Enum.filter(&(&1["ltp"] != new_ltp))
+        |> Enum.filter(&(&1.ltp != new_ltp))
         |> Enum.reduce(socket, fn updated_order, socket ->
-          {total_qty, _} = Integer.parse(updated_order["filledshares"])
-
           updated_order =
             updated_order
-            |> Map.put_new("ltp", new_ltp)
-            |> Map.put_new("close", close)
-            |> Map.put_new("ltp_percent", ltp_percent)
-            |> Map.put_new("is_gain_today?", close < new_ltp)
+            |> Map.put_new(:ltp, new_ltp)
+            |> Map.put_new(:close, close)
+            |> Map.put_new(:ltp_percent, ltp_percent)
+            |> Map.put_new(:is_gain_today?, close < new_ltp)
             |> Map.put_new(
-              "gains_or_loss",
-              if(updated_order["transactiontype"] == "SELL", do: -1, else: 1) * total_qty *
-                (new_ltp - updated_order["averageprice"])
+              :gains_or_loss,
+              if(updated_order.transactiontype == "SELL", do: -1, else: 1) *
+                updated_order.filledshares *
+                (new_ltp - updated_order.averageprice)
             )
 
           socket
@@ -226,31 +225,30 @@ defmodule AngelTradingWeb.OrdersLive do
   end
 
   def handle_info(
-        %{topic: topic, payload: order_status},
+        %{topic: topic, payload: new_order},
         %{assigns: %{token: token, client_code: client_code, order_book: order_book}} = socket
       )
       when topic == "order-stream-" <> client_code do
     API.reset_cache(token)
 
     updated_order =
-      Enum.find(order_book, &(&1["orderid"] == get_in(order_status, ["orderData", "orderid"])))
+      Enum.find(order_book, &(&1.orderid == new_order.orderid))
 
     socket =
-      case {updated_order, order_status} do
-        {%{"status" => updated_order_status},
-         %{"orderData" => %{"orderid" => order_id, "status" => order_status} = order_data}}
+      case {updated_order, new_order} do
+        {%{status: updated_order_status}, %{orderid: order_id, status: order_status}}
         when bit_size(order_id) > 0 and updated_order_status not in ["cancelled", "rejected"] and
                order_status in ["cancelled", "rejected"] ->
           socket
-          |> stream_delete(:order_book, order_data)
-          |> assign(order_book: Enum.filter(order_book, &(&1["orderid"] != order_id)))
+          |> stream_delete(:order_book, new_order)
+          |> assign(order_book: Enum.filter(order_book, &(&1.orderid != new_order.orderid)))
 
         {%{}, _} ->
-          updated_order = Map.merge(updated_order, order_status["orderData"])
+          updated_order = Map.merge(updated_order, new_order)
 
           order_book =
             Enum.map(order_book, fn order ->
-              if updated_order["orderid"] == order["orderid"] do
+              if updated_order.orderid == order.orderid do
                 updated_order
               else
                 order
@@ -265,11 +263,11 @@ defmodule AngelTradingWeb.OrdersLive do
           )
           |> assign(order_book: order_book)
 
-        {_, %{"orderData" => %{"orderid" => order_id} = order_data}}
+        {_, %{orderid: order_id}}
         when bit_size(order_id) > 0 ->
           socket
-          |> stream_insert(:order_book, order_data, at: -1)
-          |> assign(order_book: [order_data | order_book])
+          |> stream_insert(:order_book, new_order, at: -1)
+          |> assign(order_book: [new_order | order_book])
 
         _ ->
           socket
@@ -284,16 +282,16 @@ defmodule AngelTradingWeb.OrdersLive do
         %{assigns: %{token: token, order_book: order_book}} = socket
       ) do
     socket =
-      with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+      with {:ok, %{"data" => %{fetched: [quote]}}} <-
              API.quote(token, exchange, [symbol_token]) do
-        %{"ltp" => ltp, "close" => close} = quote
+        %{ltp: ltp, close: close} = quote
         ltp_percent = (ltp - close) / close * 100
 
-        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+        quote = Map.merge(quote, %{ltp_percent: ltp_percent, is_gain_today?: ltp > close})
 
         socket
         |> assign(quote: quote)
-        |> assign(selected_order: Enum.find(order_book, &(&1["orderid"] == order_id)))
+        |> assign(selected_order: Enum.find(order_book, &(&1.orderid == order_id)))
       else
         _ ->
           socket
@@ -329,13 +327,13 @@ defmodule AngelTradingWeb.OrdersLive do
   defp get_order_data(%{assigns: %{token: token}} = socket) do
     with {:ok, %{"data" => profile}} <- API.profile(token),
          {:ok, %{"data" => funds}} <- API.funds(token),
-         {:ok, %{"data" => order_book}} <- API.order_book(token) do
-      order_book = Enum.sort(order_book || [], &(&1["orderid"] >= &2["orderid"]))
+         {:ok, %{"data" => %{orders: order_book}}} <- API.order_book(token) do
+      order_book = Enum.sort(order_book || [], &(&1.orderid >= &2.orderid))
 
       socket
-      |> assign(name: profile["name"])
+      |> assign(name: profile.name)
       |> assign(funds: funds)
-      |> stream_configure(:order_book, dom_id: &"order-#{&1["orderid"]}")
+      |> stream_configure(:order_book, dom_id: &"order-#{&1.orderid}")
       |> stream(:order_book, order_book || [])
       |> assign(order_book: order_book || [])
     else
@@ -356,7 +354,7 @@ defmodule AngelTradingWeb.OrdersLive do
          } = socket
        ) do
     with {:ok, %{"data" => %{"fetched" => quotes}}} <-
-           API.quote(token, "NSE", Enum.map(order_book, & &1["symboltoken"])) do
+           API.quote(token, "NSE", Enum.map(order_book, & &1.symboltoken)) do
       Enum.each(quotes, fn quote_data ->
         send(
           self(),
@@ -364,7 +362,7 @@ defmodule AngelTradingWeb.OrdersLive do
             topic: "quote-stream-" <> client_code,
             payload:
               Map.merge(quote_data, %{
-                last_traded_price: quote_data["ltp"] * 100,
+                last_traded_price: quote_data.ltp * 100,
                 token: quote_data["symbolToken"],
                 close_price: quote_data["close"] * 100
               })
