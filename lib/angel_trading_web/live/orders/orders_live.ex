@@ -284,10 +284,10 @@ defmodule AngelTradingWeb.OrdersLive do
     socket =
       with {:ok, %{"data" => %{fetched: [quote]}}} <-
              API.quote(token, exchange, [symbol_token]) do
-        %{ltp: ltp, close: close} = quote
+        %{"ltp" => ltp, "close" => close} = quote
         ltp_percent = (ltp - close) / close * 100
 
-        quote = Map.merge(quote, %{ltp_percent: ltp_percent, is_gain_today?: ltp > close})
+        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
 
         socket
         |> assign(quote: quote)

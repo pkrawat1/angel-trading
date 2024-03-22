@@ -20,12 +20,13 @@ defmodule AngelTrading.Client do
   @spec get_client_portfolio_info(binary) :: {:ok, map} | {:error, atom}
   def get_client_portfolio_info(token) do
     with {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
-         {:portfolio, {:ok, %{"data" => holdings}}} <- {:portfolio, API.portfolio(token)},
+         {:portfolio, {:ok, %{"data" => %{holdings: holdings}}}} <-
+           {:portfolio, API.portfolio(token)},
          {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)} do
       {:ok,
        %{
          profile: profile,
-         holdings:
+         portfolio:
            holdings
            |> Utils.formatted_holdings()
            |> Utils.calculated_overview(),
@@ -71,14 +72,14 @@ defmodule AngelTrading.Client do
           |> MapSet.new()
           |> Enum.map(&API.search_token(token, "NSE", &1))
           |> Enum.flat_map(fn
-            {:ok, %{"data" => token_list}} -> token_list
+            {:ok, %{"data" => %{scrips: token_list}}} -> token_list
             _ -> []
           end)
-          |> Enum.uniq_by(& &1["tradingsymbol"])
-          |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
+          |> Enum.uniq_by(& &1.tradingsymbol)
+          |> Enum.filter(&String.ends_with?(&1.tradingsymbol, "-EQ"))
           |> Enum.map(
             &(&1
-              |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
+              |> Map.put_new(:name, Utils.stock_long_name(&1.tradingsymbol)))
           )
 
         {:ok, %{token_list: token_list}}
@@ -120,7 +121,7 @@ defmodule AngelTrading.Client do
            |> Timex.shift(days: 1)
            |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}")
          ) do
-      {:ok, %{"data" => candle_data}} ->
+      {:ok, %{"data" => %{data: candle_data}}} ->
         {:ok, %{candle_data: Utils.formatted_candle_data(candle_data)}}
 
       _ ->
@@ -151,10 +152,12 @@ defmodule AngelTrading.Client do
 
     case get_client_portfolio_info(token) do
       {:ok, %{profile: profile, funds: funds} = portfolio} ->
-        Jason.encode!(%{
+        IO.inspect(Jason.encode(portfolio))
+
+        Jason.encode(%{
           portfolio
-          | profile: Map.take(profile, ["name"]),
-            funds: Map.take(funds, ["net"])
+          | profile: profile.name,
+            available_funds: funds.net
         })
 
       _ ->
