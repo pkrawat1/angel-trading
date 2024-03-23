@@ -43,8 +43,8 @@ defmodule AngelTrading.Utils do
     |> Enum.map(&format_holding/1)
   end
 
-  defp filter_holding(%{symboltoken: symboltoken, quantity: quantity})
-       when symboltoken == nil or quantity == 0,
+  defp filter_holding(%{symboltoken: symboltoken, quantity: quantity, close: close})
+       when symboltoken == nil or quantity == 0 or close == 0,
        do: false
 
   defp filter_holding(_), do: true

@@ -24,14 +24,15 @@ defmodule AngelTrading.Client do
            {:portfolio, API.portfolio(token)},
          {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)} do
       {:ok,
-       %{
-         profile: profile,
-         portfolio:
-           holdings
-           |> Utils.formatted_holdings()
-           |> Utils.calculated_overview(),
-         funds: funds
-       }}
+       Map.merge(
+         %{
+           profile: profile,
+           funds: funds
+         },
+         holdings
+         |> Utils.formatted_holdings()
+         |> Utils.calculated_overview()
+       )}
     else
       {:profile, {:error, _}} -> {:error, :unauthorized}
       {:portfolio, {:error, _}} -> {:error, :unauthorized}
@@ -151,14 +152,8 @@ defmodule AngelTrading.Client do
     send(pid, {:function_run, "Retrieving client portfolio information."})
 
     case get_client_portfolio_info(token) do
-      {:ok, %{profile: profile, funds: funds} = portfolio} ->
-        IO.inspect(Jason.encode(portfolio))
-
-        Jason.encode(%{
-          portfolio
-          | profile: profile.name,
-            available_funds: funds.net
-        })
+      {:ok, result} ->
+        Jason.encode!(result)
 
       _ ->
         Jason.encode!(%{error: "Unable to fetch the client portfolio."})
