@@ -86,22 +86,20 @@
       </div>
       <section class="capitalize fixed bottom-[56px] px-5 py-4 left-0 z-50 w-full bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-800">
         <div class="flex justify-between mx-auto max-w-6xl">
-          <span class={
-            if !is_sell_order? && @order.margin_required > @funds["net"], do: "text-red-500"
-          }>
+          <span class={if !is_sell_order? && @order.gross > @funds.net, do: "text-red-500"}>
             Margin Required<br />
             <%= number_to_currency(
               if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.ceil())
             ) %>
             <span :if={@order[:charges]} class="text-orange-600 animate-pulse">
-              + Charges(<%= @order[:charges]["total_charges"]
+              + Charges(<%= @order.charges.total_charges
               |> Float.round(2)
               |> number_to_currency() %>)
             </span>
           </span>
           <span class="text-right">
             Avilable Cash(<small><b><%= @name %></b></small>)<br />
-            <%= number_to_currency(@funds["net"]) %>
+            <%= number_to_currency(@funds.net) %>
           </span>
         </div>
       </section>

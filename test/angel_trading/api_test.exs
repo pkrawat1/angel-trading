@@ -4,22 +4,19 @@ defmodule AngelTrading.APITest do
   import Mock
 
   describe "Auth" do
+    @valid_params %{
+      "clientcode" => "clientcode",
+      "password" => "password",
+      "totp" => "totp"
+    }
     test "login" do
       with_mock API, login: fn _ -> {:ok, %{token: ""}} end do
-        API.login(%{
-          "clientcode" => "clientcode",
-          "password" => "password",
-          "totp" => "totp"
-        })
+        API.login(@valid_params)
 
         assert_called(
           API.login(
             :meck.is(fn params ->
-              assert params == %{
-                       "clientcode" => "clientcode",
-                       "password" => "password",
-                       "totp" => "totp"
-                     }
+              assert params == @valid_params
             end)
           )
         )

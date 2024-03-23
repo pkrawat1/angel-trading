@@ -211,18 +211,18 @@ defmodule AngelTradingWeb.WatchlistLive do
             |> MapSet.new()
             |> Enum.map(&API.search_token(token, "NSE", &1))
             |> Enum.flat_map(fn
-              {:ok, %{"data" => token_list}} -> token_list
+              {:ok, %{"data" => %{scrips: token_list}}} -> token_list
               _ -> []
             end)
-            |> Enum.uniq_by(& &1["tradingsymbol"])
-            |> Enum.filter(&String.ends_with?(&1["tradingsymbol"], "-EQ"))
+            |> Enum.uniq_by(& &1.tradingsymbol)
+            |> Enum.filter(&String.ends_with?(&1.tradingsymbol, "-EQ"))
             |> Enum.map(
               &(&1
                 |> Map.put_new(
-                  "in_watchlist?",
-                  MapSet.member?(watchlist_symbols, &1["tradingsymbol"])
+                  :in_watchlist?,
+                  MapSet.member?(watchlist_symbols, &1.tradingsymbol)
                 )
-                |> Map.put_new("name", Utils.stock_long_name(&1["tradingsymbol"])))
+                |> Map.put_new(:name, Utils.stock_long_name(&1.tradingsymbol)))
             )
 
           {:ok,
@@ -313,7 +313,7 @@ defmodule AngelTradingWeb.WatchlistLive do
   end
 
   defp get_quote(%{assigns: %{token: token}} = socket, exchange, symbol_token) do
-    with {:ok, %{"data" => %{"fetched" => [quote]}}} <-
+    with {:ok, %{"data" => %{fetched: [quote]}}} <-
            API.quote(token, exchange, [symbol_token]) do
       %{"ltp" => ltp, "close" => close} = quote
 
@@ -337,7 +337,7 @@ defmodule AngelTradingWeb.WatchlistLive do
          exchange,
          symbol_token
        ) do
-    with {:ok, %{"data" => candle_data}} <-
+    with {:ok, %{"data" => %{data: candle_data}}} <-
            API.candle_data(
              token,
              exchange,

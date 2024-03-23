@@ -40,6 +40,12 @@ defmodule AngelTradingWeb.UserAuth do
         |> put_flash(:error, "Invalid totp. Please try again.")
         |> redirect(to: ~p"/login?user=#{user}&password=#{password}")
         |> halt()
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Unable to login at the moment. Please try again.")
+        |> redirect(to: ~p"/login?user=#{user}&password=#{password}")
+        |> halt()
     end
   end
 
@@ -176,9 +182,9 @@ defmodule AngelTradingWeb.UserAuth do
            {:ok,
             %{
               "data" => %{
-                "jwtToken" => token,
-                "refreshToken" => refresh_token,
-                "feedToken" => feed_token
+                jwtToken: token,
+                refreshToken: refresh_token,
+                feedToken: feed_token
               }
             }} <-
              API.login(%{
