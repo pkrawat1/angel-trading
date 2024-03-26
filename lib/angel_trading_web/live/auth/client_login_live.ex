@@ -41,14 +41,15 @@ defmodule AngelTradingWeb.ClientLoginLive do
               params
         },
         socket
-      ) do
+      )
+      when bit_size(clientcode) != 0 and bit_size(password) != 0 and bit_size(totp_secret) != 0 do
     with {:ok, totp} <- AngelTrading.TOTP.totp_now(params["totp_secret"]),
          {:ok,
           %{
             "data" => %{
-              "jwtToken" => token,
-              "refreshToken" => refresh_token,
-              "feedToken" => feed_token
+              jwtToken: token,
+              refreshToken: refresh_token,
+              feedToken: feed_token
             }
           }} <-
            API.login(%{
@@ -78,5 +79,14 @@ defmodule AngelTradingWeb.ClientLoginLive do
           |> put_flash(:error, message)
         }
     end
+  end
+
+  def handle_event("login", %{"user" => params}, socket) do
+    {
+      :noreply,
+      socket
+      |> push_patch(to: ~p"/client/login?#{params}")
+      |> put_flash(:error, "Invalid credentials")
+    }
   end
 end

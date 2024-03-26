@@ -36,7 +36,12 @@ defmodule AngelTradingWeb.ConnCase do
   end
 
   def log_in_user(%{conn: conn}) do
-    conn = Plug.Test.init_test_session(conn, current_user: "Test")
+    conn =
+      Plug.Test.init_test_session(conn,
+        current_user: "Test",
+        session_expiry: "Asia/Kolkata" |> Timex.now() |> Timex.shift(days: 1)
+      )
+
     {:ok, conn: conn}
   end
 end

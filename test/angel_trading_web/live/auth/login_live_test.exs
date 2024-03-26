@@ -44,7 +44,7 @@ defmodule AngelTradingWeb.LoginLiveTest do
 
       assert_redirected(
         view,
-        ~p"/session/#{@session_params["user"]}/#{@session_params["password"]}/#{@session_params["totp"]}"
+        ~p</session/#{@session_params["user"]}/#{@session_params["password"]}/#{@session_params["totp"]}>
       )
     end
   end
