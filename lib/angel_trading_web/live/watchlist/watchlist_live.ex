@@ -256,6 +256,8 @@ defmodule AngelTradingWeb.WatchlistLive do
     new_watch =
       token_list
       |> Map.get(:result, watchlist)
+      |> Jason.encode!()
+      |> Jason.decode!()
       |> Kernel.++(watchlist)
       |> Enum.filter(&(&1["symboltoken"] == token))
       |> assign_quotes(user_token)
@@ -399,7 +401,7 @@ defmodule AngelTradingWeb.WatchlistLive do
   end
 
   defp assign_quotes(watchlist, token) do
-    with {:ok, %{"data" => %{"fetched" => quotes}}} <-
+    with {:ok, %{"data" => %{fetched: quotes}}} <-
            API.quote(token, "NSE", Enum.map(watchlist, & &1["symboltoken"])) do
       watchlist_map =
         Enum.reduce(watchlist, %{}, fn w, acc ->
@@ -419,7 +421,8 @@ defmodule AngelTradingWeb.WatchlistLive do
       end)
       |> Enum.sort(&(&1["timestamp"] >= &2["timestamp"]))
     else
-      _ ->
+      e ->
+        IO.inspect(e)
         watchlist
     end
   end
