@@ -134,7 +134,7 @@ defmodule AngelTradingWeb.OrderLive do
           if order.transaction_type == "BUY" do
             funds.net / price
           else
-            (selected_holding || %{"quantity" => 0})["quantity"]
+            (selected_holding || %{quantity: 0}).quantity
           end
 
         assign(socket,
