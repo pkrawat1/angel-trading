@@ -42,11 +42,10 @@ defmodule AngelTradingWeb.LoginLiveTest do
              |> render_submit(%{"user" => @valid_params})
              |> follow_redirect(conn)
 
-      flash =
-        assert_redirected(
-          view,
-          ~p"/session/#{@session_params["user"]}/#{@session_params["password"]}/#{@session_params["totp"]}"
-        )
+      assert_redirected(
+        view,
+        ~p"/session/#{@session_params["user"]}/#{@session_params["password"]}/#{@session_params["totp"]}"
+      )
     end
   end
 end
