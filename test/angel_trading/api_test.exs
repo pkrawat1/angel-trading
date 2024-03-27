@@ -9,9 +9,15 @@ defmodule AngelTrading.APITest do
       "password" => "password",
       "totp" => "totp"
     }
-    test "login" do
-      with_mock API, login: fn _ -> {:ok, %{token: ""}} end do
-        API.login(@valid_params)
+    @token_response %{
+      jwtToken: "jwtToken",
+      refreshToken: "refreshToken",
+      feedToken: "feedToken"
+    }
+
+    test "login/1" do
+      with_mock API, login: fn _ -> {:ok, @token_response} end do
+        {:ok, @token_response} = API.login(@valid_params)
 
         assert_called(
           API.login(
@@ -20,6 +26,32 @@ defmodule AngelTrading.APITest do
             end)
           )
         )
+      end
+    end
+
+    test "logout/2" do
+      with_mock API, logout: fn _, _ -> {:ok, %{}} end do
+        API.logout("token", "clientcode")
+
+        assert_called(API.logout("token", "clientcode"))
+      end
+    end
+
+    test "generate_token/2" do
+      with_mock API, generate_token: fn _, _ -> {:ok, @token_response} end do
+        {:ok, @token_response} = API.generate_token("token", "refresh_token")
+
+        assert_called(API.generate_token("token", "refresh_token"))
+      end
+    end
+  end
+
+  describe "Profile" do
+    test "get_profile/1" do
+      with_mock API, profile: fn _ -> {:ok, %{}} end do
+        {:ok, _} = API.profile("token")
+
+        assert_called(API.profile("token"))
       end
     end
   end
