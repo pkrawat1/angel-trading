@@ -50,11 +50,11 @@ defmodule AngelTrading.API do
   Authenticate the user and obtain an access token.
 
   ## Map containing the login parameters:
-    - clientcode: The client code.
+    - client_code: The client code.
     - password: The password.
     - totp: The TOTP
   """
-  def login(%{"clientcode" => _, "password" => _, "totp" => _} = params),
+  def login(%{client_code: _, password: _, totp: _} = params),
     do: TradeGalleon.call(AngelOne, :login, params: params)
 
   @doc """
@@ -65,7 +65,8 @@ defmodule AngelTrading.API do
     - client_code: The client code.
   """
   def logout(token, client_code),
-    do: TradeGalleon.call(AngelOne, :logout, params: %{"clientcode" => client_code}, token: token)
+    do:
+      TradeGalleon.call(AngelOne, :logout, params: %{"client_code" => client_code}, token: token)
 
   @doc """
   Generate a new access token using the refresh token.
@@ -77,7 +78,7 @@ defmodule AngelTrading.API do
   def generate_token(token, refresh_token),
     do:
       TradeGalleon.call(AngelOne, :generate_token,
-        params: %{"refreshToken" => refresh_token},
+        params: %{"refresh_token" => refresh_token},
         token: token
       )
 
@@ -126,7 +127,7 @@ defmodule AngelTrading.API do
       token: token,
       params: %{
         mode: "FULL",
-        exchangeTokens: %{
+        exchange_tokens: %{
           exchange => symbol_tokens
         }
       }
@@ -148,11 +149,11 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :candle_data,
       token: token,
       params: %{
-        "exchange" => exchange,
-        "symboltoken" => symbol_token,
-        "interval" => interval,
-        "fromdate" => from,
-        "todate" => to
+        exchange: exchange,
+        symbol_token: symbol_token,
+        interval: interval,
+        from_date: from,
+        to_date: to
       }
     )
   end
