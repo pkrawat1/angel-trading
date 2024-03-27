@@ -53,9 +53,9 @@ defmodule AngelTradingWeb.ClientLoginLive do
             }
           }} <-
            API.login(%{
-             "clientcode" => clientcode,
-             "password" => password,
-             "totp" => totp
+             client_code: clientcode,
+             password: password,
+             totp: totp
            }) do
       clientcode = params["clientcode"]
 

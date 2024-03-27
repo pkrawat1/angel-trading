@@ -188,9 +188,9 @@ defmodule AngelTradingWeb.UserAuth do
               }
             }} <-
              API.login(%{
-               "clientcode" => client_code,
-               "password" => pin,
-               "totp" => totp
+               client_code: client_code,
+               password: pin,
+               totp: totp
              }),
            :ok <-
              Account.set_tokens(user_hash, %{
