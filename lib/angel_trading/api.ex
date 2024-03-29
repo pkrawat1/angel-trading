@@ -66,7 +66,7 @@ defmodule AngelTrading.API do
   """
   def logout(token, client_code),
     do:
-      TradeGalleon.call(AngelOne, :logout, params: %{"client_code" => client_code}, token: token)
+      TradeGalleon.call(AngelOne, :logout, params: %{client_code: client_code}, token: token)
 
   @doc """
   Generate a new access token using the refresh token.
@@ -78,7 +78,7 @@ defmodule AngelTrading.API do
   def generate_token(token, refresh_token),
     do:
       TradeGalleon.call(AngelOne, :generate_token,
-        params: %{"refresh_token" => refresh_token},
+        params: %{refresh_token: refresh_token},
         token: token
       )
 
@@ -201,8 +201,8 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :search_token,
       token: token,
       params: %{
-        "exchange" => exchange,
-        "searchscrip" => query
+        exchange: exchange,
+        searchscrip: query
       }
     )
   end
@@ -229,16 +229,16 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :place_order,
       token: token,
       params: %{
-        "exchange" => order.exchange,
-        "tradingsymbol" => order.trading_symbol,
-        "symboltoken" => order.symbol_token,
-        "quantity" => order.quantity,
-        "transactiontype" => order.transaction_type,
-        "ordertype" => order.order_type,
-        "variety" => order.variety,
-        "duration" => "DAY",
-        "producttype" => order.product_type,
-        "price" => if(order.order_type == "MARKET", do: 0, else: order.price)
+        exchange: order.exchange,
+        trading_symbol: order.trading_symbol,
+        symbol_token: order.symbol_token,
+        quantity: order.quantity,
+        transaction_type: order.transaction_type,
+        order_type: order.order_type,
+        variety: order.variety,
+        duration: "DAY",
+        product_type: order.product_type,
+        price: if(order.order_type == "MARKET", do: 0, else: order.price)
       }
     )
   end
@@ -266,17 +266,17 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :modify_order,
       token: token,
       params: %{
-        "exchange" => order.exchange,
-        "tradingsymbol" => order.trading_symbol,
-        "symboltoken" => order.symbol_token,
-        "quantity" => order.quantity,
-        "transactiontype" => order.transaction_type,
-        "ordertype" => order.order_type,
-        "variety" => order.variety,
-        "duration" => "DAY",
-        "producttype" => order.product_type,
-        "orderid" => order.order_id,
-        "price" => if(order.order_type == "MARKET", do: 0, else: order.price)
+        exchange: order.exchange,
+        trading_symbol: order.trading_symbol,
+        symbol_token: order.symbol_token,
+        quantity: order.quantity,
+        transaction_type: order.transaction_type,
+        order_type: order.order_type,
+        variety: order.variety,
+        duration: "DAY",
+        product_type: order.product_type,
+        order_id: order.order_id,
+        price: if(order.order_type == "MARKET", do: 0, else: order.price)
       }
     )
   end
@@ -294,8 +294,8 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :cancel_order,
       token: token,
       params: %{
-        "variety" => "NORMAL",
-        "orderid" => order_id
+        variety: "NORMAL",
+        order_id: order_id
       }
     )
   end
@@ -311,7 +311,7 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :order_status,
       token: token,
       params: %{
-        "unique_order_id" => unique_order_id
+        unique_order_id: unique_order_id
       }
     )
   end
@@ -330,8 +330,8 @@ defmodule AngelTrading.API do
          case TradeGalleon.call(AngelOne, :verify_dis,
                 token: token,
                 params: %{
-                  "isin" => isin,
-                  "quantity" => "1"
+                  isin: isin,
+                  quantity: "1"
                 }
               ) do
            {:error, %{"errorcode" => errorcode}} when errorcode == "AG1000" -> {:ok, true}
@@ -360,16 +360,16 @@ defmodule AngelTrading.API do
     TradeGalleon.call(AngelOne, :estimate_charges,
       token: token,
       params: %{
-        "orders" =>
+        orders:
           Enum.map(orders, fn order ->
             %{
-              "product_type" => order.product_type,
-              "transaction_type" => order.transaction_type,
-              "quantity" => order.quantity,
-              "price" => order.price,
-              "exchange" => order.exchange,
-              "symbol_name" => order.trading_symbol,
-              "token" => order.symbol_token
+              product_type: order.product_type,
+              transaction_type: order.transaction_type,
+              quantity: order.quantity,
+              price: order.price,
+              exchange: order.exchange,
+              symbol_name: order.trading_symbol,
+              token: order.symbol_token
             }
           end)
       }
