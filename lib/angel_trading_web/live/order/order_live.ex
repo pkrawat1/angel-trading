@@ -233,7 +233,7 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
       else
         e ->
-          Logger.error("[Watchlist][Order] Error placing order")
+          Logger.error("[Order] Error placing order")
           IO.inspect(e)
 
           socket
@@ -274,7 +274,7 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
       else
         e ->
-          Logger.error("[Orders][Order] Error modifying order")
+          Logger.error("[Order] Error modifying order")
           IO.inspect(e)
 
           socket

@@ -182,9 +182,9 @@ defmodule AngelTradingWeb.UserAuth do
            {:ok,
             %{
               "data" => %{
-                jwtToken: token,
-                refreshToken: refresh_token,
-                feedToken: feed_token
+                jwt_token: token,
+                refresh_token: refresh_token,
+                feed_token: feed_token
               }
             }} <-
              API.login(%{

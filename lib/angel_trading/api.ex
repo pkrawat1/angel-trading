@@ -65,8 +65,7 @@ defmodule AngelTrading.API do
     - client_code: The client code.
   """
   def logout(token, client_code),
-    do:
-      TradeGalleon.call(AngelOne, :logout, params: %{client_code: client_code}, token: token)
+    do: TradeGalleon.call(AngelOne, :logout, params: %{client_code: client_code}, token: token)
 
   @doc """
   Generate a new access token using the refresh token.

@@ -21,7 +21,7 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
             {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)},
             {_, dis_status} <-
               API.verify_dis(token, holdings |> List.first() |> Map.get(:isin, "")) do
-         symbol_tokens = Enum.map(holdings, & &1.symboltoken)
+         symbol_tokens = Enum.map(holdings, & &1.symbol_token)
 
          Process.send_after(
            live_view_pid,
@@ -71,7 +71,7 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
   def update(%{quote_data: quote_data}, %{assigns: %{client: %{result: %{} = client}}} = socket) do
     new_ltp = quote_data.last_traded_price
 
-    updated_holding = Enum.find(client.holdings, &(&1.symboltoken == quote_data.token))
+    updated_holding = Enum.find(client.holdings, &(&1.symbol_token == quote_data.token))
 
     if updated_holding && updated_holding.ltp != new_ltp do
       client = %{
@@ -79,7 +79,7 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
         | holdings:
             client.holdings
             |> Enum.map(fn holding ->
-              if holding.symboltoken == quote_data.token do
+              if holding.symbol_token == quote_data.token do
                 [%{updated_holding | ltp: new_ltp}]
                 |> Utils.formatted_holdings()
                 |> List.first()
