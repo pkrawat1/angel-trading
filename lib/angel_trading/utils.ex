@@ -91,7 +91,7 @@ defmodule AngelTrading.Utils do
     total_todays_gain_or_loss = holdings |> Enum.map(& &1.todays_profit_or_loss) |> Enum.sum()
 
     %{
-      holdings: holdings |> Enum.sort_by(& &1.tradingsymbol, :desc),
+      holdings: holdings |> Enum.sort_by(& &1.trading_symbol, :desc),
       total_invested: total_invested,
       total_current: holdings |> Enum.map(& &1.current) |> Enum.sum(),
       total_overall_gain_or_loss: total_overall_gain_or_loss,

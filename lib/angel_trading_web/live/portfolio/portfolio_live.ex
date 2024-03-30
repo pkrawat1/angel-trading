@@ -88,21 +88,21 @@ defmodule AngelTradingWeb.PortfolioLive do
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
-      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symboltoken), 3)
+      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symbol_token), 3)
     else
       pid when is_pid(pid) ->
         Logger.info(
           "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
-        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symboltoken), 3)
+        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symbol_token), 3)
 
       e ->
         with {:ok, %{"data" => %{"fetched" => quotes}}} <-
                API.quote(
                  token,
                  "NSE",
-                 Enum.map(holdings, & &1.symboltoken)
+                 Enum.map(holdings, & &1.symbol_token)
                ) do
           Enum.each(quotes, fn quote_data ->
             send(
@@ -180,7 +180,7 @@ defmodule AngelTradingWeb.PortfolioLive do
       )
       when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price
-    updated_holding = Enum.find(holdings, &(&1.symboltoken == quote_data.token))
+    updated_holding = Enum.find(holdings, &(&1.symbol_token == quote_data.token))
 
     socket =
       if updated_holding && updated_holding.ltp != new_ltp do
@@ -191,7 +191,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
         holdings =
           Enum.map(holdings, fn holding ->
-            if holding.symboltoken == quote_data.token do
+            if holding.symbol_token == quote_data.token do
               updated_holding
             else
               holding
@@ -301,7 +301,7 @@ defmodule AngelTradingWeb.PortfolioLive do
      socket
      |> stream(
        :holdings,
-       Enum.sort(portfolio.holdings, &(&2.tradingsymbol >= &1.tradingsymbol))
+       Enum.sort(portfolio.holdings, &(&2.trading_symbol >= &1.trading_symbol))
      )
      |> assign(:portfolio, AsyncResult.ok(socket.assigns.portfolio, portfolio))}
   end
@@ -327,7 +327,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
     socket
-    |> stream_configure(:holdings, dom_id: &"holding-#{&1.symboltoken}")
+    |> stream_configure(:holdings, dom_id: &"holding-#{&1.symbol_token}")
     |> stream(:holdings, [])
     |> assign(:portfolio, AsyncResult.loading())
     |> start_async(:get_portfolio_data, fn ->

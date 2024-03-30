@@ -147,17 +147,17 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
         <% order_params = %{
           symbol_token: @quote["symbolToken"],
           exchange: @quote["exchange"],
-          transaction_type: @selected_order.transactiontype,
+          transaction_type: @selected_order.transaction_type,
           trading_symbol: @quote["tradingSymbol"],
-          order_id: @selected_order.orderid,
-          order_type: @selected_order.ordertype,
+          order_id: @selected_order.order_id,
+          order_type: @selected_order.order_type,
           price: @selected_order.price,
           quantity: @selected_order.quantity
         } %>
         <.link
           data-confirm="Are you sure?"
           phx-click="cancel-order"
-          phx-value-id={@selected_order.orderid}
+          phx-value-id={@selected_order.order_id}
           class="w-1/2 px-4 py-2 text-white bg-red-500 rounded-s-lg focus-visible:outline-none"
         >
           Cancel

@@ -8,21 +8,21 @@
       JS.push("select-holding")
       |> JS.patch(~p[/client/#{@client_code}/orders/quote?status=#{@params["status"] || "open"}])
     }
-    phx-value-symbol={order.symboltoken}
+    phx-value-symbol={order.symbol_token}
     phx-value-exchange={order.exchange}
-    phx-value-selected-order-id={order.orderid}
+    phx-value-selected-order-id={order.order_id}
   >
     <dl class="items-center">
       <div>
         <dd class="flex font-semibold justify-between">
           <span>
-            <%= order.tradingsymbol |> String.split("-") |> List.first() %>
+            <%= order.trading_symbol |> String.split("-") |> List.first() %>
           </span>
           <div>
             <span class={[
               if(
-                (order.transactiontype == "BUY" and order.averageprice > order.ltp) ||
-                  (order.transactiontype == "SELL" and order.averageprice < order.ltp),
+                (order.transaction_type == "BUY" and order.average_price > order.ltp) ||
+                  (order.transaction_type == "SELL" and order.average_price < order.ltp),
                 do: "text-red-500",
                 else: "text-green-700 dark:text-green-500"
               )
@@ -36,19 +36,19 @@
         <dd class="my-2 flex text-xs justify-between">
           <span>
             <small class={[
-              if(order.transactiontype == "SELL",
+              if(order.transaction_type == "SELL",
                 do: "bg-red-100 text-red-500",
                 else: "bg-green-200 text-green-700"
               ),
               "text-xs me-2 px-1 py-0.5 rounded"
             ]}>
-              <%= order.transactiontype %>
+              <%= order.transaction_type %>
             </small>
             <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
               <%= order.exchange %>
             </small>
             <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
-              <%= order.producttype %>
+              <%= order.product_type %>
             </small>
           </span>
           <div>
@@ -69,10 +69,10 @@
       <div>
         <dd class="my-2 flex text-xs justify-between">
           <span>
-            Shares <%= order.filledshares %>
+            Shares <%= order.filled_shares %>
           </span>
           <span>
-            Avg <%= number_to_currency(order.averageprice) %>
+            Avg <%= number_to_currency(order.average_price) %>
           </span>
         </dd>
       </div>

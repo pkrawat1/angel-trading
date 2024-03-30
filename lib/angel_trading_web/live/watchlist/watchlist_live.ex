@@ -214,15 +214,15 @@ defmodule AngelTradingWeb.WatchlistLive do
               {:ok, %{"data" => %{scrips: token_list}}} -> token_list
               _ -> []
             end)
-            |> Enum.uniq_by(& &1.tradingsymbol)
-            |> Enum.filter(&String.ends_with?(&1.tradingsymbol, "-EQ"))
+            |> Enum.uniq_by(& &1.trading_symbol)
+            |> Enum.filter(&String.ends_with?(&1.trading_symbol, "-EQ"))
             |> Enum.map(
               &(&1
                 |> Map.put_new(
                   :in_watchlist?,
-                  MapSet.member?(watchlist_symbols, &1.tradingsymbol)
+                  MapSet.member?(watchlist_symbols, &1.trading_symbol)
                 )
-                |> Map.put_new(:name, Utils.stock_long_name(&1.tradingsymbol)))
+                |> Map.put_new(:name, Utils.stock_long_name(&1.trading_symbol)))
             )
 
           {:ok,
