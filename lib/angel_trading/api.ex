@@ -201,7 +201,7 @@ defmodule AngelTrading.API do
       token: token,
       params: %{
         exchange: exchange,
-        searchscrip: query
+        search_scrip: query
       }
     )
   end

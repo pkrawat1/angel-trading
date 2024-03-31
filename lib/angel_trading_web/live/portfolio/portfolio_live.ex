@@ -18,7 +18,7 @@ defmodule AngelTradingWeb.PortfolioLive do
     if connected?(socket) do
       :ok = PubSub.subscribe(AngelTrading.PubSub, "quote-stream-#{client_code}")
       :timer.send_after(500, self(), :subscribe_to_feed)
-      :timer.send_interval(30000, self(), :subscribe_to_feed)
+      :timer.send_interval(3000, self(), :subscribe_to_feed)
     end
 
     user_clients =
@@ -110,8 +110,8 @@ defmodule AngelTradingWeb.PortfolioLive do
               %{
                 payload:
                   Map.merge(quote_data, %{
-                    last_traded_price: quote_data["ltp"] * 100,
-                    token: quote_data["symbolToken"]
+                    last_traded_price: quote_data.ltp * 100,
+                    token: quote_data.symbol_token
                   })
               }
             )
@@ -129,39 +129,39 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   def handle_info(
         %{topic: topic, payload: new_quote},
-        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote}} = socket
+        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote_data}} = socket
       )
       when topic == "quote-stream-" <> client_code do
     socket =
-      if(new_quote.token == quote["symbolToken"]) do
+      if(new_quote.token == quote_data.symbol_token) do
         ltp = new_quote.last_traded_price
         close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
 
         socket
-        |> get_candle_data(quote["exchange"], quote["symbolToken"])
+        |> get_candle_data(quote_data.exchange, quote_data.symbol_token)
         |> assign(
           quote:
-            Map.merge(quote, %{
-              "ltp" => ltp,
-              "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close,
-              "close" => close,
-              "open" => new_quote.open_price_day,
-              "low" => new_quote.low_price_day,
-              "high" => new_quote.high_price_day,
-              "totBuyQuan" => new_quote.total_buy_quantity,
-              "totSellQuan" => new_quote.total_sell_quantity,
-              "depth" => %{
-                "buy" =>
+            Map.merge(quote_data, %{
+              ltp: ltp,
+              ltp_percent: ltp_percent,
+              is_gain_today?: ltp > close,
+              close: close,
+              open: new_quote.open_price_day,
+              low: new_quote.low_price_day,
+              high: new_quote.high_price_day,
+              totBuyQuan: new_quote.total_buy_quantity,
+              totSellQuan: new_quote.total_sell_quantity,
+              depth: %{
+                buy:
                   Enum.map(
                     new_quote.best_five.buy,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   ),
-                "sell" =>
+                sell:
                   Enum.map(
                     new_quote.best_five.sell,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   )
               }
             })
@@ -231,16 +231,16 @@ defmodule AngelTradingWeb.PortfolioLive do
          exchange,
          symbol_token
        ) do
-    with {:ok, %{"data" => %{fetched: [quote]}}} <-
+    with {:ok, %{"data" => %{fetched: [quote_data]}}} <-
            API.quote(token, exchange, [symbol_token]) do
-      %{"ltp" => ltp, "close" => close} = quote
+      %{ltp: ltp, close: close} = quote_data
 
       ltp_percent = (ltp - close) / close * 100
 
-      quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+      quote_data = Map.merge(quote_data, %{ltp_percent: ltp_percent, is_gain_today?: ltp > close})
 
       socket
-      |> assign(quote: quote)
+      |> assign(quote: quote_data)
     else
       e ->
         IO.inspect(e)

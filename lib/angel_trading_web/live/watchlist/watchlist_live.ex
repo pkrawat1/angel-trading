@@ -31,7 +31,7 @@ defmodule AngelTradingWeb.WatchlistLive do
           quote: nil,
           order: %{type: "LIMIT", price: nil, quantity: nil}
         )
-        |> stream_configure(:watchlist, dom_id: &"watchlist-quote-#{&1["symboltoken"]}")
+        |> stream_configure(:watchlist, dom_id: &"watchlist-quote-#{&1["symbol_token"]}")
         |> stream(:watchlist, watchlist)
         |> assign(:token_list, AsyncResult.ok(AsyncResult.loading(), []))
       else
@@ -150,7 +150,7 @@ defmodule AngelTradingWeb.WatchlistLive do
     ltp_percent = (new_ltp - close) / close * 100
 
     updated_watchlist_quote =
-      Enum.find(watchlist, &(&1["symboltoken"] == quote_data.token))
+      Enum.find(watchlist, &(&1["symbol_token"] == quote_data.token))
 
     socket =
       if updated_watchlist_quote && updated_watchlist_quote["ltp"] != new_ltp do
@@ -198,7 +198,7 @@ defmodule AngelTradingWeb.WatchlistLive do
     async_fn = fn ->
       case YahooFinance.search(query) do
         {:ok, yahoo_quotes} when yahoo_quotes != [] ->
-          watchlist_symbols = watchlist |> Enum.map(& &1["tradingsymbol"]) |> MapSet.new()
+          watchlist_symbols = watchlist |> Enum.map(& &1["trading_symbol"]) |> MapSet.new()
 
           token_list =
             yahoo_quotes
@@ -259,23 +259,23 @@ defmodule AngelTradingWeb.WatchlistLive do
       |> Jason.encode!()
       |> Jason.decode!()
       |> Kernel.++(watchlist)
-      |> Enum.filter(&(&1["symboltoken"] == token))
+      |> Enum.filter(&(&1["symbol_token"] == token))
       |> assign_quotes(user_token)
       |> List.first()
-      |> Map.put("timestamp", Timex.to_unix(Timex.now()))
+      |> Map.put("time_stamp", Timex.to_unix(Timex.now()))
 
-    token_exist? = watchlist |> Enum.find(&(&1["symboltoken"] == token))
+    token_exist? = watchlist |> Enum.find(&(&1["symbol_token"] == token))
 
     %{assigns: %{watchlist: watchlist}} =
       socket =
       if token_exist? do
         socket
-        |> assign(watchlist: Enum.filter(watchlist, &(&1["symboltoken"] != token)))
-        |> put_flash(:info, "Removed #{new_watch["tradingsymbol"]} from watchlist.")
+        |> assign(watchlist: Enum.filter(watchlist, &(&1["symbol_token"] != token)))
+        |> put_flash(:info, "Removed #{new_watch["trading_symbol"]} from watchlist.")
       else
         socket
         |> assign(watchlist: [new_watch | watchlist])
-        |> put_flash(:info, "Added #{new_watch["tradingsymbol"]} from watchlist.")
+        |> put_flash(:info, "Added #{new_watch["trading_symbol"]} from watchlist.")
       end
 
     socket =
@@ -390,7 +390,7 @@ defmodule AngelTradingWeb.WatchlistLive do
             tokenList: [
               %{
                 exchangeType: 1,
-                tokens: Enum.map(watchlist, & &1["symboltoken"])
+                tokens: Enum.map(watchlist, & &1["symbol_token"])
               }
             ]
           }
@@ -402,10 +402,10 @@ defmodule AngelTradingWeb.WatchlistLive do
 
   defp assign_quotes(watchlist, token) do
     with {:ok, %{"data" => %{fetched: quotes}}} <-
-           API.quote(token, "NSE", Enum.map(watchlist, & &1["symboltoken"])) do
+           API.quote(token, "NSE", Enum.map(watchlist, & &1["symbol_token"])) do
       watchlist_map =
         Enum.reduce(watchlist, %{}, fn w, acc ->
-          Map.merge(acc, %{w["symboltoken"] => w})
+          Map.merge(acc, %{w["symbol_token"] => w})
         end)
 
       quotes
@@ -419,7 +419,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         |> Map.put("ltp_percent", ltp_percent)
         |> Map.put("is_gain_today?", close < ltp)
       end)
-      |> Enum.sort(&(&1["timestamp"] >= &2["timestamp"]))
+      |> Enum.sort(&(&1["time_stamp"] >= &2["time_stamp"]))
     else
       e ->
         IO.inspect(e)
