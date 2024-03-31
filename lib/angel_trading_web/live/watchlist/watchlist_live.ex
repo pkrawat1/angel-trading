@@ -100,13 +100,13 @@ defmodule AngelTradingWeb.WatchlistLive do
       )
       when topic == "quote-stream-" <> client_code do
     socket =
-      if(new_quote.token == quote["symbolToken"]) do
+      if(new_quote.token == quote.symbol_token) do
         ltp = new_quote.last_traded_price
         close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
 
         socket
-        |> get_candle_data(quote["exchange"], quote["symbolToken"])
+        |> get_candle_data(quote.exchange, quote.symbol_token)
         |> assign(
           quote:
             Map.merge(quote, %{
@@ -315,16 +315,16 @@ defmodule AngelTradingWeb.WatchlistLive do
   end
 
   defp get_quote(%{assigns: %{token: token}} = socket, exchange, symbol_token) do
-    with {:ok, %{"data" => %{fetched: [quote]}}} <-
+    with {:ok, %{"data" => %{fetched: [quote_data]}}} <-
            API.quote(token, exchange, [symbol_token]) do
-      %{"ltp" => ltp, "close" => close} = quote
+      %{ltp: ltp, close: close} = quote_data
 
       ltp_percent = (ltp - close) / close * 100
 
-      quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+      quote_data = Map.merge(quote_data, %{ltp_percent: ltp_percent, is_gain_today?: ltp > close})
 
       socket
-      |> assign(quote: quote)
+      |> assign(quote: quote_data)
     else
       e ->
         IO.inspect(e)
@@ -409,7 +409,7 @@ defmodule AngelTradingWeb.WatchlistLive do
         end)
 
       quotes
-      |> Enum.map(fn %{"symbolToken" => symbol_token, "ltp" => ltp, "close" => close} ->
+      |> Enum.map(fn %{symbol_token: symbol_token, ltp: ltp, close: close} ->
         watch = watchlist_map[symbol_token]
         ltp_percent = (ltp - close) / close * 100
 

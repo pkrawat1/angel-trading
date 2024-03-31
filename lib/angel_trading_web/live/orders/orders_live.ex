@@ -143,7 +143,7 @@ defmodule AngelTradingWeb.OrdersLive do
       )
       when topic == "quote-stream-" <> client_code do
     socket =
-      if(new_quote.token == quote["symbolToken"]) do
+      if(new_quote.token == quote.symbol_token) do
         ltp = new_quote.last_traded_price
         close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
