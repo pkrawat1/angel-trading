@@ -43,35 +43,27 @@ defmodule AngelTrading.Utils do
     |> Enum.map(&format_holding/1)
   end
 
-  defp filter_holding(%{symboltoken: symboltoken, quantity: quantity, close: close})
-       when symboltoken == nil or quantity == 0 or close == 0,
+  defp filter_holding(%{symbol_token: symbol_token, quantity: quantity, close: close})
+       when symbol_token == nil or quantity == 0 or close == 0,
        do: false
 
   defp filter_holding(_), do: true
 
   defp format_holding(
          %TradeGalleon.Brokers.AngelOne.Responses.Portfolio.Holding{
-           authorisedquantity: _,
-           averageprice: averageprice,
+           average_price: average_price,
            close: close,
-           collateralquantity: _,
-           collateraltype: _,
-           exchange: _,
-           isin: _,
            ltp: ltp,
-           product: _,
            quantity: quantity,
-           realisedquantity: realisedquantity,
-           symboltoken: symboltoken,
-           t1quantity: _,
-           tradingsymbol: _
+           realised_quantity: realised_quantity,
+           symbol_token: symbol_token
          } = holding
        ) do
-    averageprice = if averageprice > 0, do: averageprice, else: close
-    close = if realisedquantity > 0, do: close, else: averageprice
-    invested = quantity * averageprice
+    average_price = if average_price > 0, do: average_price, else: close
+    close = if realised_quantity > 0, do: close, else: average_price
+    invested = quantity * average_price
     current = quantity * ltp
-    overall_gain_or_loss = quantity * (ltp - averageprice)
+    overall_gain_or_loss = quantity * (ltp - average_price)
     overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
     todays_profit_or_loss = quantity * (ltp - close)
     ltp_percent = (ltp - close) / close * 100
@@ -89,7 +81,7 @@ defmodule AngelTrading.Utils do
       todays_profit_or_loss: todays_profit_or_loss,
       todays_profit_or_loss_percent: todays_profit_or_loss_percent,
       ltp_percent: ltp_percent,
-      id: symboltoken
+      id: symbol_token
     })
   end
 
@@ -99,7 +91,7 @@ defmodule AngelTrading.Utils do
     total_todays_gain_or_loss = holdings |> Enum.map(& &1.todays_profit_or_loss) |> Enum.sum()
 
     %{
-      holdings: holdings |> Enum.sort_by(& &1.tradingsymbol, :desc),
+      holdings: holdings |> Enum.sort_by(& &1.trading_symbol, :desc),
       total_invested: total_invested,
       total_current: holdings |> Enum.map(& &1.current) |> Enum.sum(),
       total_overall_gain_or_loss: total_overall_gain_or_loss,

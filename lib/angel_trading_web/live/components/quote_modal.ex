@@ -8,24 +8,22 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
         <div class="text-xs md:text-sm uppercase -m-10 md:-m-8">
           <.header>
             <div class="dark:text-gray-200">
-              <%= @quote["tradingSymbol"] |> String.split("-") |> List.first() %>
+              <%= @quote.trading_symbol |> String.split("-") |> List.first() %>
               <small class="text-xs text-blue-500">
-                <%= @quote["exchange"] %>
+                <%= @quote.exchange %>
               </small>
               <br />
               <div class="text-xs md:text-sm">
-                <span :if={@quote["is_gain_today?"]} class="text-green-700 dark:text-green-500">
-                  <%= number_to_currency(@quote["ltp"]) %>
+                <span :if={@quote.is_gain_today?} class="text-green-700 dark:text-green-500">
+                  <%= number_to_currency(@quote.ltp) %>
                   <.icon name="hero-arrow-up" />
                 </span>
-                <span :if={!@quote["is_gain_today?"]} class="text-red-500">
-                  <%= number_to_currency(@quote["ltp"]) %>
+                <span :if={!@quote.is_gain_today?} class="text-red-500">
+                  <%= number_to_currency(@quote.ltp) %>
                   <.icon name="hero-arrow-down" />
                 </span>
                 <span>
-                  <%= (@quote["ltp"] - @quote["close"]) |> Float.floor(2) %> (<%= @quote[
-                    "ltp_percent"
-                  ]
+                  <%= (@quote.ltp - @quote.close) |> Float.floor(2) %> (<%= @quote.ltp_percent
                   |> Float.floor(2) %>%)
                 </span>
               </div>
@@ -35,19 +33,19 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
             <div class="flex justify-between text-center">
               <span>
                 Open <br />
-                <b><%= @quote["open"] %></b>
+                <b><%= @quote.open %></b>
               </span>
               <span>
                 High <br />
-                <b><%= @quote["high"] %></b>
+                <b><%= @quote.high %></b>
               </span>
               <span>
                 Low <br />
-                <b><%= @quote["low"] %></b>
+                <b><%= @quote.low %></b>
               </span>
               <span>
                 Close <br />
-                <b><%= @quote["close"] %></b>
+                <b><%= @quote.close %></b>
               </span>
             </div>
             <div class="grid grid-cols-2 gap-4 my-2">
@@ -57,12 +55,12 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                   <th class="text-right">Buy Price</th>
                 </thead>
                 <tbody>
-                  <tr :for={buy <- @quote["depth"]["buy"]}>
-                    <td><%= buy["quantity"] %></td>
-                    <td class="text-right text-green-700 dark:text-green-500"><%= buy["price"] %></td>
+                  <tr :for={buy <- @quote.depth.buy}>
+                    <td><%= buy.quantity %></td>
+                    <td class="text-right text-green-700 dark:text-green-500"><%= buy.price %></td>
                   </tr>
                   <tr class="border-y">
-                    <td><%= @quote["totBuyQuan"] %></td>
+                    <td><%= @quote.tot_buy_quan %></td>
                     <td class="text-right">Total</td>
                   </tr>
                 </tbody>
@@ -73,14 +71,14 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                   <th class="text-right">Qty</th>
                 </thead>
                 <tbody>
-                  <tr :for={sell <- @quote["depth"]["sell"]}>
-                    <td class="text-left text-red-500"><%= sell["price"] %></td>
-                    <td class="text-right"><%= sell["quantity"] %></td>
+                  <tr :for={sell <- @quote.depth.sell}>
+                    <td class="text-left text-red-500"><%= sell.price %></td>
+                    <td class="text-right"><%= sell.quantity %></td>
                   </tr>
                   <tr class="border-y">
                     <td>Total</td>
                     <td class="text-right">
-                      <%= @quote["totSellQuan"] %>
+                      <%= @quote.tot_sell_quan %>
                     </td>
                   </tr>
                 </tbody>
@@ -93,7 +91,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
               dataset={@candle_data}
               chart_config={
                 %{
-                  id: "quote-chart-" <> @quote["symbolToken"],
+                  id: "quote-chart-" <> @quote.symbol_token,
                   class: "h-[30vh] -mx-4 mt-5 -mb-1"
                 }
               }
@@ -112,10 +110,10 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
     <section id="order-place-actions">
       <div class="w-full inline-flex rounded-md text-center text-sm font-medium" role="group">
         <% order_params = %{
-          symbol_token: @quote["symbolToken"],
-          exchange: @quote["exchange"],
+          symbol_token: @quote.symbol_token,
+          exchange: @quote.exchange,
           transaction_type: "BUY",
-          trading_symbol: @quote["tradingSymbol"]
+          trading_symbol: @quote.trading_symbol
         } %>
         <.link
           navigate={~p"/client/#{@client_code}/order/new?#{order_params}"}
@@ -145,19 +143,19 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
     <section id="modify-order-actions bottom-0">
       <div class="w-full inline-flex rounded-md text-center text-sm font-medium" role="group">
         <% order_params = %{
-          symbol_token: @quote["symbolToken"],
-          exchange: @quote["exchange"],
-          transaction_type: @selected_order.transactiontype,
-          trading_symbol: @quote["tradingSymbol"],
-          order_id: @selected_order.orderid,
-          order_type: @selected_order.ordertype,
+          symbol_token: @quote.symbol_token,
+          exchange: @quote.exchange,
+          transaction_type: @selected_order.transaction_type,
+          trading_symbol: @quote.trading_symbol,
+          order_id: @selected_order.order_id,
+          order_type: @selected_order.order_type,
           price: @selected_order.price,
           quantity: @selected_order.quantity
         } %>
         <.link
           data-confirm="Are you sure?"
           phx-click="cancel-order"
-          phx-value-id={@selected_order.orderid}
+          phx-value-id={@selected_order.order_id}
           class="w-1/2 px-4 py-2 text-white bg-red-500 rounded-s-lg focus-visible:outline-none"
         >
           Cancel

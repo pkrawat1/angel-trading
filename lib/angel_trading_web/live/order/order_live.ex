@@ -210,7 +210,7 @@ defmodule AngelTradingWeb.OrderLive do
         %{assigns: %{order: order, token: token, client_code: client_code}} = socket
       ) do
     socket =
-      with {:ok, %{"data" => %{"uniqueorderid" => unique_order_id}}} <-
+      with {:ok, %{"data" => %{unique_order_id: unique_order_id}}} <-
              API.place_order(token, %{
                exchange: order.exchange,
                trading_symbol: order.trading_symbol,
@@ -222,7 +222,7 @@ defmodule AngelTradingWeb.OrderLive do
                product_type: "DELIVERY",
                price: price
              }),
-           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
+           {:ok, %{"data" => %{order_status: order_status, text: message}}} <-
              API.order_status(token, unique_order_id) do
         flash_status = if order_status in ["open", "complete"], do: :info, else: :error
         message = if message == "", do: "Order placed successfully", else: message
@@ -233,7 +233,7 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
       else
         e ->
-          Logger.error("[Watchlist][Order] Error placing order")
+          Logger.error("[Order] Error placing order")
           IO.inspect(e)
 
           socket
@@ -250,7 +250,7 @@ defmodule AngelTradingWeb.OrderLive do
         %{assigns: %{order: order, token: token, client_code: client_code}} = socket
       ) do
     socket =
-      with {:ok, %{"data" => %{"uniqueorderid" => unique_order_id}}} <-
+      with {:ok, %{"data" => %{unique_order_id: unique_order_id}}} <-
              API.modify_order(token, %{
                exchange: order.exchange,
                trading_symbol: order.trading_symbol,
@@ -263,7 +263,7 @@ defmodule AngelTradingWeb.OrderLive do
                order_id: order.order_id,
                price: price
              }),
-           {:ok, %{"data" => %{"orderstatus" => order_status, "text" => message}}} <-
+           {:ok, %{"data" => %{order_status: order_status, text: message}}} <-
              API.order_status(token, unique_order_id) do
         flash_status = if order_status in ["open", "complete"], do: :info, else: :error
         message = if message == "", do: "Order modified successfully", else: message
@@ -274,7 +274,7 @@ defmodule AngelTradingWeb.OrderLive do
         |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
       else
         e ->
-          Logger.error("[Orders][Order] Error modifying order")
+          Logger.error("[Order] Error modifying order")
           IO.inspect(e)
 
           socket
@@ -299,7 +299,7 @@ defmodule AngelTradingWeb.OrderLive do
       socket
       |> assign(name: profile.name |> String.split(" ") |> List.first())
       |> assign(funds: funds)
-      |> assign(selected_holding: Enum.find(holdings, &(&1.symboltoken == symbol_token)))
+      |> assign(selected_holding: Enum.find(holdings, &(&1.symbol_token == symbol_token)))
     else
       {:error, %{"message" => message}} ->
         socket

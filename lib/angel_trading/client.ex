@@ -76,11 +76,11 @@ defmodule AngelTrading.Client do
             {:ok, %{"data" => %{scrips: token_list}}} -> token_list
             _ -> []
           end)
-          |> Enum.uniq_by(& &1.tradingsymbol)
-          |> Enum.filter(&String.ends_with?(&1.tradingsymbol, "-EQ"))
+          |> Enum.uniq_by(& &1.trading_symbol)
+          |> Enum.filter(&String.ends_with?(&1.trading_symbol, "-EQ"))
           |> Enum.map(
             &(&1
-              |> Map.put_new(:name, Utils.stock_long_name(&1.tradingsymbol)))
+              |> Map.put_new(:name, Utils.stock_long_name(&1.trading_symbol)))
           )
 
         {:ok, %{token_list: token_list}}

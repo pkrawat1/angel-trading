@@ -88,21 +88,21 @@ defmodule AngelTradingWeb.PortfolioLive do
     with nil <- Process.whereis(socket_process),
          {:ok, pid} when is_pid(pid) <-
            API.socket(client_code, token, feed_token, "quote-stream-" <> client_code) do
-      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symboltoken), 3)
+      subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symbol_token), 3)
     else
       pid when is_pid(pid) ->
         Logger.info(
           "[Portfolio] web socket (#{socket_process} #{inspect(pid)}) already established"
         )
 
-        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symboltoken), 3)
+        subscribe_to_quote_feed(client_code, Enum.map(holdings, & &1.symbol_token), 3)
 
       e ->
         with {:ok, %{"data" => %{"fetched" => quotes}}} <-
                API.quote(
                  token,
                  "NSE",
-                 Enum.map(holdings, & &1.symboltoken)
+                 Enum.map(holdings, & &1.symbol_token)
                ) do
           Enum.each(quotes, fn quote_data ->
             send(
@@ -110,8 +110,8 @@ defmodule AngelTradingWeb.PortfolioLive do
               %{
                 payload:
                   Map.merge(quote_data, %{
-                    last_traded_price: quote_data["ltp"] * 100,
-                    token: quote_data["symbolToken"]
+                    last_traded_price: quote_data.ltp * 100,
+                    token: quote_data.symbol_token
                   })
               }
             )
@@ -129,39 +129,39 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   def handle_info(
         %{topic: topic, payload: new_quote},
-        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote}} = socket
+        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote_data}} = socket
       )
       when topic == "quote-stream-" <> client_code do
     socket =
-      if(new_quote.token == quote["symbolToken"]) do
+      if(new_quote.token == quote_data.symbol_token) do
         ltp = new_quote.last_traded_price
         close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
 
         socket
-        |> get_candle_data(quote["exchange"], quote["symbolToken"])
+        |> get_candle_data(quote_data.exchange, quote_data.symbol_token)
         |> assign(
           quote:
-            Map.merge(quote, %{
-              "ltp" => ltp,
-              "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close,
-              "close" => close,
-              "open" => new_quote.open_price_day,
-              "low" => new_quote.low_price_day,
-              "high" => new_quote.high_price_day,
-              "totBuyQuan" => new_quote.total_buy_quantity,
-              "totSellQuan" => new_quote.total_sell_quantity,
-              "depth" => %{
-                "buy" =>
+            Map.merge(quote_data, %{
+              ltp: ltp,
+              ltp_percent: ltp_percent,
+              is_gain_today?: ltp > close,
+              close: close,
+              open: new_quote.open_price_day,
+              low: new_quote.low_price_day,
+              high: new_quote.high_price_day,
+              totBuyQuan: new_quote.total_buy_quantity,
+              totSellQuan: new_quote.total_sell_quantity,
+              depth: %{
+                buy:
                   Enum.map(
                     new_quote.best_five.buy,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   ),
-                "sell" =>
+                sell:
                   Enum.map(
                     new_quote.best_five.sell,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   )
               }
             })
@@ -180,7 +180,7 @@ defmodule AngelTradingWeb.PortfolioLive do
       )
       when topic == "quote-stream-" <> client_code do
     new_ltp = quote_data.last_traded_price
-    updated_holding = Enum.find(holdings, &(&1.symboltoken == quote_data.token))
+    updated_holding = Enum.find(holdings, &(&1.symbol_token == quote_data.token))
 
     socket =
       if updated_holding && updated_holding.ltp != new_ltp do
@@ -191,7 +191,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
         holdings =
           Enum.map(holdings, fn holding ->
-            if holding.symboltoken == quote_data.token do
+            if holding.symbol_token == quote_data.token do
               updated_holding
             else
               holding
@@ -231,16 +231,16 @@ defmodule AngelTradingWeb.PortfolioLive do
          exchange,
          symbol_token
        ) do
-    with {:ok, %{"data" => %{fetched: [quote]}}} <-
+    with {:ok, %{"data" => %{fetched: [quote_data]}}} <-
            API.quote(token, exchange, [symbol_token]) do
-      %{"ltp" => ltp, "close" => close} = quote
+      %{ltp: ltp, close: close} = quote_data
 
       ltp_percent = (ltp - close) / close * 100
 
-      quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+      quote_data = Map.merge(quote_data, %{ltp_percent: ltp_percent, is_gain_today?: ltp > close})
 
       socket
-      |> assign(quote: quote)
+      |> assign(quote: quote_data)
     else
       e ->
         IO.inspect(e)
@@ -301,7 +301,7 @@ defmodule AngelTradingWeb.PortfolioLive do
      socket
      |> stream(
        :holdings,
-       Enum.sort(portfolio.holdings, &(&2.tradingsymbol >= &1.tradingsymbol))
+       Enum.sort(portfolio.holdings, &(&2.trading_symbol >= &1.trading_symbol))
      )
      |> assign(:portfolio, AsyncResult.ok(socket.assigns.portfolio, portfolio))}
   end
@@ -327,7 +327,7 @@ defmodule AngelTradingWeb.PortfolioLive do
 
   defp get_portfolio_data(%{assigns: %{token: token}} = socket) do
     socket
-    |> stream_configure(:holdings, dom_id: &"holding-#{&1.symboltoken}")
+    |> stream_configure(:holdings, dom_id: &"holding-#{&1.symbol_token}")
     |> stream(:holdings, [])
     |> assign(:portfolio, AsyncResult.loading())
     |> start_async(:get_portfolio_data, fn ->

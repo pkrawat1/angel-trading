@@ -14,7 +14,7 @@ defmodule AngelTradingWeb.ClientLoginLive do
     ~H"""
     <div class="flex m-auto max-w-6xl px-4 sm:px-6 lg:px-8 justify-center">
       <.simple_form :let={f} for={%{}} as={:user} autocomplete="off" phx-submit="login">
-        <.input field={f[:clientcode]} value={@params["clientcode"]} placeholder="Client code" />
+        <.input field={f[:client_code]} value={@params["client_code"]} placeholder="Client code" />
         <.input
           field={f[:password]}
           type="password"
@@ -37,31 +37,32 @@ defmodule AngelTradingWeb.ClientLoginLive do
         "login",
         %{
           "user" =>
-            %{"clientcode" => clientcode, "password" => password, "totp_secret" => totp_secret} =
+            %{"client_code" => client_code, "password" => password, "totp_secret" => totp_secret} =
               params
         },
         socket
-      ) do
+      )
+      when bit_size(client_code) != 0 and bit_size(password) != 0 and bit_size(totp_secret) != 0 do
     with {:ok, totp} <- AngelTrading.TOTP.totp_now(params["totp_secret"]),
          {:ok,
           %{
             "data" => %{
-              "jwtToken" => token,
-              "refreshToken" => refresh_token,
-              "feedToken" => feed_token
+              jwt_token: token,
+              refresh_token: refresh_token,
+              feed_token: feed_token
             }
           }} <-
            API.login(%{
-             "clientcode" => clientcode,
-             "password" => password,
-             "totp" => totp
+             client_code: client_code,
+             password: password,
+             totp: totp
            }) do
-      clientcode = params["clientcode"]
+      client_code = params["client_code"]
 
       {:noreply,
        redirect(socket,
          to:
-           ~p"/session/#{clientcode}/#{token}/#{refresh_token}/#{feed_token}/#{password}/#{totp_secret}"
+           ~p"/session/#{client_code}/#{token}/#{refresh_token}/#{feed_token}/#{password}/#{totp_secret}"
        )}
     else
       {:error, error} ->
@@ -78,5 +79,14 @@ defmodule AngelTradingWeb.ClientLoginLive do
           |> put_flash(:error, message)
         }
     end
+  end
+
+  def handle_event("login", %{"user" => params}, socket) do
+    {
+      :noreply,
+      socket
+      |> push_patch(to: ~p"/client/login?#{params}")
+      |> put_flash(:error, "Invalid credentials")
+    }
   end
 end

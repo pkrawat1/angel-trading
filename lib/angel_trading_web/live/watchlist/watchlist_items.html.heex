@@ -4,14 +4,14 @@
     class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md p-3 bg-white text-slate-900 ring-1 ring-slate-200 shadow dark:bg-gray-900 dark:ring-slate-800 dark:text-slate-200"
     id={dom_id}
     phx-click={JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/watchlist/quote")}
-    phx-value-symbol={watchlist["symboltoken"]}
+    phx-value-symbol={watchlist["symbol_token"]}
     phx-value-exchange={watchlist["exchange"]}
   >
     <dl class="relative items-center text-sm">
       <div>
         <dd class="flex font-semibold justify-between">
           <span class="truncate">
-            <%= watchlist["tradingsymbol"] |> String.split("-") |> List.first() %>
+            <%= watchlist["trading_symbol"] |> String.split("-") |> List.first() %>
           </span>
           <div>
             <span
@@ -43,7 +43,7 @@
       <span
         class="absolute cursor-pointer -top-5 -right-5"
         phx-click="toggle-token-watchlist"
-        phx-value-token={watchlist["symboltoken"]}
+        phx-value-token={watchlist["symbol_token"]}
       >
         <.icon name="hero-x-circle-solid h-6 w-6 text-red-500" />
       </span>

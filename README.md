@@ -15,6 +15,9 @@ Implements
   <a href="https://www.loom.com/share/60816921d58245b6b5e1e33a96ec66a6?sid=a0380d2c-5934-4cfd-8244-c70f2cd90f39">
     <p>Demo of streaming data from websocket</p>
   </a>
+  <a href="https://www.loom.com/share/3244b916cdeb4f1d8333b0e325e5b19b">
+    <p>Demo of AI assistant</p>
+  </a>
   <img width="250" alt="Screenshot 2024-01-30 at 9 54 30 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/423b8da0-c328-4914-9324-30af2871cc62">
   <img width="250" src="https://github.com/pkrawat1/angel-trading/assets/3807725/afcd4655-f50f-462b-b66e-738fb0808963">
   <img width="250" alt="Screenshot 2024-01-30 at 9 43 07 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/cfa35d29-f6aa-42b3-b7e9-0f168a3af89c">
