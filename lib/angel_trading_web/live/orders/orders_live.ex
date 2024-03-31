@@ -282,15 +282,16 @@ defmodule AngelTradingWeb.OrdersLive do
         %{assigns: %{token: token, order_book: order_book}} = socket
       ) do
     socket =
-      with {:ok, %{"data" => %{fetched: [quote]}}} <-
+      with {:ok, %{"data" => %{fetched: [quote_data]}}} <-
              API.quote(token, exchange, [symbol_token]) do
-        %{"ltp" => ltp, "close" => close} = quote
+        %{ltp: ltp, close: close} = quote_data
         ltp_percent = (ltp - close) / close * 100
 
-        quote = Map.merge(quote, %{"ltp_percent" => ltp_percent, "is_gain_today?" => ltp > close})
+        quote_data =
+          Map.merge(quote_data, %{ltp_percent: ltp_percent, is_gain_today?: ltp > close})
 
         socket
-        |> assign(quote: quote)
+        |> assign(quote: quote_data)
         |> assign(selected_order: Enum.find(order_book, &(&1.order_id == order_id)))
       else
         _ ->
@@ -363,8 +364,8 @@ defmodule AngelTradingWeb.OrdersLive do
             payload:
               Map.merge(quote_data, %{
                 last_traded_price: quote_data.ltp * 100,
-                token: quote_data["symbolToken"],
-                close_price: quote_data["close"] * 100
+                token: quote_data.symbol_token,
+                close_price: quote_data.close * 100
               })
           }
         )

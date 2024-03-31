@@ -43,6 +43,6 @@
   on_cancel={JS.patch(~p[/client/#{@client_code}/orders?status=#{@params["status"] || "open"}])}
   quote={@quote}
   client_code={@client_code}
-  selected_order={@selected_order}
+  selected_order={if(@params["status"] == "open", do: @selected_order, else: nil)}
 />
 <.bottom_nav client_code={@client_code} active_page={:orders} />
