@@ -139,11 +139,11 @@ defmodule AngelTradingWeb.OrdersLive do
 
   def handle_info(
         %{topic: topic, payload: new_quote},
-        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote}} = socket
+        %{assigns: %{client_code: client_code, live_action: :quote, quote: quote_data}} = socket
       )
       when topic == "quote-stream-" <> client_code do
     socket =
-      if(new_quote.token == quote.symbol_token) do
+      if(new_quote.token == quote_data.symbol_token) do
         ltp = new_quote.last_traded_price
         close = new_quote.close_price
         ltp_percent = (ltp - close) / close * 100
@@ -151,26 +151,26 @@ defmodule AngelTradingWeb.OrdersLive do
         assign(
           socket,
           quote:
-            Map.merge(quote, %{
-              "ltp" => ltp,
-              "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close,
-              "close" => close,
-              "open" => new_quote.open_price_day,
-              "low" => new_quote.low_price_day,
-              "high" => new_quote.high_price_day,
-              "totBuyQuan" => new_quote.total_buy_quantity,
-              "totSellQuan" => new_quote.total_sell_quantity,
-              "depth" => %{
-                "buy" =>
+            Map.merge(quote_data, %{
+              ltp: ltp,
+              ltp_percent: ltp_percent,
+              is_gain_today?: ltp > close,
+              close: close,
+              open: new_quote.open_price_day,
+              low: new_quote.low_price_day,
+              high: new_quote.high_price_day,
+              tot_buy_quan: new_quote.total_buy_quantity,
+              tot_sell_quan: new_quote.total_sell_quantity,
+              depth: %{
+                buy:
                   Enum.map(
                     new_quote.best_five.buy,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   ),
-                "sell" =>
+                sell:
                   Enum.map(
                     new_quote.best_five.sell,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   )
               }
             })
@@ -199,11 +199,11 @@ defmodule AngelTradingWeb.OrdersLive do
         |> Enum.reduce(socket, fn updated_order, socket ->
           updated_order =
             updated_order
-            |> Map.put_new(:ltp, new_ltp)
-            |> Map.put_new(:close, close)
-            |> Map.put_new(:ltp_percent, ltp_percent)
-            |> Map.put_new(:is_gain_today?, close < new_ltp)
-            |> Map.put_new(
+            |> Map.replace(:ltp, new_ltp)
+            |> Map.replace(:close, close)
+            |> Map.replace(:ltp_percent, ltp_percent)
+            |> Map.replace(:is_gain_today?, close < new_ltp)
+            |> Map.replace(
               :gains_or_loss,
               if(updated_order.transaction_type == "SELL", do: -1, else: 1) *
                 updated_order.filled_shares *
