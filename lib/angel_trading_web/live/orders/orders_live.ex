@@ -205,7 +205,7 @@ defmodule AngelTradingWeb.OrdersLive do
             |> Map.replace(:is_gain_today?, close < new_ltp)
             |> Map.replace(
               :gains_or_loss,
-              if(updated_order.transaction_type == "SELL", do: -1, else: 1) *
+              if(updated_order.transaction_type == :SELL, do: -1, else: 1) *
                 updated_order.filled_shares *
                 (new_ltp - updated_order.average_price)
             )
