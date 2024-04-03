@@ -21,8 +21,8 @@
           <div>
             <span class={[
               if(
-                (order.transaction_type == "BUY" and order.average_price > order.ltp) ||
-                  (order.transaction_type == "SELL" and order.average_price < order.ltp),
+                (order.transaction_type == :BUY and order.average_price > order.ltp) ||
+                  (order.transaction_type == :SELL and order.average_price < order.ltp),
                 do: "text-red-500",
                 else: "text-green-700 dark:text-green-500"
               )
@@ -36,7 +36,7 @@
         <dd class="my-2 flex text-xs justify-between">
           <span>
             <small class={[
-              if(order.transaction_type == "SELL",
+              if(order.transaction_type == :SELL,
                 do: "bg-red-100 text-red-500",
                 else: "bg-green-200 text-green-700"
               ),

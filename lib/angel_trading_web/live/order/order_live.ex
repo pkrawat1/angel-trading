@@ -131,7 +131,7 @@ defmodule AngelTradingWeb.OrderLive do
         price = (order.price != 0 && order.price) || new_ltp
 
         max =
-          if order.transaction_type == "BUY" do
+          if order.transaction_type == :BUY do
             funds.net / price
           else
             (selected_holding || %{quantity: 0}).quantity
