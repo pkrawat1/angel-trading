@@ -11,9 +11,9 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.16.0-erlang-26.2.1-ubuntu-jammy-20230612
 #
-ARG ELIXIR_VERSION=1.16.0
-ARG OTP_VERSION=26.2.1
-ARG UBUNTU_VERSION=jammy-20231004
+ARG ELIXIR_VERSION=1.16.2
+ARG OTP_VERSION=26.2.4
+ARG UBUNTU_VERSION=jammy-20240405
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-ubuntu-${UBUNTU_VERSION}"
 ARG RUNNER_IMAGE="ubuntu:${UBUNTU_VERSION}"
