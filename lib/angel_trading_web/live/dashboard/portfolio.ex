@@ -18,9 +18,7 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
             {:profile, {:ok, %{"data" => profile}}} <- {:profile, API.profile(token)},
             {:portfolio, {:ok, %{"data" => %{holdings: holdings}}}} <-
               {:portfolio, API.portfolio(token)},
-            {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)},
-            {_, dis_status} <-
-              API.verify_dis(token, holdings |> List.first() |> Map.get(:isin, "")) do
+            {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)} do
          symbol_tokens = Enum.map(holdings, & &1.symbol_token)
 
          Process.send_after(
@@ -51,8 +49,7 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
            Map.merge(client, %{
              holdings: holdings,
              profile: profile,
-             funds: funds,
-             dis_status: dis_status
+             funds: funds
            })
 
          {:ok,
@@ -64,6 +61,18 @@ defmodule AngelTradingWeb.DashboardLive.Portfolio do
            Logger.error("[Dashboard] Unable to fetch data")
            IO.inspect(e)
            {:error, :client_error}
+       end
+     end)
+     |> assign_async(:dis_status, fn ->
+       with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
+            {:ok, %{token: token}} <- Utils.decrypt(:client_tokens, data),
+            {:portfolio, {:ok, %{"data" => %{holdings: holdings}}}} <-
+              {:portfolio, API.portfolio(token)},
+            {_, dis_status} <-
+              API.verify_dis(token, holdings |> List.first() |> Map.get(:isin, "")) do
+         {:ok, %{dis_status: dis_status}}
+       else
+         _ -> {:error, :dis_error}
        end
      end)}
   end

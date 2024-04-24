@@ -63,8 +63,22 @@
               <%= number_to_currency(client.funds.net, precision: 2) %> <br />
             </span>
           </small>
-          <small :if={client.dis_status} class="text-green-500">Verified</small>
-          <small :if={!client.dis_status} class="text-red-500">Not Verified</small>
+          <.async_result :let={dis_status} assign={@dis_status}>
+            <:loading>
+              <div class="animate-pulse space-y-7 mt-0.5">
+                <div class="h-5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 justify-self-end">
+                </div>
+              </div>
+            </:loading>
+            <:failed>
+              <div class="animate-pulse space-y-7 mt-0.5">
+                <div class="h-5 bg-red-300 rounded-full dark:bg-red-400 w-24 justify-self-end">
+                </div>
+              </div>
+            </:failed>
+            <small :if={dis_status} class="text-green-500">Verified</small>
+            <small :if={!dis_status} class="text-red-500">Not Verified</small>
+          </.async_result>
         </div>
       </.link>
     </div>
