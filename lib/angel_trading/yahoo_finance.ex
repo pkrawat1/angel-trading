@@ -32,6 +32,9 @@ defmodule AngelTrading.YahooFinance do
         }
       ]}
 
+      iex> AngelTrading.YahooFinance.search("")
+      {:error, "fetching the data from yahoo! finance failed"}
+
   """
   def search(_company_name), do: :erlang.nif_error(:nif_not_loaded)
 end

@@ -196,11 +196,9 @@ defmodule AngelTradingWeb.WatchlistLive do
         %{assigns: %{watchlist: watchlist, token: token}} = socket
       ) do
     async_fn = fn ->
-      case YahooFinance.search(query) do
-        {:ok, yahoo_quotes} when yahoo_quotes != [] ->
-          watchlist_symbols = watchlist |> Enum.map(& &1["trading_symbol"]) |> MapSet.new()
-
-          token_list =
+      token_list =
+        case YahooFinance.search(query) do
+          {:ok, yahoo_quotes} when yahoo_quotes != [] ->
             yahoo_quotes
             |> Enum.map(
               &(&1.symbol
@@ -209,30 +207,17 @@ defmodule AngelTradingWeb.WatchlistLive do
                 |> List.first())
             )
             |> MapSet.new()
-            |> Enum.map(&API.search_token(token, "NSE", &1))
-            |> Enum.flat_map(fn
-              {:ok, %{"data" => %{scrips: token_list}}} -> token_list
-              _ -> []
-            end)
-            |> Enum.uniq_by(& &1.trading_symbol)
-            |> Enum.filter(&String.ends_with?(&1.trading_symbol, "-EQ"))
-            |> Enum.map(
-              &(&1
-                |> Map.put_new(
-                  :in_watchlist?,
-                  MapSet.member?(watchlist_symbols, &1.trading_symbol)
-                )
-                |> Map.put_new(:name, Utils.stock_long_name(&1.trading_symbol)))
-            )
+            |> search_tokens(token, watchlist)
 
-          {:ok,
-           %{
-             token_list: token_list
-           }}
+          {:error, error} ->
+            Logger.error("[Watchlist][YahooFinance] : #{inspect(error)}")
+            search_tokens([query], token, watchlist)
 
-        _ ->
-          {:error, %{token_list: []}}
-      end
+          _ ->
+            []
+        end
+
+      {:ok, %{token_list: token_list}}
     end
 
     {:noreply,
@@ -425,5 +410,26 @@ defmodule AngelTradingWeb.WatchlistLive do
         IO.inspect(e)
         watchlist
     end
+  end
+
+  defp search_tokens(queries, token, watchlist) do
+    watchlist_symbols = watchlist |> Enum.map(& &1["trading_symbol"]) |> MapSet.new()
+
+    queries
+    |> Enum.map(&API.search_token(token, "NSE", &1))
+    |> Enum.flat_map(fn
+      {:ok, %{"data" => %{scrips: token_list}}} -> token_list
+      _ -> []
+    end)
+    |> Enum.uniq_by(& &1.trading_symbol)
+    |> Enum.filter(&String.ends_with?(&1.trading_symbol, "-EQ"))
+    |> Enum.map(
+      &(&1
+        |> Map.put_new(
+          :in_watchlist?,
+          MapSet.member?(watchlist_symbols, &1.trading_symbol)
+        )
+        |> Map.put_new(:name, Utils.stock_long_name(&1.trading_symbol)))
+    )
   end
 end
