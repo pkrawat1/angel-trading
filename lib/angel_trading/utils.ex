@@ -67,9 +67,7 @@ defmodule AngelTrading.Utils do
     overall_gain_or_loss_percent = overall_gain_or_loss / invested * 100
     todays_profit_or_loss = quantity * (ltp - close)
     ltp_percent = (ltp - close) / close * 100
-
-    todays_profit_or_loss_percent =
-      if todays_profit_or_loss > 0, do: todays_profit_or_loss / invested * 100, else: 0.0
+    todays_profit_or_loss_percent = todays_profit_or_loss / invested * 100
 
     Map.merge(holding, %{
       invested: invested,
