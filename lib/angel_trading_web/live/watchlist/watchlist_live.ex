@@ -110,25 +110,25 @@ defmodule AngelTradingWeb.WatchlistLive do
         |> assign(
           quote:
             Map.merge(quote, %{
-              "ltp" => ltp,
-              "ltp_percent" => ltp_percent,
-              "is_gain_today?" => ltp > close,
-              "close" => close,
-              "open" => new_quote.open_price_day,
-              "low" => new_quote.low_price_day,
-              "high" => new_quote.high_price_day,
-              "totBuyQuan" => new_quote.total_buy_quantity,
-              "totSellQuan" => new_quote.total_sell_quantity,
-              "depth" => %{
-                "buy" =>
+              ltp: ltp,
+              ltp_percent: ltp_percent,
+              is_gain_today?: ltp > close,
+              close: close,
+              open: new_quote.open_price_day,
+              low: new_quote.low_price_day,
+              high: new_quote.high_price_day,
+              tot_buy_quan: new_quote.total_buy_quantity,
+              tot_sell_quan: new_quote.total_sell_quantity,
+              depth: %{
+                buy:
                   Enum.map(
                     new_quote.best_five.buy,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   ),
-                "sell" =>
+                sell:
                   Enum.map(
                     new_quote.best_five.sell,
-                    &%{"quantity" => &1.quantity, "price" => &1.price}
+                    &%{quantity: &1.quantity, price: &1.price}
                   )
               }
             })
