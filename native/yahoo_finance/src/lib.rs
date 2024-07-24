@@ -11,7 +11,7 @@ struct YQuoteItem {
 
 #[rustler::nif]
 fn search(company_name: String) -> Result<Vec<YQuoteItem>, String> {
-    let provider = yahoo::YahooConnector::new();
+    let provider = yahoo::YahooConnector::new().unwrap();
     let resp = tokio_test::block_on(provider.search_ticker(&company_name));
     match resp {
         Ok(company_symbol) => {
