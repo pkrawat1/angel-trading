@@ -217,7 +217,10 @@ defmodule AngelTradingWeb.WatchlistLive do
             []
         end
 
-      {:ok, %{token_list: token_list}}
+      case token_list do
+        [] -> {:error, %{token_list: []}}
+        _ -> {:ok, %{token_list: token_list}}
+      end
     end
 
     {:noreply,
