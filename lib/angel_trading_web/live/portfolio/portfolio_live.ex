@@ -150,8 +150,8 @@ defmodule AngelTradingWeb.PortfolioLive do
               open: new_quote.open_price_day,
               low: new_quote.low_price_day,
               high: new_quote.high_price_day,
-              totBuyQuan: new_quote.total_buy_quantity,
-              totSellQuan: new_quote.total_sell_quantity,
+              tot_buy_quan: new_quote.total_buy_quantity,
+              tot_sell_quan: new_quote.total_sell_quantity,
               depth: %{
                 buy:
                   Enum.map(
