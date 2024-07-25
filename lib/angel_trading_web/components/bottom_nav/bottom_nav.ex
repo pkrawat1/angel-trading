@@ -9,7 +9,7 @@ defmodule AngelTradingWeb.Components.BottomNav do
   def bottom_nav(assigns) do
     ~H"""
     <div class="fixed bottom-0 left-0 z-50 w-full py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-800">
-      <div class="flex h-full justify-between mx-auto px-4 text-xs">
+      <div class="flex h-full justify-center space-x-6 mx-auto text-xs">
         <.link
           navigate={~p"/"}
           type="button"
