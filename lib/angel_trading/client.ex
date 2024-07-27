@@ -141,11 +141,11 @@ defmodule AngelTrading.Client do
   """
   @spec client_portfolio_info_function :: LangChain.Function.t()
   def client_portfolio_info_function do
-    %LangChain.Function{
+    LangChain.Function.new!(%{
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
       function: &client_portfolio_info_fn/2
-    }
+    })
   end
 
   defp client_portfolio_info_fn(_args, %{client_token: token, live_view_pid: pid} = _context) do
@@ -171,18 +171,18 @@ defmodule AngelTrading.Client do
   """
   @spec search_stock_function :: LangChain.Function.t()
   def search_stock_function do
-    %LangChain.Function{
+    LangChain.Function.new!(%{
       name: "search_stock_details",
       description: "Return JSON object of the stock details like symbol, token, exchange etc.",
-      parameters_schema: %{
-        type: "object",
-        properties: %{
-          name: %{type: "string", description: "Stock Name"}
-        },
-        required: ["name"]
-      },
+      parameters: [
+        LangChain.FunctionParam.new!(%{
+          name: "name",
+          type: "string",
+          description: "Stock name to search for."
+        })
+      ],
       function: &search_stock_fn/2
-    }
+    })
   end
 
   defp search_stock_fn(%{"name" => name}, %{client_token: token, live_view_pid: pid} = _context) do
@@ -206,27 +206,29 @@ defmodule AngelTrading.Client do
   """
   @spec candle_data_function :: LangChain.Function.t()
   def candle_data_function do
-    %LangChain.Function{
+    LangChain.Function.new!(%{
       name: "get_candle_data",
       description:
         "Return JSON object of the candle data (RSI) for a stock recorded in 1 week time with 1 hour gap.",
-      parameters_schema: %{
-        type: "object",
-        properties: %{
-          exchange: %{type: "string", description: "Exchange name"},
-          symbol_token: %{
-            type: "string",
-            description: "Symbol token is numeric code for the stock found in stock detail"
-          },
-          trading_symbol: %{
-            type: "string",
-            description: "Trading symbol for the stock found in the stock details details"
-          }
-        },
-        required: ["exchange", "symbol_token", "trading_symbol"]
-      },
+      parameters: [
+        LangChain.FunctionParam.new!(%{
+          name: "exchange",
+          type: "string",
+          description: "Exchange name"
+        }),
+        LangChain.FunctionParam.new!(%{
+          name: "symbol_token",
+          type: "string",
+          description: "Symbol token is numeric code for the stock found in stock detail"
+        }),
+        LangChain.FunctionParam.new!(%{
+          name: "trading_symbol",
+          type: "string",
+          description: "Trading symbol for the stock found in the stock details details"
+        })
+      ],
       function: &candle_data_fn/2
-    }
+    })
   end
 
   defp candle_data_fn(

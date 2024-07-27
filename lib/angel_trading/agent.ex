@@ -42,7 +42,7 @@ defmodule AngelTrading.Agent do
     %{llm: @chat_model, custom_context: context, verbose: false}
     |> LLMChain.new!()
     |> LLMChain.add_messages(@init_messages)
-    |> LLMChain.add_functions([
+    |> LLMChain.add_tools([
       Client.client_portfolio_info_function(),
       Client.search_stock_function(),
       Client.candle_data_function()
