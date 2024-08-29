@@ -48,7 +48,7 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                 <b><%= @quote.close %></b>
               </span>
             </div>
-            <div class="grid grid-cols-2 gap-4 my-2">
+            <div :if={!is_indice(@quote)} class="grid grid-cols-2 gap-4 my-2">
               <table class="table w-full">
                 <thead class="border-y">
                   <th class="text-left">Qty</th>
@@ -91,14 +91,20 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
               dataset={@candle_data}
               chart_config={
                 %{
-                  id: "quote-chart-" <> @quote.symbol_token,
-                  class: "h-[30vh] -mx-4 mt-5 -mb-1"
+                  id: "quote-chart-#{@quote.symbol_token}",
+                  class: "#{if(is_indice(@quote), do: "h-[50vh]", else: "h-[30vh]")} -mx-4 mt-5 -mb-1"
                 }
               }
             />
           </section>
-          <.render_place_order_actions :if={!assigns[:selected_order]} {assigns} />
-          <.render_modify_order_actions :if={assigns[:selected_order]} {assigns} />
+          <.render_place_order_actions
+            :if={!assigns[:selected_order] && !is_indice(@quote)}
+            {assigns}
+          />
+          <.render_modify_order_actions
+            :if={assigns[:selected_order] && !is_indice(@quote)}
+            {assigns}
+          />
         </div>
       </.modal>
     </div>
@@ -169,5 +175,9 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
       </div>
     </section>
     """
+  end
+
+  defp is_indice(quote) do
+    quote.symbol_token in ["99926009", "99926000"]
   end
 end

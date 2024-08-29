@@ -1,7 +1,10 @@
 <ul class="grid grid-cols-2 gap-x-2 gap-y-2 my-4" id="watchlist" phx-update="stream">
   <li
     :for={{dom_id, watchlist} <- @streams.watchlist}
-    class="cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md p-3 bg-white text-slate-900 ring-1 ring-slate-200 shadow dark:bg-gray-900 dark:ring-slate-800 dark:text-slate-200"
+    class={[
+      "cursor-pointer hover:ring-blue-500 transition duration-300 hover:shadow-md group rounded-md p-3 bg-white text-slate-900 ring-1 ring-slate-200 shadow dark:bg-gray-900 dark:ring-slate-800 dark:text-slate-200",
+      watchlist["disabled"] && "animate-pulse !bg-gray-200 dark:!bg-gray-800"
+    ]}
     id={dom_id}
     phx-click={JS.push("select-holding") |> JS.patch(~p"/client/#{@client_code}/watchlist/quote")}
     phx-value-symbol={watchlist["symbol_token"]}
@@ -41,6 +44,7 @@
         </dd>
       </div>
       <span
+        :if={!watchlist["disabled"]}
         class="absolute cursor-pointer -top-5 -right-5"
         phx-click="toggle-token-watchlist"
         phx-value-token={watchlist["symbol_token"]}

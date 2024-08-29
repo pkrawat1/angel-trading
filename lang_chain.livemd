@@ -2,7 +2,7 @@
 
 ```elixir
 Mix.install([
-  {:langchain, "~> 0.1.10"}
+  {:langchain, "~> 0.3.0-rc.0"}
 ])
 ```
 
@@ -56,7 +56,7 @@ Application.put_env(:langchain, :google_ai_key, System.fetch_env!("LB_GOOGLEAI_A
 alias LangChain.ChatModels.ChatGoogleAI
 
 chat_model =
-  ChatGoogleAI.new!(%{endpoint: "https://generativelanguage.googleapis.com/", stream: true})
+  ChatGoogleAI.new!(%{stream: true})
 ```
 
 ```elixir
@@ -85,7 +85,7 @@ end
   # add the prompt message
   |> LLMChain.add_messages(messages)
   # add the functions that are available to the LLM
-  |> LLMChain.add_functions([function])
+  |> LLMChain.add_tools([function])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
   |> LLMChain.run(while_needs_response: true, callback_fn: callback)
@@ -106,4 +106,4 @@ alias LangChain.Chains.LLMChain
 IO.puts(response.content)
 ```
 
-<!-- livebook:{"offset":2806,"stamp":{"token":"XCP.qwB7uOPIc7H5yzUFYywxSQ-wJeN9-Ij15plEFEO-h-ttGXdoOHSV1YkcHHsdb891UQpLUqcuaD1drxn5aO5XdcOWKgln57lFMbwWbuPSkp7Yp_lwDYlPx1FMuQ","version":2}} -->
+<!-- livebook:{"offset":2750,"stamp":{"token":"XCP.1UlySLYZUrlCflHsjW8ckpGOY2sTmGfSUqplVfIt3BM3NVubzCXGfFk7LTeZaNEHSghUon9ttceTLj4VP5MROuiSHP3-6xwbb3XdhGSyLfoMSmgvruWuhkf2nQ","version":2}} -->

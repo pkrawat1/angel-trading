@@ -20,7 +20,22 @@ defmodule AngelTradingWeb.WatchlistLive do
           :timer.send_interval(30000, self(), :subscribe_to_feed)
         end
 
-        watchlist = assign_quotes(user["watchlist"] || [], token)
+        indices = [
+          %{
+            "symbol_token" => "99926000",
+            "trading_symbol" => "NIFTY 50",
+            "exchange" => "NSE",
+            "disabled" => true
+          },
+          %{
+            "symbol_token" => "99926009",
+            "trading_symbol" => "BANKNIFTY",
+            "exchange" => "NSE",
+            "disabled" => true
+          }
+        ]
+
+        watchlist = assign_quotes(indices ++ user["watchlist"] || [], token)
 
         socket
         |> assign(
