@@ -18,19 +18,19 @@ Implements
   <a href="https://www.loom.com/share/3244b916cdeb4f1d8333b0e325e5b19b">
     <p>Demo of AI assistant</p>
   </a>
-  <img width="250" alt="Screenshot 2024-01-30 at 9 54 30 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/423b8da0-c328-4914-9324-30af2871cc62">
-  <img width="250" src="https://github.com/pkrawat1/angel-trading/assets/3807725/afcd4655-f50f-462b-b66e-738fb0808963">
-  <img width="250" alt="Screenshot 2024-01-30 at 9 43 07 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/cfa35d29-f6aa-42b3-b7e9-0f168a3af89c">
-  <img width="250" alt="Screenshot 2024-01-30 at 9 43 49 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/9f64b213-2f10-4ab6-b81d-94cdb274c767">
-  <img width="250" alt="Screenshot 2024-01-30 at 9 44 42 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/5955b351-0234-4138-93a6-04e847f62952">
-  <img width="250" alt="Screenshot 2024-01-30 at 9 45 28 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/96c928d6-b55a-4628-9373-99375dad35af">
+  <img width="250" alt="Screenshot 2024-01-30 at 9 54 30 AM" src="https://github.com/user-attachments/assets/7fcb3e81-5dd9-47ae-b4c7-4d1fc3109eb4">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 32 36 PM" src="https://github.com/user-attachments/assets/d007b50f-dc67-482c-9aa3-7d1d68ddc69e">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 34 34 PM" src="https://github.com/user-attachments/assets/4a5d429e-0a10-465e-881e-ad752703059c">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 35 46 PM" src="https://github.com/user-attachments/assets/99c936a2-f365-4671-b85d-531fd8688a34">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 36 51 PM" src="https://github.com/user-attachments/assets/3c912ab9-9ee7-4dbb-9a49-53bb00e14ed9">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 38 24 PM" src="https://github.com/user-attachments/assets/82164a7f-3637-473c-b246-5b5634c6637b">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 41 05 PM" src="https://github.com/user-attachments/assets/e4d97c47-6d5c-4298-a66b-9870cea7597e">
   <img width="250" alt="Screenshot 2024-01-30 at 9 46 39 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/355d3e44-3967-4d6d-b0f2-5117d6727c45">
   <img width="250" alt="Screenshot 2024-01-30 at 9 46 55 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/d1a1b485-b1c8-4ddc-8567-eb88b22c5748">
   <a href="https://www.loom.com/share/60816921d58245b6b5e1e33a96ec66a6?sid=a0380d2c-5934-4cfd-8244-c70f2cd90f39">
     <img style="height:532px;" src="https://cdn.loom.com/sessions/thumbnails/ccb5ea5a390e4f20b140a10824fd6941-with-play.gif">
   </a>
 </div>
-
 
 To start your Phoenix server:
 
