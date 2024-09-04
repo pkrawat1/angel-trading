@@ -25,6 +25,7 @@ Implements
   <img width="250" alt="Screenshot 2024-09-04 at 7 36 51 PM" src="https://github.com/user-attachments/assets/3c912ab9-9ee7-4dbb-9a49-53bb00e14ed9">
   <img width="250" alt="Screenshot 2024-09-04 at 7 38 24 PM" src="https://github.com/user-attachments/assets/82164a7f-3637-473c-b246-5b5634c6637b">
   <img width="250" alt="Screenshot 2024-09-04 at 7 41 05 PM" src="https://github.com/user-attachments/assets/e4d97c47-6d5c-4298-a66b-9870cea7597e">
+  <img width="250" alt="Screenshot 2024-09-04 at 7 43 29 PM" src="https://github.com/user-attachments/assets/bb01042e-2f4a-4cb2-943f-93e8f48e5eac">
   <img width="250" alt="Screenshot 2024-01-30 at 9 46 39 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/355d3e44-3967-4d6d-b0f2-5117d6727c45">
   <img width="250" alt="Screenshot 2024-01-30 at 9 46 55 AM" src="https://github.com/pkrawat1/angel-trading/assets/3807725/d1a1b485-b1c8-4ddc-8567-eb88b22c5748">
   <a href="https://www.loom.com/share/60816921d58245b6b5e1e33a96ec66a6?sid=a0380d2c-5934-4cfd-8244-c70f2cd90f39">
