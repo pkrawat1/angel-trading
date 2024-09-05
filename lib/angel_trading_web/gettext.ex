@@ -20,5 +20,5 @@ defmodule AngelTradingWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :angel_trading
+  use Gettext.Backend, otp_app: :angel_trading
 end

@@ -144,7 +144,12 @@ defmodule AngelTrading.Client do
     LangChain.Function.new!(%{
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
-      function: &client_portfolio_info_fn/2
+      function: &client_portfolio_info_fn/2,
+      parameter_schema: %{
+        type: "object",
+        properties: %{},
+        required: []
+      }
     })
   end
 

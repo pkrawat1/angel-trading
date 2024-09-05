@@ -116,6 +116,7 @@ defmodule AngelTradingWeb.AskLive do
     {:noreply, socket}
   end
 
+  @impl true
   def handle_async(:running_llm, {:ok, {:ok, chain, _last_response} = _success_result}, socket) do
     socket =
       socket
@@ -144,8 +145,10 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   def run_chain(socket) do
+    llm_chain = socket.assigns.llm_chain
+
     socket
-    |> start_async(:running_llm, fn -> Agent.run_chain(socket.assigns.llm_chain) end)
+    |> start_async(:running_llm, fn -> Agent.run_chain(llm_chain) end)
     |> assign(:async_result, AsyncResult.loading())
   end
 

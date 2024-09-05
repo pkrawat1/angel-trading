@@ -17,7 +17,7 @@ defmodule AngelTradingWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import AngelTradingWeb.Gettext
+  use Gettext, backend: AngelTradingWeb.Gettext
 
   @doc """
   Renders a modal.

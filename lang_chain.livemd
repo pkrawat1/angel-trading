@@ -2,7 +2,7 @@
 
 ```elixir
 Mix.install([
-  {:langchain, "~> 0.3.0-rc.0"}
+  {:langchain, path: "~/Projects/elixir/langchain"}
 ])
 ```
 
@@ -28,6 +28,16 @@ function =
   Function.new!(%{
     name: "get_user_info",
     description: "Return JSON object of the current users's relevant information.",
+    parameters_schema: %{
+      type: "object",
+      properties: %{
+        user_id: %{
+          type: "string",
+          description: "The thing whose location is being requested."
+        }
+      },
+      required: ["user_id"]
+    },
     function: fn _args, %{user_id: user_id} = _context ->
       # Use the provided user_id context to call our Elixir function.
       # ChatGPT responses must be text. Convert the returned Map into JSON.
@@ -79,31 +89,32 @@ callback = fn
     IO.inspect(data.content, label: "COMPLETED MESSAGE")
 end
 
-{:ok, updated_chain, response} =
-  %{llm: chat_model, custom_context: context, verbose: true}
+{:ok, updated_chain} =
+  %{llm: chat_model, context: context, verbose: true}
   |> LLMChain.new!()
   # add the prompt message
   |> LLMChain.add_messages(messages)
   # add the functions that are available to the LLM
+  |> LLMChain.add_callback(%{log: callback})
   |> LLMChain.add_tools([function])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
-  |> LLMChain.run(while_needs_response: true, callback_fn: callback)
+  |> LLMChain.run(while_needs_response: true)
 
-response.content
+updated_chain.last_message.content
 ```
 
 ```elixir
 alias LangChain.Chains.LLMChain
 
-{:ok, updated_chain, response} =
+{:ok, updated_chain} =
   updated_chain
   |> LLMChain.add_messages([Message.new_user!("Give me two more please!")])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
-  |> LLMChain.run(while_needs_response: true, callback_fn: callback)
+  |> LLMChain.run(while_needs_response: true)
 
-IO.puts(response.content)
+IO.puts(updated_chain.last_message.content)
 ```
 
-<!-- livebook:{"offset":2750,"stamp":{"token":"XCP.1UlySLYZUrlCflHsjW8ckpGOY2sTmGfSUqplVfIt3BM3NVubzCXGfFk7LTeZaNEHSghUon9ttceTLj4VP5MROuiSHP3-6xwbb3XdhGSyLfoMSmgvruWuhkf2nQ","version":2}} -->
+<!-- livebook:{"offset":3017,"stamp":{"token":"XCP.lbh1Fd_0UpALwjuakcOIIKk8lo-HovcC8tWrpFjSCm6l1j76-MH-2yLcPp_ajrqdO8RgFTMJhZoI1I9-STVLwsvvNs3B8Lb8WYNH1MGc85sWkwJ_X2YLUFZXCQ","version":2}} -->

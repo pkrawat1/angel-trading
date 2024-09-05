@@ -91,7 +91,7 @@ defmodule AngelTradingWeb do
       import Phoenix.HTML
       # Core UI components and translation
       use AngelTradingWeb.Components
-      import AngelTradingWeb.Gettext
+      use Gettext, backend: AngelTradingWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

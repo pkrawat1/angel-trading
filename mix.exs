@@ -9,7 +9,8 @@ defmodule AngelTrading.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      elixirc_options: [warnings_as_errors: true]
     ]
   end
 
@@ -72,7 +73,7 @@ defmodule AngelTrading.MixProject do
       {:phoenix_bakery, "~> 0.1.2", runtime: false},
       {:explorer, "~> 0.9.0"},
       {:cachex, "~> 3.6"},
-      {:langchain, "~> 0.2.0"},
+      {:langchain, "~> 0.3.0-rc.0"},
       {:earmark, "~> 1.4.47"},
       {:mock, "~> 0.3.8", only: :test}
     ]
