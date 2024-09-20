@@ -81,18 +81,18 @@ defmodule AngelTrading.Cache do
 
   defp start_renewal_task(raw_cache_key, {fun, args}, expiry) do
     Task.start(fn ->
-      # Skip renewal if expiry is :infinity
-      if expiry != :infinity do
-        Logger.info(
-          "[CACHE][TRIGGER-RENEW][#{cache_key(raw_cache_key)}] in #{expiry / (1000 * 60)} minutes"
-        )
+      Logger.info(
+        "[CACHE][TRIGGER-RENEW][#{cache_key(raw_cache_key)}] in #{expiry / (1000 * 60)} minutes"
+      )
 
-        Process.sleep(expiry)
-        get(raw_cache_key, {fun, args}, expiry)
-      else
-        Logger.info("[CACHE][NO-RENEWAL][#{cache_key(raw_cache_key)}] due to infinite expiry")
-      end
+      Process.sleep(expiry)
+      get(raw_cache_key, {fun, args}, expiry)
     end)
+  end
+
+  def handle_cache_miss_or_error(raw_cache_key, fun, args, :infinity) do
+    Logger.info("[CACHE][MARKET_CLOSED][#{cache_key(raw_cache_key)}] (no renewal)")
+    apply(fun, args)
   end
 
   def handle_cache_miss_or_error(raw_cache_key, fun, args, expiry) do
