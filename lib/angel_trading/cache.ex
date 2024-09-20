@@ -25,6 +25,9 @@ defmodule AngelTrading.Cache do
   def get(raw_cache_key, {fun, args}, expiry \\ :timer.minutes(15)) do
     cache_key = cache_key(raw_cache_key)
 
+    # Adjust expiry based on current time
+    expiry = adjust_expiry_based_on_time(expiry)
+
     case Cachex.get(@cache_name, cache_key) do
       {:ok, nil} ->
         # Cache miss
@@ -64,16 +67,30 @@ defmodule AngelTrading.Cache do
 
   # Private functions
 
-  defp cache_key(raw_cache_key), do: :sha256 |> :crypto.hash(raw_cache_key) |> Base.encode64()
+  defp cache_key(raw_cache_key) do
+    case String.split(raw_cache_key, "_api_") do
+      [fn_name, token] ->
+        hashed_token = :crypto.hash(:sha256, token) |> Base.encode64()
+        "#{fn_name}_api_#{hashed_token}"
+
+      _ ->
+        raise "Invalid cache key format"
+    end
+  end
 
   defp start_renewal_task(raw_cache_key, {fun, args}, expiry) do
     Task.start(fn ->
-      Logger.info(
-        "[CACHE][TRIGGER-RENEW][#{cache_key(raw_cache_key)}] in #{expiry / (1000 * 60)} minutes"
-      )
+      # Skip renewal if expiry is :infinity
+      if expiry != :infinity do
+        Logger.info(
+          "[CACHE][TRIGGER-RENEW][#{cache_key(raw_cache_key)}] in #{expiry / (1000 * 60)} minutes"
+        )
 
-      Process.sleep(expiry)
-      get(raw_cache_key, {fun, args}, expiry)
+        Process.sleep(expiry)
+        get(raw_cache_key, {fun, args}, expiry)
+      else
+        Logger.info("[CACHE][NO-RENEWAL][#{cache_key(raw_cache_key)}] due to infinite expiry")
+      end
     end)
   end
 
@@ -84,5 +101,30 @@ defmodule AngelTrading.Cache do
     Cachex.put(@cache_name, cache_key, result, ttl: expiry)
     start_renewal_task(raw_cache_key, {fun, args}, expiry)
     result
+  end
+
+  # Helper function to adjust expiry based on the current time
+  defp adjust_expiry_based_on_time(expiry) do
+    {_, {hour, minute, _second}} = :calendar.local_time()
+
+    # 9:00 AM
+    start_time = {9, 0}
+    # 3:45 PM
+    end_time = {15, 45}
+
+    if time_between?(hour, minute, start_time, end_time) do
+      expiry
+    else
+      :infinity
+    end
+  end
+
+  # Helper function to check if the current time is within a range
+  defp time_between?(hour, minute, {start_hour, start_minute}, {end_hour, end_minute}) do
+    start_total_minutes = start_hour * 60 + start_minute
+    end_total_minutes = end_hour * 60 + end_minute
+    current_total_minutes = hour * 60 + minute
+
+    current_total_minutes >= start_total_minutes and current_total_minutes <= end_total_minutes
   end
 end

@@ -25,7 +25,7 @@ defmodule AngelTrading.Account do
   """
   def get_client(client_code) do
     Cache.get(
-      "get_client_" <> client_code,
+      "get_client_api_" <> client_code,
       {fn -> get("/clients/#{client_code}.json") end, []},
       :timer.hours(5)
     )
@@ -46,7 +46,7 @@ defmodule AngelTrading.Account do
   """
   def get_client_codes(user_hash) do
     Cache.get(
-      "get_client_codes_" <> user_hash,
+      "get_client_codes_api_" <> user_hash,
       {fn -> get("/users/#{user_hash}/clients.json") end, []},
       :timer.hours(5)
     )
@@ -67,7 +67,7 @@ defmodule AngelTrading.Account do
   """
   def get_user(user_hash) do
     Cache.get(
-      "get_user_" <> user_hash,
+      "get_user_api_" <> user_hash,
       {fn -> get("/users/#{user_hash}.json") end, []},
       :timer.hours(5)
     )
@@ -90,7 +90,7 @@ defmodule AngelTrading.Account do
   def update_watchlist(user_hash, watchlist) do
     case patch("/users/#{user_hash}.json", %{watchlist: watchlist}) do
       {:ok, %{body: %{"watchlist" => _}}} ->
-        Cache.del("get_user_" <> user_hash)
+        Cache.del("get_user_api_" <> user_hash)
         :ok
 
       e ->
@@ -146,9 +146,9 @@ defmodule AngelTrading.Account do
                  })
              }
            ) do
-      Cache.del("get_client_" <> client_code)
-      Cache.del("get_user_" <> user_hash)
-      Cache.del("get_client_codes_" <> user_hash)
+      Cache.del("get_client_api_" <> client_code)
+      Cache.del("get_user_api_" <> user_hash)
+      Cache.del("get_client_codes_api_" <> user_hash)
       :ok
     else
       e ->
