@@ -4,6 +4,7 @@ defmodule AngelTrading.Cache do
   """
 
   require Logger
+  require Timex
 
   @cache_name AngelTrading.Cache
 
@@ -25,7 +26,7 @@ defmodule AngelTrading.Cache do
   def get(raw_cache_key, {fun, args}, expiry \\ :timer.minutes(15)) do
     cache_key = cache_key(raw_cache_key)
 
-    # Adjust expiry based on current time
+    # Adjust expiry based on current time in IST
     expiry = adjust_expiry_based_on_time(expiry)
 
     case Cachex.get(@cache_name, cache_key) do
@@ -103,28 +104,18 @@ defmodule AngelTrading.Cache do
     result
   end
 
-  # Helper function to adjust expiry based on the current time
+  # Helper function to adjust expiry based on the current time in IST
   defp adjust_expiry_based_on_time(expiry) do
-    {_, {hour, minute, _second}} = :calendar.local_time()
+    # Get the current time in IST
+    current_time = Timex.now("Asia/Kolkata")
 
-    # 9:00 AM
-    start_time = {9, 0}
-    # 3:45 PM
-    end_time = {15, 45}
+    start_time = Timex.set(current_time, hour: 9, minute: 0, second: 0)
+    end_time = Timex.set(current_time, hour: 15, minute: 45, second: 0)
 
-    if time_between?(hour, minute, start_time, end_time) do
+    if Timex.after?(current_time, start_time) and Timex.before?(current_time, end_time) do
       expiry
     else
       :infinity
     end
-  end
-
-  # Helper function to check if the current time is within a range
-  defp time_between?(hour, minute, {start_hour, start_minute}, {end_hour, end_minute}) do
-    start_total_minutes = start_hour * 60 + start_minute
-    end_total_minutes = end_hour * 60 + end_minute
-    current_total_minutes = hour * 60 + minute
-
-    current_total_minutes >= start_total_minutes and current_total_minutes <= end_total_minutes
   end
 end
