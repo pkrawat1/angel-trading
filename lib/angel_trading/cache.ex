@@ -27,12 +27,14 @@ defmodule AngelTrading.Cache do
 
     case Cachex.get(@cache_name, cache_key) do
       {:ok, nil} ->
-        # Cache miss, fetch data and cache it
-        result = apply(fun, args)
-        Logger.info("[CACHE][RENEWED][#{cache_key}]")
-        Cachex.put(@cache_name, cache_key, result, ttl: expiry)
-        start_renewal_task(raw_cache_key, {fun, args}, expiry)
-        result
+        # Cache miss
+        Logger.info("[CACHE][MISS][#{cache_key}]")
+        handle_cache_miss_or_error(raw_cache_key, fun, args, expiry)
+
+      {:ok, {:error, _}} ->
+        # Cache error
+        Logger.error("[CACHE][ERROR][#{cache_key}]")
+        handle_cache_miss_or_error(raw_cache_key, fun, args, expiry)
 
       {:ok, cached_data} ->
         # Cache hit
@@ -73,5 +75,14 @@ defmodule AngelTrading.Cache do
       Process.sleep(expiry)
       get(raw_cache_key, {fun, args}, expiry)
     end)
+  end
+
+  def handle_cache_miss_or_error(raw_cache_key, fun, args, expiry) do
+    cache_key = cache_key(raw_cache_key)
+    result = apply(fun, args)
+    Logger.info("[CACHE][RENEWED][#{cache_key}]")
+    Cachex.put(@cache_name, cache_key, result, ttl: expiry)
+    start_renewal_task(raw_cache_key, {fun, args}, expiry)
+    result
   end
 end
