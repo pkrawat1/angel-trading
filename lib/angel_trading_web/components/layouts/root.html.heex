@@ -8,12 +8,12 @@
     />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title suffix=" · (SmartAPI AngelOne)">
-      <%= assigns[:page_title] || "SmartTrade" %>
+      {assigns[:page_title] || "SmartTrade"}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="module" src={~p"/assets/app.js"} />
   </head>
   <body class="relative h-full w-full overflow-hidden bg-white dark:bg-gray-950 antialiased">
-    <%= @inner_content %>
+    {@inner_content}
   </body>
 </html>

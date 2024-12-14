@@ -14,18 +14,18 @@
       <div>
         <dd class="flex font-semibold justify-between">
           <span class="truncate">
-            <%= watchlist["trading_symbol"] |> String.split("-") |> List.first() %>
+            {watchlist["trading_symbol"] |> String.split("-") |> List.first()}
           </span>
           <div>
             <span
               :if={watchlist["is_gain_today?"]}
               class="flex items-center text-green-700 dark:text-green-500"
             >
-              <%= number_to_currency(watchlist["ltp"]) %>
+              {number_to_currency(watchlist["ltp"])}
               <.icon name="hero-arrow-up h-3 w-3" />
             </span>
             <span :if={!watchlist["is_gain_today?"]} class="flex items-center text-red-500">
-              <%= number_to_currency(watchlist["ltp"]) %>
+              {number_to_currency(watchlist["ltp"])}
               <.icon name="hero-arrow-down h-3 w-3" />
             </span>
           </div>
@@ -34,12 +34,12 @@
       <div>
         <dd class="mt-2 flex justify-between">
           <small class="font-semibold text-blue-600 bg-gray-100 me-2 px-1 rounded dark:bg-gray-800">
-            <%= watchlist["exchange"] %>
+            {watchlist["exchange"]}
           </small>
           <span>
-            <%= ((watchlist["ltp"] || 0.0) - (watchlist["close"] || 0.0))
-            |> Float.floor(2) %> (<%= (watchlist["ltp_percent"] || 0.0)
-            |> Float.floor(2) %>%)
+            {((watchlist["ltp"] || 0.0) - (watchlist["close"] || 0.0))
+            |> Float.floor(2)} ({(watchlist["ltp_percent"] || 0.0)
+            |> Float.floor(2)}%)
           </span>
         </dd>
       </div>

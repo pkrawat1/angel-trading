@@ -19,7 +19,7 @@
       </div>
     </div>
   </:loading>
-  <:failed :let={reason}><%= reason %></:failed>
+  <:failed :let={reason}>{reason}</:failed>
   <ul id="holdings" phx-update="stream">
     <li
       :for={{dom_id, holding} <- @streams.holdings}
@@ -35,20 +35,20 @@
         <div>
           <dd class="flex font-semibold justify-between">
             <span class="flex items-center">
-              <%= holding.trading_symbol |> String.split("-") |> List.first() %>
+              {holding.trading_symbol |> String.split("-") |> List.first()}
               <small class="text-xs bg-gray-100 text-blue-500 ml-2 px-1 py-0.5 rounded dark:bg-gray-800">
-                <%= holding.exchange %>
+                {holding.exchange}
               </small>
             </span>
             <div>
               <span :if={holding.in_overall_profit?} class="text-green-700 dark:text-green-500">
-                <%= number_to_currency(holding.overall_gain_or_loss) %>
+                {number_to_currency(holding.overall_gain_or_loss)}
               </span>
               <span :if={!holding.in_overall_profit?} class="text-red-500">
-                <%= holding.overall_gain_or_loss |> number_to_currency() %>
+                {holding.overall_gain_or_loss |> number_to_currency()}
               </span>
               <small>
-                (<%= holding.overall_gain_or_loss_percent |> Float.floor(2) %>%)
+                ({holding.overall_gain_or_loss_percent |> Float.floor(2)}%)
               </small>
             </div>
           </dd>
@@ -56,19 +56,19 @@
         <div>
           <dd class="my-2 flex text-xs font-semibold justify-between">
             <span>
-              Avg <%= number_to_currency(holding.average_price) %>
+              Avg {number_to_currency(holding.average_price)}
             </span>
             <div>
               LTP
               <span :if={holding.is_gain_today?} class="text-green-700 dark:text-green-500">
-                <%= number_to_currency(holding.ltp) %>
+                {number_to_currency(holding.ltp)}
               </span>
               <span :if={!holding.is_gain_today?} class="text-red-500">
-                <%= number_to_currency(holding.ltp) %>
+                {number_to_currency(holding.ltp)}
               </span>
               <span>
-                (<%= holding.ltp_percent
-                |> Float.floor(2) %>%)
+                ({holding.ltp_percent
+                |> Float.floor(2)}%)
               </span>
             </div>
           </dd>
@@ -76,18 +76,18 @@
         <div>
           <dd class="my-2 flex text-xs font-semibold justify-between">
             <span>
-              Shares <%= holding.quantity %>
+              Shares {holding.quantity}
             </span>
             <div>
-              <%= if holding.is_gain_today?, do: "Today's gain", else: "Today's loss" %>
+              {if holding.is_gain_today?, do: "Today's gain", else: "Today's loss"}
               <span :if={holding.is_gain_today?} class="text-green-700 dark:text-green-500">
-                <%= number_to_currency(holding.todays_profit_or_loss) %>
+                {number_to_currency(holding.todays_profit_or_loss)}
               </span>
               <span :if={!holding.is_gain_today?} class="text-red-500">
-                <%= holding.todays_profit_or_loss |> number_to_currency() %>
+                {holding.todays_profit_or_loss |> number_to_currency()}
               </span>
               <span>
-                (<%= holding.todays_profit_or_loss_percent |> Float.floor(2) %>%)
+                ({holding.todays_profit_or_loss_percent |> Float.floor(2)}%)
               </span>
             </div>
           </dd>
@@ -97,10 +97,10 @@
           <dt class="sr-only">Invested Amount</dt>
           <dd class="text-xs flex justify-between pt-2">
             <span>
-              Invested <%= number_to_currency(holding.invested, precision: 0) %>
+              Invested {number_to_currency(holding.invested, precision: 0)}
             </span>
             <span>
-              Current <%= number_to_currency(holding.current, precision: 0) %>
+              Current {number_to_currency(holding.current, precision: 0)}
             </span>
           </dd>
         </div>

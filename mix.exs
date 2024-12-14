@@ -45,15 +45,15 @@ defmodule AngelTrading.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.14"},
+      {:phoenix, "~> 1.7.18"},
       {:phoenix_html, "~> 4.1.1"},
       {:phoenix_ecto, "~> 4.6"},
       {:phoenix_live_reload, "~> 1.5.3", only: :dev},
-      {:phoenix_live_view, "~> 0.20.17"},
+      {:phoenix_live_view, "~> 1.0.1"},
       {:floki, ">= 0.36.2", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.4"},
+      {:phoenix_live_dashboard, "~> 0.8.5"},
       {:esbuild, "~> 0.8.1", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.3", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.2.4", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.16.10"},
       {:finch, "~> 0.18"},
       {:telemetry_metrics, "~> 1.0.0"},

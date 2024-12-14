@@ -7,16 +7,16 @@
 >
   <div class="flex">
     <span class="flex bg-gray-100 rounded-full h-10 w-10 mr-2 justify-center items-center dark:bg-gray-800">
-      <%= token.trading_symbol |> String.split("-") |> List.last() %>
+      {token.trading_symbol |> String.split("-") |> List.last()}
     </span>
     <span>
-      <%= token.trading_symbol |> String.split("-") |> List.first() %>
+      {token.trading_symbol |> String.split("-") |> List.first()}
       <small class="text-xs text-blue-600 bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
-        <%= token.exchange %>
+        {token.exchange}
       </small>
       <br />
       <small>
-        <%= token.name %>
+        {token.name}
       </small>
     </span>
   </div>

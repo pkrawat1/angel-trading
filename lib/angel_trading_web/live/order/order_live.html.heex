@@ -5,25 +5,25 @@
         <.icon name="hero-arrow-left" />
       </.link>
       <div class="col-span-3 leading-none">
-        <%= @order[:trading_symbol] |> String.split("-") |> List.first() %>
+        {@order[:trading_symbol] |> String.split("-") |> List.first()}
         <br />
         <span class="text-xs -mt-5 text-blue-500">
-          <%= @order[:exchange] %>
+          {@order[:exchange]}
         </span>
       </div>
       <div class="text-right col-span-8 justify-self-end">
         <span :if={@order[:is_gain_today?]} class="text-green-700 dark:text-green-500">
-          <%= number_to_currency(@order[:ltp]) %>
+          {number_to_currency(@order[:ltp])}
           <.icon name="hero-arrow-up" />
         </span>
         <span :if={!@order[:is_gain_today?]} class="text-red-500">
-          <%= number_to_currency(@order[:ltp]) %>
+          {number_to_currency(@order[:ltp])}
           <.icon name="hero-arrow-down" />
         </span>
         <br />
         <span>
-          <%= (@order[:ltp] - @order[:close]) |> Float.floor(2) %> (<%= @order[:ltp_percent]
-          |> Float.floor(2) %>%)
+          {(@order[:ltp] - @order[:close]) |> Float.floor(2)} ({@order[:ltp_percent]
+          |> Float.floor(2)}%)
         </span>
       </div>
     </div>
@@ -41,9 +41,9 @@
     >
       <% is_market_order? = @order[:type] == "MARKET" %>
       <.input required field={f[:quantity]} value={@order[:quantity]} label="No. of Shares" />
-      <small>Max shares: <%= @order[:max] %></small>
+      <small>Max shares: {@order[:max]}</small>
       <label for="order_price" class="block text-sm font-semibold">
-        <%= @order[:type] %>
+        {@order[:type]}
       </label>
       <div class="flex space-x-2 !mt-0 items-baseline">
         <.button type="button" phx-click="decrease-limit" class="!bg-red-100 !text-red-500">
@@ -88,18 +88,18 @@
         <div class="flex justify-between mx-auto max-w-6xl">
           <span class={if !is_sell_order? && @order.gross > @funds.net, do: "text-red-500"}>
             Margin Required<br />
-            <%= number_to_currency(
+            {number_to_currency(
               if(is_sell_order?, do: 0.0, else: @order.margin_required |> Float.ceil())
-            ) %>
+            )}
             <span :if={@order[:charges]} class="text-orange-600 animate-pulse">
-              + Charges(<%= @order.charges.total_charges
+              + Charges({@order.charges.total_charges
               |> Float.round(2)
-              |> number_to_currency() %>)
+              |> number_to_currency()})
             </span>
           </span>
           <span class="text-right">
             Avilable Cash(<small><b><%= @name %></b></small>)<br />
-            <%= number_to_currency(@funds.net) %>
+            {number_to_currency(@funds.net)}
           </span>
         </div>
       </section>
@@ -108,10 +108,10 @@
           <div class="flex mx-auto max-w-6xl">
             <% action = if(is_edit_order?, do: "MODIFY", else: "PLACE") %>
             <.button :if={!is_sell_order?} class="w-full !bg-green-500">
-              <%= action %> BUY ORDER
+              {action} BUY ORDER
             </.button>
             <.button :if={is_sell_order?} class="w-full !bg-red-500">
-              <%= action %> SELL ORDER
+              {action} SELL ORDER
             </.button>
           </div>
         </div>

@@ -19,7 +19,7 @@
       <div :if={@delta} class="flex items-start gap-2.5 my-8">
         <.reply_message :if={@delta.role == :assistant} message={@delta} />
         <span :if={@delta.role != :assistant} class="whitespace-pre-wrap">
-          <%= @delta.content %>
+          {@delta.content}
         </span>
       </div>
       <.async_result :let={_} assign={@async_result}>

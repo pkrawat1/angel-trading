@@ -16,7 +16,7 @@
       <div>
         <dd class="flex font-semibold justify-between">
           <div class="flex">
-            <%= order.trading_symbol |> String.split("-") |> List.first() %>
+            {order.trading_symbol |> String.split("-") |> List.first()}
           </div>
           <div>
             <span class={[
@@ -27,7 +27,7 @@
                 else: "text-green-700 dark:text-green-500"
               )
             ]}>
-              <%= number_to_currency(order.price) %>
+              {number_to_currency(order.price)}
             </span>
           </div>
         </dd>
@@ -42,26 +42,26 @@
               ),
               "text-xs me-2 px-1 py-0.5 rounded"
             ]}>
-              <%= order.transaction_type %>
+              {order.transaction_type}
             </small>
             <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
-              <%= order.exchange %>
+              {order.exchange}
             </small>
             <small class="text-xs bg-gray-100 me-2 px-1 py-0.5 rounded dark:bg-gray-800">
-              <%= order.product_type %>
+              {order.product_type}
             </small>
           </span>
           <div>
             LTP
             <span :if={order.is_gain_today?} class="text-green-700 dark:text-green-500">
-              <%= number_to_currency(order.ltp) %>
+              {number_to_currency(order.ltp)}
             </span>
             <span :if={!order.is_gain_today?} class="text-red-500">
-              <%= number_to_currency(order.ltp) %>
+              {number_to_currency(order.ltp)}
             </span>
             <span>
-              (<%= (order.ltp_percent || 0.0)
-              |> Float.floor(2) %>%)
+              ({(order.ltp_percent || 0.0)
+              |> Float.floor(2)}%)
             </span>
           </div>
         </dd>
@@ -69,7 +69,7 @@
       <div>
         <dd class="my-2 flex text-xs justify-between">
           <span>
-            <%= order.filled_shares %>/<%= order.quantity %> Shares
+            {order.filled_shares}/{order.quantity} Shares
           </span>
           <span class={[
             if(order.status in ["rejected", "cancelled"],
@@ -79,7 +79,7 @@
             "px-1 py-0.5 rounded uppercase"
           ]}>
             <.icon name="hero-clock h-4 w-4" />
-            <%= order.status %>
+            {order.status}
           </span>
         </dd>
       </div>

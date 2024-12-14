@@ -8,23 +8,23 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
         <div class="text-xs md:text-sm uppercase -m-10 md:-m-8">
           <.header>
             <div class="dark:text-gray-200">
-              <%= @quote.trading_symbol |> String.split("-") |> List.first() %>
+              {@quote.trading_symbol |> String.split("-") |> List.first()}
               <small class="text-xs text-blue-500">
-                <%= @quote.exchange %>
+                {@quote.exchange}
               </small>
               <br />
               <div class="text-xs md:text-sm">
                 <span :if={@quote.is_gain_today?} class="text-green-700 dark:text-green-500">
-                  <%= number_to_currency(@quote.ltp) %>
+                  {number_to_currency(@quote.ltp)}
                   <.icon name="hero-arrow-up" />
                 </span>
                 <span :if={!@quote.is_gain_today?} class="text-red-500">
-                  <%= number_to_currency(@quote.ltp) %>
+                  {number_to_currency(@quote.ltp)}
                   <.icon name="hero-arrow-down" />
                 </span>
                 <span>
-                  <%= (@quote.ltp - @quote.close) |> Float.floor(2) %> (<%= @quote.ltp_percent
-                  |> Float.floor(2) %>%)
+                  {(@quote.ltp - @quote.close) |> Float.floor(2)} ({@quote.ltp_percent
+                  |> Float.floor(2)}%)
                 </span>
               </div>
             </div>
@@ -33,19 +33,19 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
             <div class="flex justify-between text-center">
               <span>
                 Open <br />
-                <b><%= @quote.open %></b>
+                <b>{@quote.open}</b>
               </span>
               <span>
                 High <br />
-                <b><%= @quote.high %></b>
+                <b>{@quote.high}</b>
               </span>
               <span>
                 Low <br />
-                <b><%= @quote.low %></b>
+                <b>{@quote.low}</b>
               </span>
               <span>
                 Close <br />
-                <b><%= @quote.close %></b>
+                <b>{@quote.close}</b>
               </span>
             </div>
             <div :if={!is_indice(@quote)} class="grid grid-cols-2 gap-4 my-2">
@@ -56,11 +56,11 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                 </thead>
                 <tbody>
                   <tr :for={buy <- @quote.depth.buy}>
-                    <td><%= buy.quantity %></td>
-                    <td class="text-right text-green-700 dark:text-green-500"><%= buy.price %></td>
+                    <td>{buy.quantity}</td>
+                    <td class="text-right text-green-700 dark:text-green-500">{buy.price}</td>
                   </tr>
                   <tr class="border-y">
-                    <td><%= @quote.tot_buy_quan %></td>
+                    <td>{@quote.tot_buy_quan}</td>
                     <td class="text-right">Total</td>
                   </tr>
                 </tbody>
@@ -72,13 +72,13 @@ defmodule AngelTradingWeb.LiveComponents.QuoteModal do
                 </thead>
                 <tbody>
                   <tr :for={sell <- @quote.depth.sell}>
-                    <td class="text-left text-red-500"><%= sell.price %></td>
-                    <td class="text-right"><%= sell.quantity %></td>
+                    <td class="text-left text-red-500">{sell.price}</td>
+                    <td class="text-right">{sell.quantity}</td>
                   </tr>
                   <tr class="border-y">
                     <td>Total</td>
                     <td class="text-right">
-                      <%= @quote.tot_sell_quan %>
+                      {@quote.tot_sell_quan}
                     </td>
                   </tr>
                 </tbody>
