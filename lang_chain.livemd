@@ -28,16 +28,17 @@ function =
   Function.new!(%{
     name: "get_user_info",
     description: "Return JSON object of the current users's relevant information.",
-    parameters_schema: %{
-      type: "object",
-      properties: %{
-        user_id: %{
-          type: "string",
-          description: "The thing whose location is being requested."
-        }
-      },
-      required: ["user_id"]
-    },
+    # parameters_schema: %{
+    #   type: "object",
+    #   properties: %{
+    #     user_id: %{
+    #       type: "string",
+    #       description: "The thing whose location is being requested."
+    #     }
+    #   },
+    #   required: ["user_id"]
+    # },
+    parameters: [LangChain.FunctionParam.new!(%{name: "user_id", type: :string, required: false})],
     function: fn _args, %{user_id: user_id} = _context ->
       # Use the provided user_id context to call our Elixir function.
       # ChatGPT responses must be text. Convert the returned Map into JSON.
@@ -99,10 +100,12 @@ end
   |> LLMChain.add_tools([function])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
-  |> LLMChain.run(while_needs_response: true)
+  |> LLMChain.run(mode: :while_needs_response)
 
 updated_chain.last_message.content
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 alias LangChain.Chains.LLMChain
@@ -117,4 +120,4 @@ alias LangChain.Chains.LLMChain
 IO.puts(updated_chain.last_message.content)
 ```
 
-<!-- livebook:{"offset":3017,"stamp":{"token":"XCP.lbh1Fd_0UpALwjuakcOIIKk8lo-HovcC8tWrpFjSCm6l1j76-MH-2yLcPp_ajrqdO8RgFTMJhZoI1I9-STVLwsvvNs3B8Lb8WYNH1MGc85sWkwJ_X2YLUFZXCQ","version":2}} -->
+<!-- livebook:{"offset":3191,"stamp":{"token":"XCP.tmGy0B0GRcEZ5Hb9od02lEbfgVyl8eP-f7LfE78HxrvAUG2i5V4o2-RCY-bMgMPtwDzRAXIOOYWfEXGr17WKR4RIHvrO9jw0VH1d3rOjh4K8FOSOuA3k7a77iA","version":2}} -->
