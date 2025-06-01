@@ -117,7 +117,7 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   @impl true
-  def handle_async(:running_llm, {:ok, {:ok, chain, _last_response} = _success_result}, socket) do
+  def handle_async(:running_llm, {:ok, {:ok, chain}}, socket) do
     socket =
       socket
       |> assign(:async_result, AsyncResult.ok(%AsyncResult{}, :ok))
@@ -131,6 +131,15 @@ defmodule AngelTradingWeb.AskLive do
       socket
       |> put_flash(:error, reason)
       |> assign(:async_result, AsyncResult.failed(%AsyncResult{}, reason))
+
+    {:noreply, socket}
+  end
+
+  def handle_async(:running_llm, {:ok, result}, socket) do
+    socket =
+      socket
+      |> put_flash(:error, "Unexpected async result: #{inspect(result)}")
+      |> assign(:async_result, AsyncResult.failed(%AsyncResult{}, result))
 
     {:noreply, socket}
   end
@@ -175,13 +184,40 @@ defmodule AngelTradingWeb.AskLive do
 
   defp handle_chat_response(socket, %MessageDelta{role: role, content: content, status: :complete})
        when role in [:user, :assistant] and is_binary(content) do
+    # Use accumulated content if there was streaming, otherwise use the complete content
+    final_content =
+      if socket.assigns.delta && socket.assigns.delta.content do
+        socket.assigns.delta.content
+      else
+        content
+      end
+
     socket
-    |> append_display_message(%ChatMessage{role: role, content: content})
+    |> append_display_message(%ChatMessage{role: role, content: final_content, hidden: false})
     |> assign(:delta, nil)
   end
 
-  defp handle_chat_response(socket, %MessageDelta{} = delta) do
-    content = Map.get(socket.assigns.delta || %{}, :content, "") <> (delta.content || "")
-    assign(socket, :delta, %MessageDelta{delta | content: content})
+  defp handle_chat_response(socket, %MessageDelta{role: role, content: new_content} = delta)
+       when role in [:user, :assistant] do
+    # Accumulate streaming content
+    current_content =
+      if socket.assigns.delta do
+        socket.assigns.delta.content <> (new_content || "")
+      else
+        new_content || ""
+      end
+
+    updated_delta = %MessageDelta{
+      role: role,
+      content: current_content,
+      status: delta.status
+    }
+
+    assign(socket, :delta, updated_delta)
+  end
+
+  defp handle_chat_response(socket, %MessageDelta{} = _delta) do
+    # Fallback for other delta types
+    socket
   end
 end

@@ -2,7 +2,7 @@
 
 ```elixir
 Mix.install([
-  {:langchain, path: "~/Projects/elixir/langchain"}
+  {:langchain, "~>0.3.3"}
 ])
 ```
 
@@ -67,7 +67,7 @@ Application.put_env(:langchain, :google_ai_key, System.fetch_env!("LB_GOOGLEAI_A
 alias LangChain.ChatModels.ChatGoogleAI
 
 chat_model =
-  ChatGoogleAI.new!(%{stream: true})
+  ChatGoogleAI.new!(%{model: "gemini-2.0-flash"})
 ```
 
 ```elixir
@@ -90,13 +90,29 @@ callback = fn
     IO.inspect(data.content, label: "COMPLETED MESSAGE")
 end
 
+chain_handler = %{
+      on_tool_response_created: fn _chain, %Message{} = tool_message ->
+        IO.inspect tool_message
+      end
+    }
+
+callback = %{
+      on_llm_new_delta: fn _model, delta ->
+        # we received a piece of data
+        IO.write(delta.content)
+      end
+    }
+
+
+
 {:ok, updated_chain} =
   %{llm: chat_model, context: context, verbose: true}
   |> LLMChain.new!()
   # add the prompt message
   |> LLMChain.add_messages(messages)
   # add the functions that are available to the LLM
-  |> LLMChain.add_callback(%{log: callback})
+  |> LLMChain.add_callback(callback)
+  |> LLMChain.add_callback(chain_handler)
   |> LLMChain.add_tools([function])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
@@ -115,9 +131,9 @@ alias LangChain.Chains.LLMChain
   |> LLMChain.add_messages([Message.new_user!("Give me two more please!")])
   # keep running the LLM chain against the LLM if needed to evaluate
   # function calls and provide a response.
-  |> LLMChain.run(while_needs_response: true)
+  |> LLMChain.run(mode: :while_needs_response)
 
-IO.puts(updated_chain.last_message.content)
+IO.puts(updated_chain.delta)
 ```
 
-<!-- livebook:{"offset":3191,"stamp":{"token":"XCP.tmGy0B0GRcEZ5Hb9od02lEbfgVyl8eP-f7LfE78HxrvAUG2i5V4o2-RCY-bMgMPtwDzRAXIOOYWfEXGr17WKR4RIHvrO9jw0VH1d3rOjh4K8FOSOuA3k7a77iA","version":2}} -->
+<!-- livebook:{"offset":3485,"stamp":{"token":"XCP.CRDoNIddiTTzg9Jn4lQi_zTwyX4iejgW64mFSHeAE3fgwhfhxNNFwRC21DNJ4yJ5EDOpdFuownMIfAdZsu-z1ujiytun-exwrSHhYxx2szWB5xk6o5Ag1X4Fgg","version":2}} -->
