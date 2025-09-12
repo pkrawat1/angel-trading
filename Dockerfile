@@ -9,11 +9,11 @@
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/ubuntu?tab=tags&page=1&name=jammy-20240808 - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.18.0-erlang-27.0.1-ubuntu-jammy-20240808
+#   - Ex: hexpm/elixir:1.18.4-erlang-27.3.4.2-ubuntu-jammy-20240808
 #
-ARG ELIXIR_VERSION=1.18.0
-ARG OTP_VERSION=27.0.1
-ARG UBUNTU_VERSION=jammy-20240808
+ARG ELIXIR_VERSION=1.18.4
+ARG OTP_VERSION=27.3.4.2
+ARG UBUNTU_VERSION=jammy-20250819
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-ubuntu-${UBUNTU_VERSION}"
 ARG RUNNER_IMAGE="ubuntu:${UBUNTU_VERSION}"

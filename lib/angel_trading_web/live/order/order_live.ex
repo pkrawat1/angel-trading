@@ -234,13 +234,13 @@ defmodule AngelTradingWeb.OrderLive do
         |> put_flash(flash_status, message)
         |> assign(order: %{order | type: "LIMIT", price: nil, quantity: nil})
       else
-        e ->
+        {:error, %{"message" => message} = response} ->
           Logger.error("[Order] Error placing order")
-          IO.inspect(e)
+          IO.inspect(response)
 
           socket
           |> push_navigate(to: ~p"/client/#{client_code}/orders")
-          |> put_flash(:error, "Failed to place order.")
+          |> put_flash(:error, message)
       end
 
     {:noreply, socket}

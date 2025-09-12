@@ -64,7 +64,7 @@ defmodule AngelTrading.MixProject do
       {:bandit, "~> 1.6.1"},
       {:number, "~> 1.0.5"},
       {:timex, "~> 3.7.11"},
-      {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git", branch: "master"},
+      {:trade_galleon, git: "https://github.com/pkrawat1/trade_galleon.git"},
       # {:trade_galleon, path: "../trade_galleon"},
       {:mix_test_watch, "~> 1.2.0", only: [:dev, :test], runtime: false},
       {:rustler, "~> 0.35.1", runtime: false},
