@@ -157,6 +157,9 @@ defmodule AngelTradingWeb.AskLive do
     llm_chain = socket.assigns.llm_chain
 
     socket
+    # Reset delta state to prevent accumulation from previous conversation turns
+    # This fixes the bug where new messages were merged with previous replies
+    |> assign(:delta, nil)
     |> start_async(:running_llm, fn -> Agent.run_chain(llm_chain) end)
     |> assign(:async_result, AsyncResult.loading())
   end
@@ -200,6 +203,7 @@ defmodule AngelTradingWeb.AskLive do
   defp handle_chat_response(socket, %MessageDelta{role: role, content: new_content} = delta)
        when role in [:user, :assistant] do
     # Accumulate streaming content
+    # Note: delta state is reset at the start of each new run_chain call
     current_content =
       if socket.assigns.delta do
         socket.assigns.delta.content <> (new_content || "")
