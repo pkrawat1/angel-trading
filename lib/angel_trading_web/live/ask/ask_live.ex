@@ -37,13 +37,9 @@ defmodule AngelTradingWeb.AskLive do
         |> assign(:token, token)
         |> assign(:client_code, client_code)
         |> assign(:llm_chain, Agent.new_chain(%{client_token: token, live_view_pid: self()}))
-        |> stream_configure(:display_messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
+        |> stream_configure(:display_messages, dom_id: &"message-#{&1.id}")
         |> stream(:display_messages, [
-          %ChatMessage{
-            role: :assistant,
-            hidden: false,
-            content: "Hello! I'm your personal Assistant! How can I help you today?"
-          }
+          create_message(:assistant, "Hello! I'm your personal Assistant! How can I help you today?")
         ])
         |> assign(:delta, nil)
         |> reset_chat_message_form()
@@ -95,11 +91,7 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   def handle_info({:function_run, message}, socket) do
-    display = %ChatMessage{
-      role: :function_call,
-      hidden: false,
-      content: message
-    }
+    display = create_message(:function_call, message)
 
     {:noreply, append_display_message(socket, display)}
   end
@@ -169,7 +161,7 @@ defmodule AngelTradingWeb.AskLive do
 
     socket
     |> assign(llm_chain: updated_chain)
-    |> append_display_message(%ChatMessage{role: :user, content: user_text})
+    |> append_display_message(create_message(:user, user_text))
   end
 
   defp reset_chat_message_form(socket) do
@@ -185,6 +177,15 @@ defmodule AngelTradingWeb.AskLive do
     assign(socket, :form, to_form(changeset))
   end
 
+  defp create_message(role, content, hidden \\ false) do
+    %ChatMessage{
+      id: "msg_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:millisecond)}",
+      role: role,
+      content: content,
+      hidden: hidden
+    }
+  end
+
   defp handle_chat_response(socket, %MessageDelta{role: role, content: content, status: :complete})
        when role in [:user, :assistant] and is_binary(content) do
     # Use accumulated content if there was streaming, otherwise use the complete content
@@ -196,7 +197,7 @@ defmodule AngelTradingWeb.AskLive do
       end
 
     socket
-    |> append_display_message(%ChatMessage{role: role, content: final_content, hidden: false})
+    |> append_display_message(create_message(role, final_content))
     |> assign(:delta, nil)
   end
 
