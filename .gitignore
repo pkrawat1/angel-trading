@@ -36,4 +36,3 @@ npm-debug.log
 /assets/node_modules/
 .envrc
 /priv/native/
-elixir.zip
