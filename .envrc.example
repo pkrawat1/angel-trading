@@ -1,6 +1,11 @@
 export API_ENDPOINT=
 export ENCRYPTION_KEY=
+export LOCAL_IP=
 export MAC_ADDRESS=
+# Webshare.io proxy credentials (account-level, shared across all client proxies).
+# Each client's specific proxy host:port is stored per-client in Firebase.
+export PROXY_USERNAME=
+export PROXY_PASSWORD=
 export FIREBASE_TOKEN=
 export FIREBASE_API=
 export BREVO_API_KEY=

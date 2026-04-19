@@ -69,7 +69,10 @@ config :angel_trading,
 config :trade_galleon, TradeGalleon.Brokers.AngelOne,
   adapter: TradeGalleon.Brokers.AngelOne,
   local_ip: System.get_env("LOCAL_IP", "192.168.168.168"),
-  mac_address: System.get_env("MAC_ADDRESS", "fe80::216e:6507:4b90:3719")
+  mac_address: System.get_env("MAC_ADDRESS", "fe80::216e:6507:4b90:3719"),
+  # Webshare.io account-level proxy credentials (shared across all client proxies).
+  proxy_username: System.get_env("PROXY_USERNAME"),
+  proxy_password: System.get_env("PROXY_PASSWORD")
 
 # api_key is per-client and passed at call-time; pub_sub_module/supervisor are global.
 config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocket,
