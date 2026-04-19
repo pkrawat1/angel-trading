@@ -60,32 +60,35 @@ defmodule AngelTradingWeb.UserAuth do
         "pin" => pin,
         "totp_secret" => totp_secret
       }) do
-    case(
-      conn
-      |> get_session(:user_hash)
-      |> Account.set_tokens(%{
-        "client_code" => client_code,
-        "token" => token,
-        "refresh_token" => refresh_token,
-        "feed_token" => feed_token,
-        "pin" => pin,
-        "totp_secret" => totp_secret
-      })
-    ) do
-      :ok ->
-        conn
-        |> put_flash(:info, "Client logged in successfully.")
-        |> redirect(to: ~p"/")
+    user_hash = get_session(conn, :user_hash)
 
-      :error ->
+    # api_key, secret_key, proxy_url are not in the route params — look them up
+    # from the already-stored client data so set_tokens can re-encrypt everything.
+    with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
+         {:ok, %{api_key: api_key, secret_key: secret_key, proxy_url: proxy_url}} <-
+           Utils.decrypt(:client_tokens, data),
+         :ok <-
+           Account.set_tokens(user_hash, %{
+             "client_code" => client_code,
+             "token" => token,
+             "refresh_token" => refresh_token,
+             "feed_token" => feed_token,
+             "pin" => pin,
+             "totp_secret" => totp_secret,
+             "api_key" => api_key,
+             "secret_key" => secret_key,
+             "proxy_url" => proxy_url
+           }) do
+      conn
+      |> put_flash(:info, "Client logged in successfully.")
+      |> redirect(to: ~p"/")
+    else
+      _ ->
         conn
         |> put_flash(:error, "Unable to login at the moment. Please try again.")
         |> redirect(to: ~p"/client/login")
         |> halt()
     end
-
-    conn
-    |> redirect(to: "/")
   end
 
   @doc """
@@ -176,7 +179,14 @@ defmodule AngelTradingWeb.UserAuth do
     end
     |> Enum.map(fn client_code ->
       with {:ok, %{body: data}} when is_binary(data) <- Account.get_client(client_code),
-           {:ok, %{pin: pin, totp_secret: totp_secret}} <-
+           {:ok,
+            %{
+              pin: pin,
+              totp_secret: totp_secret,
+              api_key: api_key,
+              secret_key: secret_key,
+              proxy_url: proxy_url
+            }} <-
              Utils.decrypt(:client_tokens, data),
            {:ok, totp} <- AngelTrading.TOTP.totp_now(totp_secret),
            {:ok,
@@ -199,7 +209,10 @@ defmodule AngelTradingWeb.UserAuth do
                "refresh_token" => refresh_token,
                "feed_token" => feed_token,
                "pin" => pin,
-               "totp_secret" => totp_secret
+               "totp_secret" => totp_secret,
+               "api_key" => api_key,
+               "secret_key" => secret_key,
+               "proxy_url" => proxy_url
              }) do
         Logger.info("User client[#{client_code}] tokens refreshed")
       else
