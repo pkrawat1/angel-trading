@@ -101,23 +101,21 @@ defmodule AngelTrading.Account do
   end
 
   @doc """
-  Set a user's tokens (client code, token, refresh token, feed token, PIN, and TOTP secret) in the Firebase API and invalidate the cached data.
+  Set a user\'s tokens in Firebase and populate the in-memory ClientConfig ETS store.
+
+  New per-client fields: `api_key`, `secret_key`, `proxy_url`.
+  The proxy_url (e.g. "http://103.210.12.49:5977/") routes all AngelOne
+  HTTP requests for this client through the assigned static IP.
 
   ## Parameters
 
-    - user_hash: The hash of the user to set tokens for.
-    - tokens: A map containing the following keys:
-      - client_code: The client code.
-      - token: The access token.
-      - refresh_token: The refresh token.
-      - feed_token: The feed token.
-      - pin: The user's PIN.
-      - totp_secret: The user's TOTP secret.
+    - user_hash: The hash of the user.
+    - tokens: A map with keys: client_code, token, refresh_token, feed_token,
+      pin, totp_secret, api_key, secret_key, proxy_url.
 
   ## Examples
 
-      iex> tokens = %{"client_code" => "ABC123", "token" => "xyz", ...}
-      iex> AngelTrading.Account.set_tokens("user123", tokens)
+      iex> AngelTrading.Account.set_tokens("user123", %{"client_code" => "ABC123", ...})
       :ok
 
   """
@@ -127,7 +125,10 @@ defmodule AngelTrading.Account do
         "refresh_token" => refresh_token,
         "feed_token" => feed_token,
         "pin" => pin,
-        "totp_secret" => totp_secret
+        "totp_secret" => totp_secret,
+        "api_key" => api_key,
+        "secret_key" => secret_key,
+        "proxy_url" => proxy_url
       }) do
     with {:ok, %{body: %{^client_code => ^client_code}}} <-
            patch("/users/#{user_hash}/clients.json", %{client_code => client_code}),
@@ -142,13 +143,23 @@ defmodule AngelTrading.Account do
                    refresh_token: refresh_token,
                    feed_token: feed_token,
                    pin: pin,
-                   totp_secret: totp_secret
+                   totp_secret: totp_secret,
+                   api_key: api_key,
+                   secret_key: secret_key,
+                   proxy_url: proxy_url
                  })
              }
            ) do
       Cache.del("get_client_api_" <> client_code)
       Cache.del("get_user_api_" <> user_hash)
       Cache.del("get_client_codes_api_" <> user_hash)
+
+      AngelTrading.ClientConfig.put(client_code, token, %{
+        api_key: api_key,
+        secret_key: secret_key,
+        proxy_url: proxy_url
+      })
+
       :ok
     else
       e ->

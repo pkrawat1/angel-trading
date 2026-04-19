@@ -26,8 +26,29 @@ defmodule AngelTrading.Utils do
   """
   @spec decrypt(atom(), binary(), integer()) :: {:ok, any()} | {:error, atom()}
   def decrypt(context, ciphertext, max_age \\ @max_age) when is_binary(ciphertext) do
-    Plug.Crypto.decrypt(secret(), to_string(context), ciphertext, max_age: max_age)
+    result = Plug.Crypto.decrypt(secret(), to_string(context), ciphertext, max_age: max_age)
+    populate_client_config_cache(context, result)
+    result
   end
+
+  # Side effect: whenever client tokens are decrypted successfully, populate the
+  # in-memory ClientConfig ETS store so subsequent API calls can auto-resolve
+  # per-client credentials without any change to the live views.
+  defp populate_client_config_cache(
+         :client_tokens,
+         {:ok,
+          %{token: token, client_code: client_code, api_key: api_key, secret_key: secret_key} =
+            data}
+       )
+       when is_binary(token) and is_binary(api_key) do
+    AngelTrading.ClientConfig.put(client_code, token, %{
+      api_key: api_key,
+      secret_key: secret_key,
+      proxy_url: Map.get(data, :proxy_url)
+    })
+  end
+
+  defp populate_client_config_cache(_context, _result), do: :ok
 
   def quote_stream_process(client_code), do: :"#{client_code}-quote-stream"
   def order_stream_process(client_code), do: :"#{client_code}-order-stream"

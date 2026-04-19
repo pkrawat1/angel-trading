@@ -59,22 +59,21 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :angel_trading,
-  api_key: System.get_env("API_KEY"),
   firebase_token: System.get_env("FIREBASE_TOKEN"),
   firebase_api: System.get_env("FIREBASE_API"),
   encryption_key: System.get_env("ENCRYPTION_KEY")
 
+# api_key, secret_key, proxy_url are per-client (stored encrypted in Firebase).
+# local_ip and mac_address are server-wide defaults used in AngelOne request headers.
+# public_ip is derived at call-time from each client\'s proxy_url.
 config :trade_galleon, TradeGalleon.Brokers.AngelOne,
   adapter: TradeGalleon.Brokers.AngelOne,
-  api_key: System.get_env("API_KEY"),
   local_ip: System.get_env("LOCAL_IP", "192.168.168.168"),
-  public_ip: System.get_env("PUBLIC_IP", "106.193.147.98"),
-  mac_address: System.get_env("MAC_ADDRESS", "fe80::216e:6507:4b90:3719"),
-  secret_key: System.get_env("SECRET_KEY")
+  mac_address: System.get_env("MAC_ADDRESS", "fe80::216e:6507:4b90:3719")
 
+# api_key is per-client and passed at call-time; pub_sub_module/supervisor are global.
 config :trade_galleon, TradeGalleon.Brokers.AngelOne.WebSocket,
   adapter: TradeGalleon.Brokers.AngelOne.WebSocket,
-  api_key: System.get_env("API_KEY"),
   pub_sub_module: AngelTrading.PubSub,
   supervisor: AngelTrading.WebSocketSupervisor
 

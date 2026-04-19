@@ -1,9 +1,9 @@
 defmodule AngelTradingWeb.ClientLoginLive do
   use AngelTradingWeb, :live_view
-  alias AngelTrading.API
+  alias AngelTrading.{API, Account}
 
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "New Client")}
+  def mount(_params, %{"user_hash" => user_hash}, socket) do
+    {:ok, assign(socket, page_title: "New Client", user_hash: user_hash)}
   end
 
   def handle_params(params, _url, socket) do
@@ -24,6 +24,18 @@ defmodule AngelTradingWeb.ClientLoginLive do
           minlength="4"
         />
         <.input field={f[:totp_secret]} value={@params["totp_secret"]} placeholder="Totp secret" />
+        <.input field={f[:api_key]} value={@params["api_key"]} placeholder="API key" />
+        <.input
+          field={f[:secret_key]}
+          type="password"
+          value={@params["secret_key"]}
+          placeholder="Secret key"
+        />
+        <.input
+          field={f[:proxy_url]}
+          value={@params["proxy_url"]}
+          placeholder="Proxy URL (e.g. http://103.210.12.49:5977/)"
+        />
         <:actions>
           <.button class="w-full dark:bg-gray-500">ADD CLIENT</.button>
         </:actions>
@@ -37,13 +49,28 @@ defmodule AngelTradingWeb.ClientLoginLive do
         "login",
         %{
           "user" =>
-            %{"client_code" => client_code, "password" => password, "totp_secret" => totp_secret} =
-              params
+            %{
+              "client_code" => client_code,
+              "password" => password,
+              "totp_secret" => totp_secret,
+              "api_key" => api_key,
+              "secret_key" => secret_key,
+              "proxy_url" => proxy_url
+            } = params
         },
         socket
       )
-      when bit_size(client_code) != 0 and bit_size(password) != 0 and bit_size(totp_secret) != 0 do
-    with {:ok, totp} <- AngelTrading.TOTP.totp_now(params["totp_secret"]),
+      when bit_size(client_code) != 0 and bit_size(password) != 0 and
+             bit_size(totp_secret) != 0 and bit_size(api_key) != 0 and
+             bit_size(secret_key) != 0 do
+    # Explicit config map — used for first-time registration before ETS is populated.
+    client_config = %{
+      api_key: api_key,
+      secret_key: secret_key,
+      proxy_url: if(proxy_url == "", do: nil, else: proxy_url)
+    }
+
+    with {:ok, totp} <- AngelTrading.TOTP.totp_now(totp_secret),
          {:ok,
           %{
             "data" => %{
@@ -52,41 +79,47 @@ defmodule AngelTradingWeb.ClientLoginLive do
               feed_token: feed_token
             }
           }} <-
-           API.login(%{
+           API.login(client_config, %{
              client_code: client_code,
              password: password,
              totp: totp
+           }),
+         :ok <-
+           Account.set_tokens(socket.assigns.user_hash, %{
+             "client_code" => client_code,
+             "token" => token,
+             "refresh_token" => refresh_token,
+             "feed_token" => feed_token,
+             "pin" => password,
+             "totp_secret" => totp_secret,
+             "api_key" => api_key,
+             "secret_key" => secret_key,
+             "proxy_url" => proxy_url
            }) do
-      client_code = params["client_code"]
-
       {:noreply,
-       redirect(socket,
-         to:
-           ~p"/session/#{client_code}/#{token}/#{refresh_token}/#{feed_token}/#{password}/#{totp_secret}"
-       )}
+       socket
+       |> put_flash(:info, "Client #{client_code} added successfully.")
+       |> push_navigate(to: ~p"/")}
     else
       {:error, error} ->
         message =
           case error do
             <<message::binary>> -> message
             %{"message" => message} -> message
+            _ -> "Unexpected error. Please try again."
           end
 
-        {
-          :noreply,
-          socket
-          |> push_patch(to: ~p"/client/login?#{params}")
-          |> put_flash(:error, message)
-        }
+        {:noreply,
+         socket
+         |> push_patch(to: ~p"/client/login?#{params}")
+         |> put_flash(:error, message)}
     end
   end
 
   def handle_event("login", %{"user" => params}, socket) do
-    {
-      :noreply,
-      socket
-      |> push_patch(to: ~p"/client/login?#{params}")
-      |> put_flash(:error, "Invalid credentials")
-    }
+    {:noreply,
+     socket
+     |> push_patch(to: ~p"/client/login?#{params}")
+     |> put_flash(:error, "Client code, pin, totp secret, API key and secret key are required.")}
   end
 end

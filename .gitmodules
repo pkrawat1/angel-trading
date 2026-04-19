@@ -1,0 +1,3 @@
+[submodule "trade_galleon"]
+	path = trade_galleon
+	url = git@github.com:pkrawat1/trade_galleon.git

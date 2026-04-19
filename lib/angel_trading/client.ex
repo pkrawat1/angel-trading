@@ -2,6 +2,9 @@ defmodule AngelTrading.Client do
   @moduledoc """
   Module responsible for handling client-related functions, such as fetching
   client portfolio information, searching for stocks, and retrieving candle data.
+
+  All API calls resolve per-client credentials automatically from the
+  AngelTrading.ClientConfig ETS store keyed by the JWT token.
   """
   alias AngelTrading.{API, Utils, YahooFinance}
 
@@ -25,13 +28,8 @@ defmodule AngelTrading.Client do
          {:funds, {:ok, %{"data" => funds}}} <- {:funds, API.funds(token)} do
       {:ok,
        Map.merge(
-         %{
-           profile: profile,
-           funds: funds
-         },
-         holdings
-         |> Utils.formatted_holdings()
-         |> Utils.calculated_overview()
+         %{profile: profile, funds: funds},
+         holdings |> Utils.formatted_holdings() |> Utils.calculated_overview()
        )}
     else
       {:profile, {:error, _}} -> {:error, :unauthorized}
@@ -78,10 +76,7 @@ defmodule AngelTrading.Client do
           end)
           |> Enum.uniq_by(& &1.trading_symbol)
           |> Enum.filter(&String.ends_with?(&1.trading_symbol, "-EQ"))
-          |> Enum.map(
-            &(&1
-              |> Map.put_new(:name, Utils.stock_long_name(&1.trading_symbol)))
-          )
+          |> Enum.map(&Map.put_new(&1, :name, Utils.stock_long_name(&1.trading_symbol)))
 
         {:ok, %{token_list: token_list}}
 
@@ -131,7 +126,7 @@ defmodule AngelTrading.Client do
   end
 
   @doc """
-  Returns a function that fetches the client's portfolio information.
+  Returns a LangChain Function that fetches the client's portfolio information.
 
   ## Examples
 
@@ -145,28 +140,21 @@ defmodule AngelTrading.Client do
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
       function: &client_portfolio_info_fn/2,
-      parameter_schema: %{
-        type: "object",
-        properties: %{},
-        required: []
-      }
+      parameter_schema: %{type: "object", properties: %{}, required: []}
     })
   end
 
-  defp client_portfolio_info_fn(_args, %{client_token: token, live_view_pid: pid} = _context) do
+  defp client_portfolio_info_fn(_args, %{client_token: token, live_view_pid: pid}) do
     send(pid, {:function_run, "Retrieving client portfolio information."})
 
     case get_client_portfolio_info(token) do
-      {:ok, result} ->
-        Jason.encode!(result)
-
-      _ ->
-        Jason.encode!(%{error: "Unable to fetch the client portfolio."})
+      {:ok, result} -> Jason.encode!(result)
+      _ -> Jason.encode!(%{error: "Unable to fetch the client portfolio."})
     end
   end
 
   @doc """
-  Returns a function that searches for stock details based on the provided name.
+  Returns a LangChain Function that searches for stock details based on the provided name.
 
   ## Examples
 
@@ -190,7 +178,7 @@ defmodule AngelTrading.Client do
     })
   end
 
-  defp search_stock_fn(%{"name" => name}, %{client_token: token, live_view_pid: pid} = _context) do
+  defp search_stock_fn(%{"name" => name}, %{client_token: token, live_view_pid: pid}) do
     send(pid, {:function_run, "Retrieving stock information for #{name}"})
 
     with {:ok, result} <- search_stock(name, token) do
@@ -201,7 +189,7 @@ defmodule AngelTrading.Client do
   end
 
   @doc """
-  Returns a function that retrieves candle data (RSI) for a given stock.
+  Returns a LangChain Function that retrieves candle data (RSI) for a given stock.
 
   ## Examples
 
@@ -229,7 +217,7 @@ defmodule AngelTrading.Client do
         LangChain.FunctionParam.new!(%{
           name: "trading_symbol",
           type: "string",
-          description: "Trading symbol for the stock found in the stock details details"
+          description: "Trading symbol for the stock found in the stock details"
         })
       ],
       function: &candle_data_fn/2
@@ -242,7 +230,7 @@ defmodule AngelTrading.Client do
            "symbol_token" => symbol_token,
            "trading_symbol" => trading_symbol
          },
-         %{client_token: token, live_view_pid: pid} = _context
+         %{client_token: token, live_view_pid: pid}
        ) do
     send(pid, {:function_run, "Retrieving candle data information for #{trading_symbol}"})
 
