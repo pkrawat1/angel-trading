@@ -5,6 +5,10 @@ defmodule AngelTrading.Agent.ChatMessage do
 
   @primary_key false
   embedded_schema do
+    # Monotonic id assigned on insert; used as the stream dom_id so ordering is stable and two
+    # messages with identical text never collide (the old phash2(content) dom_id did).
+    field(:id, :integer)
+
     field(:role, Ecto.Enum,
       values: [:system, :user, :assistant, :function, :function_call],
       default: :user

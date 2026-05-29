@@ -139,8 +139,7 @@ defmodule AngelTrading.Client do
     LangChain.Function.new!(%{
       name: "get_client_portfolio_info",
       description: "Return JSON object of the client's information.",
-      function: &client_portfolio_info_fn/2,
-      parameter_schema: %{type: "object", properties: %{}, required: []}
+      function: &client_portfolio_info_fn/2
     })
   end
 
@@ -167,13 +166,15 @@ defmodule AngelTrading.Client do
     LangChain.Function.new!(%{
       name: "search_stock_details",
       description: "Return JSON object of the stock details like symbol, token, exchange etc.",
-      parameters: [
-        LangChain.FunctionParam.new!(%{
-          name: "name",
-          type: "string",
-          description: "Stock name to search for."
-        })
-      ],
+      # Raw schema instead of `parameters:`/FunctionParam — the FunctionParam path injects
+      # `"additionalProperties": false`, which the Gemini API rejects.
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          name: %{type: "string", description: "Stock name to search for."}
+        },
+        required: ["name"]
+      },
       function: &search_stock_fn/2
     })
   end
@@ -203,23 +204,21 @@ defmodule AngelTrading.Client do
       name: "get_candle_data",
       description:
         "Return JSON object of the candle data (RSI) for a stock recorded in 1 week time with 1 hour gap.",
-      parameters: [
-        LangChain.FunctionParam.new!(%{
-          name: "exchange",
-          type: "string",
-          description: "Exchange name"
-        }),
-        LangChain.FunctionParam.new!(%{
-          name: "symbol_token",
-          type: "string",
-          description: "Symbol token is numeric code for the stock found in stock detail"
-        }),
-        LangChain.FunctionParam.new!(%{
-          name: "trading_symbol",
-          type: "string",
-          description: "Trading symbol for the stock found in the stock details"
-        })
-      ],
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          exchange: %{type: "string", description: "Exchange name"},
+          symbol_token: %{
+            type: "string",
+            description: "Symbol token is numeric code for the stock found in stock detail"
+          },
+          trading_symbol: %{
+            type: "string",
+            description: "Trading symbol for the stock found in the stock details"
+          }
+        },
+        required: ["exchange", "symbol_token", "trading_symbol"]
+      },
       function: &candle_data_fn/2
     })
   end

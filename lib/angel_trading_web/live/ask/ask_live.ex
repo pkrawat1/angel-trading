@@ -3,7 +3,7 @@ defmodule AngelTradingWeb.AskLive do
   alias AngelTrading.{Account, Agent, Utils}
   alias Phoenix.LiveView.AsyncResult
   alias AngelTrading.Agent.ChatMessage
-  alias LangChain.{Message, MessageDelta}
+  alias LangChain.Message
   alias LangChain.Chains.LLMChain
   require Logger
 
@@ -37,9 +37,10 @@ defmodule AngelTradingWeb.AskLive do
         |> assign(:token, token)
         |> assign(:client_code, client_code)
         |> assign(:llm_chain, Agent.new_chain(%{client_token: token, live_view_pid: self()}))
-        |> stream_configure(:display_messages, dom_id: &"message-#{:erlang.phash2(&1.content)}")
+        |> stream_configure(:display_messages, dom_id: &"message-#{&1.id}")
         |> stream(:display_messages, [
           %ChatMessage{
+            id: next_id(),
             role: :assistant,
             hidden: false,
             content: "Hello! I'm your personal Assistant! How can I help you today?"
@@ -89,8 +90,16 @@ defmodule AngelTradingWeb.AskLive do
   end
 
   @impl true
-  def handle_info({:chat_response, %MessageDelta{} = delta}, socket) do
-    socket = handle_chat_response(socket, delta)
+  def handle_info({:chat_delta, text}, socket) do
+    {:noreply, append_delta(socket, text)}
+  end
+
+  def handle_info({:chat_message, text}, socket) do
+    socket =
+      socket
+      |> append_display_message(%ChatMessage{role: :assistant, hidden: false, content: text})
+      |> assign(:delta, nil)
+
     {:noreply, socket}
   end
 
@@ -174,50 +183,18 @@ defmodule AngelTradingWeb.AskLive do
     assign_form(socket, changeset)
   end
 
-  defp append_display_message(socket, %ChatMessage{} = message) do
-    stream_insert(socket, :display_messages, message)
+  defp append_delta(socket, text) do
+    content = if socket.assigns.delta, do: socket.assigns.delta.content <> text, else: text
+    assign(socket, :delta, %ChatMessage{role: :assistant, hidden: false, content: content})
   end
+
+  defp append_display_message(socket, %ChatMessage{} = message) do
+    stream_insert(socket, :display_messages, %{message | id: next_id()})
+  end
+
+  defp next_id, do: System.unique_integer([:monotonic, :positive])
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     assign(socket, :form, to_form(changeset))
-  end
-
-  defp handle_chat_response(socket, %MessageDelta{role: role, content: content, status: :complete})
-       when role in [:user, :assistant] and is_binary(content) do
-    # Use accumulated content if there was streaming, otherwise use the complete content
-    final_content =
-      if socket.assigns.delta && socket.assigns.delta.content do
-        socket.assigns.delta.content
-      else
-        content
-      end
-
-    socket
-    |> append_display_message(%ChatMessage{role: role, content: final_content, hidden: false})
-    |> assign(:delta, nil)
-  end
-
-  defp handle_chat_response(socket, %MessageDelta{role: role, content: new_content} = delta)
-       when role in [:user, :assistant] do
-    # Accumulate streaming content
-    current_content =
-      if socket.assigns.delta do
-        socket.assigns.delta.content <> (new_content || "")
-      else
-        new_content || ""
-      end
-
-    updated_delta = %MessageDelta{
-      role: role,
-      content: current_content,
-      status: delta.status
-    }
-
-    assign(socket, :delta, updated_delta)
-  end
-
-  defp handle_chat_response(socket, %MessageDelta{} = _delta) do
-    # Fallback for other delta types
-    socket
   end
 end
