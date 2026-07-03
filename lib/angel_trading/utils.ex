@@ -73,12 +73,10 @@ defmodule AngelTrading.Utils do
            close: close,
            ltp: ltp,
            quantity: quantity,
-           realised_quantity: realised_quantity,
            symbol_token: symbol_token
          } = holding
        ) do
     average_price = if average_price > 0, do: average_price, else: close
-    close = if realised_quantity > 0, do: close, else: average_price
     invested = quantity * average_price
     current = quantity * ltp
     overall_gain_or_loss = quantity * (ltp - average_price)
